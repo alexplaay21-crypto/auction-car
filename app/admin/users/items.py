@@ -1,0 +1,178 @@
+"""Админ-действия над игроком: выдать/забрать машину и контейнер, выдать BP и
+навык, изменить вместимость гаража (раздел 27 ТЗ). Ввод — через FSM; каждое
+действие пишется в историю игрока с ID администратора."""
+from __future__ import annotations
+
+import datetime as dt
+
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
+
+from app.admin.permissions import require_permission
+from app.admin.users.profile import render_profile_card
+from app.callbacks.admin import AdminUserCallback
+from app.core.context import RequestContext
+from app.core.enums import ObtainedFrom
+from app.database.transaction import atomic, distributed_lock
+from app.keyboards.admin import admin_user_card_keyboard
+from app.localization.manager import t
+from app.repositories.battle_pass import BattlePassProgressRepository
+from app.repositories.car import CarRepository
+from app.repositories.container import ContainerRepository
+from app.repositories.garage import GarageRepository, UserCarRepository
+from app.repositories.history import record_event
+from app.repositories.skill import SkillRepository, UserSkillRepository
+from app.repositories.transaction import SaleRepository
+from app.repositories.user import UserRepository
+from app.services.battle_pass.service import BattlePassService
+from app.services.containers.inventory import ContainerInventoryService
+from app.services.garage.service import GarageService
+from app.states.admin_users import AdminUserStates
+
+router = Router(name="admin_users_items")
+
+# действие -> право, которое оно требует
+_PERMISSION = {
+    "car_give": "cars", "car_take": "cars",
+    "container_give": "containers", "container_take": "containers",
+    "bp_give": "battle_pass", "skill_give": "skills", "garage_set": "garage",
+}
+_NEEDS_INPUT = {"car_give", "car_take", "container_give", "container_take", "skill_give", "garage_set"}
+MAX_GARAGE_CAPACITY = 1000
+
+
+def _ints(raw: str, minimum: int, maximum: int) -> list[int] | None:
+    parts = (raw or "").split()
+    if not minimum <= len(parts) <= maximum or not all(p.isdigit() for p in parts):
+        return None
+    return [int(p) for p in parts]
+
+
+async def _execute(ctx: RequestContext, action: str, target_id: int, raw: str) -> str | None:
+    """None — успех; иначе ключ локализации ошибки."""
+    admin_id = ctx.user.id
+    session = ctx.session
+    target = await UserRepository(session).get(target_id)
+    if target is None:
+        return "error_not_found"
+    now = dt.datetime.now(dt.timezone.utc)
+
+    async with distributed_lock(f"admin_item:{target_id}"):
+        async with atomic(session):
+            if action == "car_give":
+                nums = _ints(raw, 1, 1)
+                car = await CarRepository(session).get(nums[0]) if nums else None
+                if car is None:
+                    return "admin_item_invalid"
+                await GarageService(session).add_car_to_garage(target, car.id, car.price, ObtainedFrom.ADMIN_GRANT, now)
+                record_event(session, target_id, "admin_car_give", {"car_id": car.id}, actor_admin_id=admin_id)
+
+            elif action == "car_take":
+                nums = _ints(raw, 1, 1)
+                repo = UserCarRepository(session)
+                user_car = await repo.get(nums[0]) if nums else None
+                if user_car is None or user_car.user_id != target_id or user_car.is_sold:
+                    return "admin_item_invalid"
+                await SaleRepository(session).decline_pending_for_car(user_car.id, now)
+                await repo.revoke(user_car.id, now)
+                record_event(session, target_id, "admin_car_take",
+                             {"user_car_id": user_car.id, "car_id": user_car.car_id}, actor_admin_id=admin_id)
+
+            elif action in ("container_give", "container_take"):
+                nums = _ints(raw, 1, 2)
+                if nums is None or await ContainerRepository(session).get(nums[0]) is None:
+                    return "admin_item_invalid"
+                quantity = nums[1] if len(nums) == 2 else 1
+                if quantity < 1:
+                    return "admin_item_invalid"
+                service = ContainerInventoryService(session)
+                if action == "container_give":
+                    await service.grant(target_id, nums[0], quantity)
+                else:
+                    if not await service.revoke(target_id, nums[0], quantity):
+                        return "admin_item_not_enough"
+                record_event(session, target_id, f"admin_{action}",
+                             {"container_id": nums[0], "quantity": quantity}, actor_admin_id=admin_id)
+
+            elif action == "skill_give":
+                nums = _ints(raw, 1, 2)
+                skill = await SkillRepository(session).get(nums[0]) if nums else None
+                if skill is None:
+                    return "admin_item_invalid"
+                level = nums[1] if len(nums) == 2 else 1
+                if not 1 <= level <= skill.max_level:
+                    return "admin_item_invalid"
+                await UserSkillRepository(session).upsert_level(target_id, skill.id, level)
+                record_event(session, target_id, "admin_skill_give",
+                             {"skill_id": skill.id, "level": level}, actor_admin_id=admin_id)
+
+            elif action == "garage_set":
+                nums = _ints(raw, 1, 1)
+                if nums is None or not 1 <= nums[0] <= MAX_GARAGE_CAPACITY:
+                    return "admin_item_invalid"
+                await GarageRepository(session).get_or_create(target_id, 15)
+                await GarageRepository(session).set_capacity(target_id, nums[0])
+                record_event(session, target_id, "admin_garage_capacity",
+                             {"amount": nums[0]}, actor_admin_id=admin_id)
+
+            elif action == "bp_give":
+                bp = await BattlePassService(session).get_active()
+                if bp is None:
+                    return "admin_item_no_bp"
+                progress_repo = BattlePassProgressRepository(session)
+                progress = await progress_repo.get_or_create(target_id, bp.id)
+                if progress.purchased_at is not None:
+                    return "admin_item_bp_already"
+                await progress_repo.mark_purchased(progress.id, now)
+                record_event(session, target_id, "admin_bp_give", {"battle_pass_id": bp.id}, actor_admin_id=admin_id)
+    return None
+
+
+async def _reply_card(message: Message, ctx: RequestContext, user_id: int, notice: str) -> None:
+    user = await UserRepository(ctx.session).get(user_id)
+    if user is None:
+        await message.answer(notice)
+        return
+    await message.answer(
+        notice + "\n\n" + await render_profile_card(ctx, user),
+        reply_markup=admin_user_card_keyboard(ctx.language, user),
+    )
+
+
+@router.callback_query(AdminUserCallback.filter(F.action.in_(set(_PERMISSION))))
+async def on_item_action(
+    query: CallbackQuery, callback_data: AdminUserCallback, ctx: RequestContext, state: FSMContext
+) -> None:
+    action = callback_data.action
+    if not await require_permission(query, ctx, _PERMISSION[action]):
+        return
+
+    if action in _NEEDS_INPUT:
+        await state.set_state(AdminUserStates.waiting_for_item)
+        await state.update_data(admin_item_action=action, admin_target_user_id=callback_data.user_id)
+        if query.message is not None:
+            await query.message.answer(t(f"admin_item_{action}_prompt", ctx.language))
+        await query.answer()
+        return
+
+    error = await _execute(ctx, action, callback_data.user_id, "")
+    if query.message is not None:
+        await _reply_card(query.message, ctx, callback_data.user_id,
+                          t(error or "admin_item_done", ctx.language))
+    await query.answer()
+
+
+@router.message(AdminUserStates.waiting_for_item)
+async def on_item_input(message: Message, ctx: RequestContext, state: FSMContext) -> None:
+    data = await state.get_data()
+    await state.clear()
+    action, target_id = data.get("admin_item_action"), data.get("admin_target_user_id")
+    if action not in _PERMISSION or target_id is None:
+        await message.answer(t("admin_item_invalid", ctx.language))
+        return
+    # Право перепроверяем: состояние могло пережить смену прав администратора.
+    if not await require_permission(message, ctx, _PERMISSION[action]):
+        return
+    error = await _execute(ctx, action, int(target_id), message.text or "")
+    await _reply_card(message, ctx, int(target_id), t(error or "admin_item_done", ctx.language))

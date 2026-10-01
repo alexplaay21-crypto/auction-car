@@ -1,0 +1,163 @@
+"""Фоновая задача аукциона: периодически ищет истёкшие по времени
+аукционы (services/auctions/timer.py), завершает их
+(services/auctions/service.py) и рассылает результат в чат — это
+единственное место, где логика аукциона встречается с Telegram Bot,
+поэтому вся отправка сообщений живёт здесь, а не в services/."""
+from __future__ import annotations
+
+import asyncio
+
+from aiogram import Bot
+from aiogram.exceptions import TelegramForbiddenError, TelegramNotFound
+
+from app.config.logging import get_logger
+from app.core.enums import Language, RoomScope
+from app.database.session import get_session
+from app.localization.manager import t
+from app.repositories.container import ContainerRepository
+from app.repositories.room import RoomMemberRepository
+from app.repositories.user import UserRepository
+from app.services.auctions.presentation import render_container_card
+from app.services.auctions.service import AuctionService, FinalizeResult
+from app.services.auctions.timer import due_auctions
+from app.services.cars.service import CarService
+from app.utils.usernames import format_mention
+
+logger = get_logger(__name__)
+
+DEFAULT_POLL_INTERVAL_SECONDS = 2.0
+
+
+async def _recipients(session, room) -> list[tuple[int, Language]]:
+    """Кому отправлять сообщение о комнате: одно сообщение в группу, или
+    персонально каждому активному участнику в ЛС (у каждого свой язык)."""
+    if room.scope is RoomScope.GROUP:
+        from app.repositories.group import GroupRepository
+
+        group = await GroupRepository(session).get(room.scope_id)
+        language = group.language if group is not None else Language.RU
+        return [(room.scope_id, language)]
+
+    members = await RoomMemberRepository(session).list_active_members(room.id)
+    user_repo = UserRepository(session)
+    recipients = []
+    for member in members:
+        user = await user_repo.get(member.user_id)
+        if user is not None:
+            recipients.append((user.id, user.language))
+    return recipients
+
+
+async def _deactivate_group(session, group_id: int) -> None:
+    """Бота выгнали/заблокировали в группе (раздел 1 ТЗ): группа выключается,
+    комнате ставится /stop — больше туда не пишем, остальные комнаты живут."""
+    from app.repositories.group import GroupRepository
+    from app.repositories.room import RoomRepository
+
+    try:
+        await GroupRepository(session).deactivate(group_id)
+        await RoomRepository(session).request_stop_for_scope(RoomScope.GROUP, group_id)
+        await session.commit()
+    except Exception:
+        logger.exception("group_deactivate_failed", group_id=group_id)
+        await session.rollback()
+
+
+async def _send_to_room(bot: Bot, session, room, text_by_language) -> None:
+    for chat_id, language in await _recipients(session, room):
+        try:
+            await bot.send_message(chat_id, text_by_language(language))
+        except (TelegramForbiddenError, TelegramNotFound) as exc:
+            logger.warning("auction_chat_unavailable", chat_id=chat_id, error=type(exc).__name__)
+            if room.scope is RoomScope.GROUP:
+                await _deactivate_group(session, room.scope_id)
+        except Exception:
+            logger.exception("auction_notify_failed", chat_id=chat_id)
+
+
+async def _announce_result(bot: Bot, session, result: FinalizeResult) -> None:
+    container = await ContainerRepository(session).get(result.auction.container_id)
+
+    if result.winner_user_id is None:
+        await _send_to_room(bot, session, result.room, lambda lang: t("container_no_bids_closed", lang))
+    else:
+        winner = await UserRepository(session).get(result.winner_user_id)
+        mention = format_mention(winner) if winner is not None else str(result.winner_user_id)
+
+        await _send_to_room(
+            bot, session, result.room,
+            lambda lang: f"{mention}\n" + t("auction_won", lang, amount=result.bid_amount),
+        )
+
+        # Карточка машины — лично победителю.
+        if result.car is not None and winner is not None:
+            card = CarService.format_card(result.car, winner.language)
+            try:
+                if result.auto_sold_amount is not None:
+                    card += "\n\n" + t(
+                        "garage_full_auto_sold", winner.language, amount=result.auto_sold_amount
+                    )
+                    await bot.send_message(winner.id, card)
+                else:
+                    from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+                    from app.callbacks.garage import GarageSellCallback
+
+                    builder = InlineKeyboardBuilder()
+                    builder.button(
+                        text=t("sell_btn", winner.language),
+                        callback_data=GarageSellCallback(user_car_id=result.user_car_id),
+                    )
+                    await bot.send_message(winner.id, card, reply_markup=builder.as_markup())
+            except Exception:
+                logger.exception("auction_car_card_failed", user_id=winner.id)
+
+    for kicked_id in result.kicked_user_ids:
+        user = await UserRepository(session).get(kicked_id)
+        if user is not None:
+            try:
+                await bot.send_message(kicked_id, t("kicked_inactivity", user.language))
+            except Exception:
+                logger.exception("auction_kick_notify_failed", user_id=kicked_id)
+
+    if result.room_closed:
+        return
+
+    if result.next_auction is not None:
+        leader = None
+        await _send_to_room(
+            bot, session, result.room,
+            lambda lang: render_container_card(result.next_auction, container, leader, lang),
+        )
+
+
+async def run_auction_tick(bot: Bot) -> None:
+    """Один проход: найти и завершить все истёкшие аукционы. Вызывается и
+    периодическим циклом (run_auction_timer_loop), и восстановлением при
+    старте (services/auctions/recovery.py использует due_auctions напрямую,
+    этот таск — обёртка с отправкой сообщений)."""
+    async with get_session() as session:
+        overdue = await due_auctions(session)
+        service = AuctionService(session)
+        for auction in overdue:
+            # Сбой одного аукциона не должен останавливать остальные: он
+            # будет повторён на следующем тике (finalize идемпотентен).
+            try:
+                result = await service.finalize_auction(auction)
+                await _announce_result(bot, session, result)
+            except Exception:
+                logger.exception("auction_finalize_failed", auction_id=auction.id)
+                await session.rollback()
+
+
+async def run_auction_timer_loop(bot: Bot, poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS) -> None:
+    """Бесконечный цикл — реально исполняется, когда приложение входит в
+    свой run loop (polling/webhook, этап Webhook). До этого этапа функция
+    уже полностью рабочая, просто ещё не запущена в проде."""
+    logger.info("auction_timer_loop.started", poll_interval=poll_interval)
+    while True:
+        try:
+            await run_auction_tick(bot)
+        except Exception:
+            logger.exception("auction_timer_tick_failed")
+        await asyncio.sleep(poll_interval)

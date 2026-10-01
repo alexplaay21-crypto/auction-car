@@ -1,0 +1,70 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_URL: postgresql+asyncpg://user:${POSTGRES_PASSWORD:-password}@db:5432/car_auction_bot
+      REDIS_URL: redis://redis:6379/0
+      WEBAPP_HOST: 0.0.0.0
+      WEBAPP_PORT: "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    expose:
+      - "8080"
+
+  # Необязательный HTTPS-прокси (Let's Encrypt автоматически):
+  #   docker compose --profile proxy up -d
+  # Домен берётся из WEBHOOK_DOMAIN в .env. Если у вас свой nginx/Caddy —
+  # профиль не включайте и проксируйте на bot:8080.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    environment:
+      WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - bot
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: car_auction_bot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d car_auction_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
