@@ -14,6 +14,7 @@ from app.core.exceptions import AppError
 from app.filters.command_alias import CommandAlias
 from app.localization.manager import t
 from app.services.promo.service import PromoService
+from app.services.containers.auto_open import auto_open_and_notify
 from app.states.promo import PromoStates
 
 router = Router(name="promo_main")
@@ -23,6 +24,7 @@ ALIASES = ("promo", "промокод")
 
 async def _apply(message: Message, ctx: RequestContext, code: str) -> None:
     await PromoService(ctx.session).redeem(ctx.user, code)
+    await auto_open_and_notify(message.bot, ctx.session, ctx.user, message.chat.id)
     await message.answer(t("promo_success", ctx.language))
 
 

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from aiogram import F, Router
+from urllib.parse import quote
+
 from aiogram.types import Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.core.context import RequestContext
 from app.keyboards.main_menu import menu_text_variants
@@ -35,22 +38,36 @@ async def show_referrals(message: Message, ctx: RequestContext) -> None:
     username = await _bot_username(message.bot)
     link = f"https://t.me/{username}?start={build_deep_link_payload(ctx.user.id)}"
 
-    progress = count % DEFAULT_EPIC_THRESHOLD
+    threshold = DEFAULT_EPIC_THRESHOLD
+    progress = count % threshold
+    filled = round(10 * progress / threshold)
+    bar = "▰" * filled + "▱" * (10 - filled)
+    left = threshold - progress
 
     lines = [
-        t("referrals_title", ctx.language),
-        link,
+        "👥 <b>РЕФЕРАЛЫ</b>",
         "",
-        t("referrals_invited_count", ctx.language, count=count),
-        t("referrals_progress", ctx.language, progress=progress, threshold=DEFAULT_EPIC_THRESHOLD),
+        "🔗 <b>Твоя ссылка</b> (тапни, чтобы скопировать):",
+        f"<code>{link}</code>",
+        "",
+        f"📨 Приглашено: <b>{count}</b>",
+        f"🎯 До эпической машины: <b>{progress}/{threshold}</b>",
+        f"{bar} {int(100 * progress / threshold)}%",
+        f"🚗 Осталось пригласить: <b>{left}</b>",
+        "",
+        "🎁 За каждого друга — бонус, за каждые 10 — эпическая машина!",
     ]
 
     if referrals:
         user_repo = UserRepository(ctx.session)
-        lines.append("")
+        lines += ["", "🤝 <b>Твои друзья:</b>"]
         for referral in referrals[:10]:
             invited_user = await user_repo.get(referral.invited_id)
             if invited_user is not None:
                 lines.append(f"• {format_mention(invited_user)}")
 
-    await message.answer("\n".join(lines))
+    share_text = quote("🚗 Заходи в игру, собирай машины и побеждай в аукционах!")
+    b = InlineKeyboardBuilder()
+    b.button(text="📤 Поделиться ссылкой", url=f"https://t.me/share/url?url={quote(link)}&text={share_text}")
+
+    await message.answer("\n".join(lines), reply_markup=b.as_markup(), parse_mode="HTML")

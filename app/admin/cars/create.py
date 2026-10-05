@@ -38,7 +38,12 @@ def convert_car_field(field: str, raw: str):
             raise ValueError(field)
         return raw
     if field == "rarity":
-        return Rarity(raw.lower())
+        key = raw.strip().lower()
+        key = {
+            "legendary": "mythic", "легендарная": "mythic", "легендарный": "mythic",
+            "обычная": "common", "редкая": "rare", "эпическая": "epic", "эпик": "epic",
+        }.get(key, key)
+        return Rarity(key)
     if field == "accel_0_100":
         try:
             return Decimal(raw.replace(",", "."))

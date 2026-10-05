@@ -21,8 +21,24 @@ from app.repositories.user import UserRepository, UserStatsRepository
 from app.utils.pagination import Page
 
 DEFAULT_GARAGE_START_CAPACITY = 15
+GARAGE_LOW_THRESHOLD = 3
+GARAGE_LOW_TEXT = (
+    f"ⓘ В гараже осталось {GARAGE_LOW_THRESHOLD} места. Когда гараж заполнится, "
+    "новые машины будут продаваться автоматически независимо от редкости."
+)
+
+
+def pop_garage_low(session, user_id: int) -> bool:
+    """True один раз, если после последней выдачи осталось ровно 3 места."""
+    flagged = session.info.get("garage_low", set())
+    if user_id in flagged:
+        flagged.discard(user_id)
+        return True
+    return False
+
+
 DEFAULT_QUICK_SELL_COMMISSION = {"regular": 0.10, "vip": 0.05}
-GARAGE_PAGE_SIZE = 10
+GARAGE_PAGE_SIZE = 15
 
 
 class GarageService:
@@ -61,6 +77,8 @@ class GarageService:
 
                 if owned_count < garage.capacity:
                     user_car = await user_car_repo.add_car(user.id, car_id, obtained_from, when)
+                    if garage.capacity - owned_count - 1 == GARAGE_LOW_THRESHOLD:
+                        self.session.info.setdefault("garage_low", set()).add(user.id)
                     return user_car, None
 
                 # Гараж полон — машина автоматически продаётся (не добавляется).
@@ -114,7 +132,7 @@ class GarageService:
                     operation_id=new_operation_id(),
                     description=f"quick_sell_{user_car_id}",
                 )
-                await UserStatsRepository(self.session).increment(user.id, cars_sold=1)
+                await UserStatsRepository(self.session).increment(user.id, cars_sold=1, earned_total=sell_amount)
 
         user.balance = new_balance
         return sell_amount

@@ -18,6 +18,7 @@ from app.config.logging import get_logger
 from app.tasks.auction_tasks import run_auction_timer_loop
 from app.tasks.backup_tasks import run_backup_loop
 from app.tasks.broadcast_tasks import run_broadcast_timer_loop
+from app.tasks.bonus_reminder import run_bonus_reminder_loop
 from app.tasks.cleanup_tasks import run_cleanup_loop
 
 logger = get_logger(__name__)
@@ -27,6 +28,7 @@ def setup_schedulers(bot: Bot) -> list[asyncio.Task]:
     tasks = [
         asyncio.create_task(run_auction_timer_loop(bot), name="auction_timer_loop"),
         asyncio.create_task(run_broadcast_timer_loop(bot), name="broadcast_timer_loop"),
+        asyncio.create_task(run_bonus_reminder_loop(bot), name="bonus_reminder_loop"),
         asyncio.create_task(run_backup_loop(bot), name="backup_loop"),
         asyncio.create_task(run_cleanup_loop(), name="cleanup_loop"),
     ]

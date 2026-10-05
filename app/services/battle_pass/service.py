@@ -85,3 +85,36 @@ class BattlePassService:
                         self.session, user, reward.reward_type, reward.payload,
                         f"bp_level_{level_number}_reward_{reward.id}",
                     )
+
+
+    async def claim_rewards(self, user: User) -> None:
+        bp = await self.get_active()
+        if bp is None:
+            raise AppError(t("bp_not_purchased", user.language))
+        async with distributed_lock(f"bp_claim:{user.id}"):
+            async with atomic(self.session):
+                progress = await BattlePassProgressRepository(self.session).find_by_user_and_pass(user.id, bp.id)
+                if progress is None or progress.purchased_at is None:
+                    raise AppError(t("bp_not_purchased", user.language))
+                if progress.claimed_level >= progress.current_level:
+                    raise AppError("Нет наград для получения.")
+                level_repo = BattlePassLevelRepository(self.session)
+                reward_repo = BattlePassRewardRepository(self.session)
+                for n in range(progress.claimed_level + 1, progress.current_level + 1):
+                    level = await level_repo.get_by_number(bp.id, n)
+                    if level is None:
+                        continue
+                    for reward in await reward_repo.list_for_level(level.id):
+                        await grant_reward(
+                            self.session, user, reward.reward_type, reward.payload,
+                            f"bp_level_{n}_reward_{reward.id}",
+                        )
+                progress.claimed_level = progress.current_level
+
+    async def activate_paid(self, user_id: int, bp_id: int) -> None:
+        """Вызывается после успешной оплаты Stars."""
+        async with atomic(self.session):
+            repo = BattlePassProgressRepository(self.session)
+            progress = await repo.get_or_create(user_id, bp_id)
+            if progress.purchased_at is None:
+                await repo.mark_purchased(progress.id, dt.datetime.now(dt.timezone.utc))

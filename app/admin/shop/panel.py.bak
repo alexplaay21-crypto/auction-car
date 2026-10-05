@@ -1,0 +1,289 @@
+"""Админка магазина кнопками: лоты, предметы, фото, вкл/выкл, удаление."""
+from __future__ import annotations
+
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import text
+
+from app.admin.permissions import require_permission
+from app.callbacks.admin import AdminMenuCallback
+from app.core.context import RequestContext
+from app.core.enums import RewardType
+from app.core.exceptions import AppError
+from app.models.car import Car
+from app.repositories.shop import ShopLotItemRepository, ShopLotRepository
+
+router = Router(name="admin_shop_panel")
+NOCMD = ~F.text.startswith("/")
+TXT_OR_PHOTO = F.photo | (F.text & ~F.text.startswith("/"))
+
+
+class ShCb(CallbackData, prefix="ash"):
+    a: str
+    i: int = 0
+    k: str = "-"
+
+
+class S(StatesGroup):
+    title = State()
+    price = State()
+    desc = State()
+    photo = State()
+    edit = State()
+    value = State()
+
+
+KINDS = {
+    "money": ("💰 Деньги", "Сколько денег? (число)"),
+    "car": ("🚗 Машина", "ID машины и количество: 5 2 (или только 5)"),
+    "container": ("📦 Контейнер", "ID контейнера и количество: 3 2 (или только 3)"),
+    "skill": ("⬆️ Навык", "ID навыка и уровень: 1 5 (или только 1)"),
+    "battle_pass": ("🎫 Уровни BP", "Сколько уровней BP? (число)"),
+    "vip": ("👑 VIP", ""),
+}
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+async def _item_text(ctx, it) -> str:
+    t = it.item_type.value
+    p = it.payload or {}
+    q = f" ×{it.quantity}" if it.quantity > 1 else ""
+    if t == "money":
+        return f"💰 ${_fmt(int(p.get('amount', 0)))}{q}"
+    if t == "car":
+        car = await ctx.session.get(Car, int(p.get("car_id", 0)))
+        return f"🚗 {car.name if car else '#' + str(p.get('car_id'))}{q}"
+    if t == "container":
+        return f"📦 Контейнер #{p.get('container_id')} ×{p.get('quantity', 1) * it.quantity}"
+    if t == "skill":
+        return f"⬆️ Навык #{p.get('skill_id')} ур. {p.get('level', 1)}{q}"
+    if t == "battle_pass":
+        return f"🎫 +{p.get('levels', 1)} ур. BP{q}"
+    if t == "vip":
+        return "👑 VIP"
+    return "🎁 Предмет"
+
+
+async def _card(ctx, lot_id: int):
+    lot = await ShopLotRepository(ctx.session).get(lot_id)
+    if lot is None:
+        raise AppError("Лот не найден")
+    await ctx.session.refresh(lot)
+    items = await ShopLotItemRepository(ctx.session).list_for_lot(lot.id)
+    lines = [f"🛒 <b>{lot.title}</b> · ⭐ {lot.price}", lot.description or "", "",
+             "🟢 В продаже" if lot.is_available else "🔴 Скрыт", "", "📦 <b>Состав:</b>"]
+    if not items:
+        lines.append("пусто")
+    for it in items:
+        lines.append(await _item_text(ctx, it))
+    b = InlineKeyboardBuilder()
+    b.button(text="✏️ Название", callback_data=ShCb(a="ed", i=lot.id, k="title"))
+    b.button(text="⭐ Цена", callback_data=ShCb(a="ed", i=lot.id, k="price"))
+    b.button(text="📝 Описание", callback_data=ShCb(a="ed", i=lot.id, k="desc"))
+    b.button(text="🖼 Фото", callback_data=ShCb(a="ed", i=lot.id, k="photo"))
+    b.button(text="➕ Предмет", callback_data=ShCb(a="add", i=lot.id))
+    for it in items:
+        b.button(text=f"🗑 {await _item_text(ctx, it)}"[:30], callback_data=ShCb(a="rm", i=it.id, k=str(lot.id)))
+    b.button(text="🔴 Скрыть" if lot.is_available else "🟢 Включить", callback_data=ShCb(a="tog", i=lot.id))
+    b.button(text="🗑 Удалить лот", callback_data=ShCb(a="del", i=lot.id))
+    b.button(text="◀️ К списку", callback_data=ShCb(a="list"))
+    b.adjust(2, 2, 1, *([1] * len(items)), 2, 1)
+    return "\n".join(lines), b.as_markup(), lot
+
+
+async def _send_card(msg: Message, ctx, lot_id: int):
+    txt, kb, lot = await _card(ctx, lot_id)
+    if lot.photo_file_id:
+        await msg.answer_photo(lot.photo_file_id, caption=txt, reply_markup=kb, parse_mode="HTML")
+    else:
+        await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+
+
+async def _list(ctx):
+    lots = await ShopLotRepository(ctx.session).list_all(limit=50)
+    lines = ["🛒 <b>Магазин</b> (цены в ⭐ Stars)", ""]
+    b = InlineKeyboardBuilder()
+    b.button(text="➕ Новый лот", callback_data=ShCb(a="new"))
+    for lot in lots:
+        lines.append(f"{'🟢' if lot.is_available else '🔴'} {lot.id} · {lot.title} · ⭐ {lot.price}")
+        b.button(text=f"{lot.id} · {lot.title}"[:30], callback_data=ShCb(a="view", i=lot.id))
+    if not lots:
+        lines.append("Лотов пока нет.")
+    b.adjust(1, 2)
+    return "\n".join(lines), b.as_markup()
+
+
+def _kinds_kb(lot_id: int):
+    b = InlineKeyboardBuilder()
+    for k, (title, _) in KINDS.items():
+        b.button(text=title, callback_data=ShCb(a="kind", i=lot_id, k=k))
+    b.button(text="✅ Готово", callback_data=ShCb(a="view", i=lot_id))
+    b.adjust(2, 2, 2, 1)
+    return b.as_markup()
+
+
+@router.callback_query(AdminMenuCallback.filter(F.section == "shop"))
+async def on_open(query: CallbackQuery, callback_data: AdminMenuCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "shop"):
+        return
+    await state.clear()
+    txt, kb = await _list(ctx)
+    if query.message is not None:
+        await query.message.edit_text(txt, reply_markup=kb, parse_mode="HTML")
+    await query.answer()
+
+
+@router.callback_query(ShCb.filter())
+async def on_cb(query: CallbackQuery, callback_data: ShCb, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "shop") or query.message is None:
+        return
+    a, i, k = callback_data.a, callback_data.i, callback_data.k
+    msg = query.message
+    repo = ShopLotRepository(ctx.session)
+    await query.answer()
+    if a == "list":
+        await state.clear()
+        txt, kb = await _list(ctx)
+        await msg.delete()
+        await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+    elif a == "new":
+        await state.clear()
+        await state.set_state(S.title)
+        await msg.answer("🛒 Название лота?")
+    elif a == "view":
+        await state.clear()
+        await msg.delete()
+        await _send_card(msg, ctx, i)
+    elif a == "ed":
+        await state.set_state(S.edit)
+        await state.update_data(lot=i, field=k)
+        ask = {"title": "Новое название?", "price": "Новая цена в Stars? (число)",
+               "desc": "Новое описание? (- чтобы убрать)", "photo": "Пришли фото (- чтобы убрать)"}
+        await msg.answer(ask[k])
+    elif a == "add":
+        await msg.answer("🎁 Что добавить в лот?", reply_markup=_kinds_kb(i))
+    elif a == "kind":
+        if k == "vip":
+            await ShopLotItemRepository(ctx.session).add_item(i, RewardType.VIP, {}, 1)
+            await ctx.session.commit()
+            await msg.answer("✅ Добавлено: 👑 VIP", reply_markup=_kinds_kb(i))
+        else:
+            await state.set_state(S.value)
+            await state.update_data(lot=i, kind=k)
+            await msg.answer(KINDS[k][1])
+    elif a == "rm":
+        await ctx.session.execute(text("DELETE FROM shop_lot_items WHERE id=:i"), {"i": i})
+        await ctx.session.commit()
+        await msg.delete()
+        await _send_card(msg, ctx, int(k))
+    elif a == "tog":
+        lot = await repo.get(i)
+        await repo.update_fields(i, is_available=not lot.is_available)
+        await ctx.session.commit()
+        await msg.delete()
+        await _send_card(msg, ctx, i)
+    elif a == "del":
+        b = InlineKeyboardBuilder()
+        b.button(text="✅ Да, удалить", callback_data=ShCb(a="delyes", i=i))
+        b.button(text="❌ Нет", callback_data=ShCb(a="view", i=i))
+        b.adjust(2)
+        await msg.answer("⚠️ Удалить лот навсегда? Записи о покупках по нему тоже удалятся (у игроков купленное останется).", reply_markup=b.as_markup())
+    elif a == "delyes":
+        try:
+            await ctx.session.execute(text("DELETE FROM purchases WHERE lot_id=:i"), {"i": i})
+            await ctx.session.execute(text("DELETE FROM shop_lots WHERE id=:i"), {"i": i})
+            await ctx.session.commit()
+            await msg.answer("🗑 Лот удалён.")
+        except Exception:
+            await ctx.session.rollback()
+            await msg.answer("Не удалось удалить лот. Нажми «Скрыть» в карточке.")
+
+
+def _num(m: Message) -> int:
+    raw = (m.text or "").strip()
+    if not raw.isdigit() or int(raw) <= 0:
+        raise AppError("Нужно число больше 0")
+    return int(raw)
+
+
+@router.message(S.title, NOCMD)
+async def s_title(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(title=(m.text or "").strip())
+    await state.set_state(S.price)
+    await m.answer("⭐ Цена в Stars? (число)")
+
+
+@router.message(S.price, NOCMD)
+async def s_price(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(price=_num(m))
+    await state.set_state(S.desc)
+    await m.answer("📝 Описание? (- пропустить)")
+
+
+@router.message(S.desc, NOCMD)
+async def s_desc(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    raw = (m.text or "").strip()
+    await state.update_data(desc=None if raw == "-" else raw)
+    await state.set_state(S.photo)
+    await m.answer("🖼 Пришли фото (- пропустить)")
+
+
+@router.message(S.photo, TXT_OR_PHOTO)
+async def s_photo(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    photo = m.photo[-1].file_id if m.photo else None
+    lot = await ShopLotRepository(ctx.session).create(
+        title=d["title"], price=d["price"], description=d.get("desc"), photo_file_id=photo)
+    await ctx.session.commit()
+    await state.clear()
+    await m.answer("✅ Лот создан. Добавь предметы:", reply_markup=_kinds_kb(lot.id))
+
+
+@router.message(S.edit, TXT_OR_PHOTO)
+async def s_edit(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    f, lot_id = d["field"], d["lot"]
+    raw = (m.text or "").strip()
+    if f == "title":
+        if not raw:
+            raise AppError("Напиши название")
+        upd = {"title": raw}
+    elif f == "price":
+        upd = {"price": _num(m)}
+    elif f == "desc":
+        upd = {"description": None if raw == "-" else raw}
+    else:
+        upd = {"photo_file_id": m.photo[-1].file_id if m.photo else None}
+    await ShopLotRepository(ctx.session).update_fields(lot_id, **upd)
+    await ctx.session.commit()
+    await state.clear()
+    await _send_card(m, ctx, lot_id)
+
+
+@router.message(S.value, NOCMD)
+async def s_value(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    nums = (m.text or "").replace(",", " ").split()
+    if not nums or not all(x.isdigit() for x in nums) or int(nums[0]) <= 0:
+        raise AppError("Нужны числа, например: 5000")
+    a = int(nums[0])
+    b = int(nums[1]) if len(nums) > 1 else 1
+    kind = d["kind"]
+    payload, qty = {
+        "money": ({"amount": a}, 1),
+        "car": ({"car_id": a}, b),
+        "container": ({"container_id": a, "quantity": 1}, b),
+        "skill": ({"skill_id": a, "level": b}, 1),
+        "battle_pass": ({"levels": a}, 1),
+    }[kind]
+    await ShopLotItemRepository(ctx.session).add_item(d["lot"], RewardType(kind), payload, qty)
+    await ctx.session.commit()
+    await state.set_state(None)
+    await m.answer("✅ Добавлено. Ещё?", reply_markup=_kinds_kb(d["lot"]))

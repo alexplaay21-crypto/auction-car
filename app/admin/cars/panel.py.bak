@@ -1,0 +1,298 @@
+"""Админка машин: страницы, поиск, создание кнопками, изменение, удаление."""
+from __future__ import annotations
+
+from decimal import Decimal, InvalidOperation
+from html import escape
+
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import text
+
+from app.admin.permissions import require_permission
+from app.callbacks.admin import AdminMenuCallback
+from app.core.context import RequestContext
+from app.core.exceptions import AppError
+from app.models.car import Car
+from app.services.cars.service import CarService
+
+router = Router(name="admin_cars_panel")
+NOCMD = ~F.text.startswith("/")
+TXT_OR_PHOTO = F.photo | (F.text & ~F.text.startswith("/"))
+PAGE = 15
+ICON = {"common": "⚪", "rare": "🔵", "epic": "🟣", "mythic": "🟡"}
+RNAME = {"common": "Обычный", "rare": "Редкий", "epic": "Эпический", "mythic": "Легендарный"}
+
+
+class CarCb(CallbackData, prefix="acar"):
+    a: str
+    i: int = 0
+    k: str = "-"
+
+
+class S(StatesGroup):
+    name = State()
+    country = State()
+    stats = State()
+    price = State()
+    photo = State()
+    edit = State()
+    search = State()
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+def _num(m: Message) -> int:
+    raw = (m.text or "").strip().replace(" ", "")
+    if not raw.isdigit() or int(raw) <= 0:
+        raise AppError("Нужно число больше 0")
+    return int(raw)
+
+
+def _parse_stats(raw: str):
+    p = raw.replace(",", ".").split()
+    if len(p) != 5:
+        raise AppError("Нужно 5 чисел: скорость 0-100 мощность управляемость надёжность\nПример: 285 4.6 340 82 75")
+    try:
+        accel = Decimal(p[1])
+        speed, power, hand, rel = int(p[0]), int(p[2]), int(p[3]), int(p[4])
+    except (InvalidOperation, ValueError):
+        raise AppError("Нужны только числа. Пример: 285 4.6 340 82 75")
+    if not (0 <= hand <= 100 and 0 <= rel <= 100):
+        raise AppError("Управляемость и надёжность от 0 до 100")
+    return speed, accel, power, hand, rel
+
+
+def _rarity_kb(prefix_a: str, i: int):
+    b = InlineKeyboardBuilder()
+    for k in ICON:
+        b.button(text=f"{ICON[k]} {RNAME[k]}", callback_data=CarCb(a=prefix_a, i=i, k=k))
+    b.adjust(2)
+    return b.as_markup()
+
+
+async def _list(ctx, page: int, q: str | None = None):
+    where, params = "", {}
+    if q:
+        where = "WHERE name ILIKE :q" + (" OR id = :n" if q.isdigit() else "")
+        params = {"q": f"%{q}%", "n": int(q) if q.isdigit() else 0}
+    total = (await ctx.session.execute(text(f"SELECT count(*) FROM cars {where}"), params)).scalar_one()
+    pages = max((total + PAGE - 1) // PAGE, 1)
+    page = max(1, min(page, pages))
+    rows = (await ctx.session.execute(
+        text(f"SELECT id,name,rarity,is_active FROM cars {where} ORDER BY id LIMIT :l OFFSET :o"),
+        {**params, "l": PAGE, "o": (page - 1) * PAGE})).all()
+    lines = [f"🚗 <b>Машины</b> · {page}/{pages} · всего {total}", ""]
+    b = InlineKeyboardBuilder()
+    for r in rows:
+        r_ = getattr(r.rarity, "value", r.rarity)
+        lines.append(f"{'' if r.is_active else '🚫 '}{r.id:03d} · {escape(r.name)} · {ICON.get(r_, '')}")
+        b.button(text=f"{r.id:03d}", callback_data=CarCb(a="view", i=r.id))
+    if not rows:
+        lines.append("Ничего не найдено.")
+    n = len(rows)
+    nav = []
+    if page > 1:
+        b.button(text="◀️", callback_data=CarCb(a="page", i=page - 1)); nav.append(1)
+    b.button(text=f"{page}/{pages}", callback_data=CarCb(a="page", i=page)); nav.append(1)
+    if page < pages:
+        b.button(text="▶️", callback_data=CarCb(a="page", i=page + 1)); nav.append(1)
+    b.button(text="➕ Новая машина", callback_data=CarCb(a="new"))
+    b.button(text="🔍 Поиск", callback_data=CarCb(a="search"))
+    rows_layout = [5] * (n // 5) + ([n % 5] if n % 5 else [])
+    b.adjust(*rows_layout, sum(nav), 2)
+    return "\n".join(lines), b.as_markup()
+
+
+async def _card(ctx, cid: int):
+    car = await ctx.session.get(Car, cid)
+    if car is None:
+        raise AppError("Машина не найдена")
+    await ctx.session.refresh(car)
+    txt = CarService.format_card(car, ctx.language)
+    if not car.is_active:
+        txt += "\n\n🚫 Скрыта"
+    b = InlineKeyboardBuilder()
+    for k, t_ in (("name", "✏️ Название"), ("country", "🌍 Страна"), ("price", "💰 Цена"),
+                  ("photo", "🖼 Фото"), ("stats", "⚙️ Характеристики")):
+        b.button(text=t_, callback_data=CarCb(a="ed", i=cid, k=k))
+    b.button(text="💎 Редкость", callback_data=CarCb(a="rar", i=cid))
+    b.button(text="🟢 Показать" if not car.is_active else "🚫 Скрыть", callback_data=CarCb(a="tog", i=cid))
+    b.button(text="🗑 Удалить", callback_data=CarCb(a="del", i=cid))
+    b.button(text="◀️ К списку", callback_data=CarCb(a="page", i=1))
+    b.adjust(2, 2, 2, 2, 1)
+    return txt, b.as_markup(), car
+
+
+async def _send(msg: Message, ctx, cid: int):
+    txt, kb, car = await _card(ctx, cid)
+    if car.photo_file_id:
+        await msg.answer_photo(car.photo_file_id, caption=txt, reply_markup=kb, parse_mode="HTML")
+    else:
+        await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+
+
+@router.callback_query(AdminMenuCallback.filter(F.section == "cars"))
+async def on_open(query: CallbackQuery, callback_data: AdminMenuCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "cars"):
+        return
+    await state.clear()
+    txt, kb = await _list(ctx, 1)
+    if query.message is not None:
+        await query.message.edit_text(txt, reply_markup=kb, parse_mode="HTML")
+    await query.answer()
+
+
+@router.callback_query(CarCb.filter())
+async def on_cb(query: CallbackQuery, callback_data: CarCb, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "cars") or query.message is None:
+        return
+    a, i, k = callback_data.a, callback_data.i, callback_data.k
+    msg = query.message
+    await query.answer()
+    if a == "page":
+        txt, kb = await _list(ctx, i)
+        if msg.photo:
+            await msg.delete()
+            await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+        else:
+            await msg.edit_text(txt, reply_markup=kb, parse_mode="HTML")
+    elif a == "search":
+        await state.set_state(S.search)
+        await msg.answer("🔍 Пришли ID или часть названия")
+    elif a == "view":
+        await state.clear()
+        await msg.delete()
+        await _send(msg, ctx, i)
+    elif a == "new":
+        await state.clear()
+        await state.set_state(S.name)
+        await msg.answer("🚗 Название машины?")
+    elif a == "newrar":
+        await state.update_data(rarity=k)
+        await state.set_state(S.stats)
+        await msg.answer("⚙️ Характеристики одной строкой:\nскорость 0-100 мощность управляемость надёжность\nПример: 285 4.6 340 82 75")
+    elif a == "ed":
+        await state.set_state(S.edit)
+        await state.update_data(cid=i, field=k)
+        ask = {"name": "Новое название?", "country": "Страна? (- убрать)", "price": "Новая цена? (число)",
+               "photo": "Пришли фото (- убрать)",
+               "stats": "Скорость 0-100 мощность управляемость надёжность\nПример: 285 4.6 340 82 75"}
+        await msg.answer(ask[k])
+    elif a == "rar":
+        await msg.answer("💎 Выбери редкость:", reply_markup=_rarity_kb("setrar", i))
+    elif a == "setrar":
+        await ctx.session.execute(text("UPDATE cars SET rarity = CAST(:r AS rarity) WHERE id=:i"), {"r": k, "i": i})
+        await ctx.session.commit()
+        await _send(msg, ctx, i)
+    elif a == "tog":
+        await ctx.session.execute(text("UPDATE cars SET is_active = NOT is_active WHERE id=:i"), {"i": i})
+        await ctx.session.commit()
+        await msg.delete()
+        await _send(msg, ctx, i)
+    elif a == "del":
+        b = InlineKeyboardBuilder()
+        b.button(text="✅ Да, удалить", callback_data=CarCb(a="delyes", i=i))
+        b.button(text="❌ Нет", callback_data=CarCb(a="view", i=i))
+        b.adjust(2)
+        await msg.answer("⚠️ Удалить машину? Она пропадёт из контейнеров. Если она есть у игроков, удаление не пройдёт: тогда «Скрыть».",
+                         reply_markup=b.as_markup())
+    elif a == "delyes":
+        try:
+            await ctx.session.execute(text("DELETE FROM container_cars WHERE car_id=:i"), {"i": i})
+            await ctx.session.execute(text("DELETE FROM cars WHERE id=:i"), {"i": i})
+            await ctx.session.commit()
+            await msg.answer("🗑 Машина удалена.")
+        except Exception:
+            await ctx.session.rollback()
+            await msg.answer("Нельзя удалить: машина есть у игроков. Нажми «Скрыть» в карточке.")
+
+
+@router.message(S.search, NOCMD)
+async def s_search(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    q = (m.text or "").strip()
+    await state.clear()
+    if q.isdigit() and (await ctx.session.get(Car, int(q))) is not None:
+        await _send(m, ctx, int(q))
+        return
+    txt, kb = await _list(ctx, 1, q)
+    await m.answer(txt, reply_markup=kb, parse_mode="HTML")
+
+
+@router.message(S.name, NOCMD)
+async def s_name(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    if not (m.text or "").strip():
+        raise AppError("Напиши название")
+    await state.update_data(name=m.text.strip())
+    await state.set_state(S.country)
+    await m.answer("🌍 Страна? (- пропустить)")
+
+
+@router.message(S.country, NOCMD)
+async def s_country(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    raw = (m.text or "").strip()
+    await state.update_data(country=None if raw == "-" else raw)
+    await state.set_state(None)
+    await m.answer("💎 Редкость:", reply_markup=_rarity_kb("newrar", 0))
+
+
+@router.message(S.stats, NOCMD)
+async def s_stats(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(stats=list(map(str, _parse_stats(m.text or ""))))
+    await state.set_state(S.price)
+    await m.answer("💰 Стоимость машины? (число)")
+
+
+@router.message(S.price, NOCMD)
+async def s_price(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(price=_num(m))
+    await state.set_state(S.photo)
+    await m.answer("🖼 Пришли фото (- пропустить)")
+
+
+@router.message(S.photo, TXT_OR_PHOTO)
+async def s_photo(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    sp, ac, pw, hd, rl = d["stats"]
+    photo = m.photo[-1].file_id if m.photo else None
+    cid = (await ctx.session.execute(text(
+        "INSERT INTO cars (name,country,rarity,max_speed,accel_0_100,power,handling,reliability,price,photo_file_id,is_active) "
+        "VALUES (:n,:c,CAST(:r AS rarity),:sp,:ac,:pw,:hd,:rl,:p,:f,true) RETURNING id"),
+        {"n": d["name"], "c": d.get("country"), "r": d["rarity"], "sp": int(sp), "ac": Decimal(ac),
+         "pw": int(pw), "hd": int(hd), "rl": int(rl), "p": d["price"], "f": photo})).scalar_one()
+    await ctx.session.commit()
+    await state.clear()
+    await m.answer(f"✅ Машина создана, ID {cid:03d}")
+    await _send(m, ctx, cid)
+
+
+@router.message(S.edit, TXT_OR_PHOTO)
+async def s_edit(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    f, cid = d["field"], d["cid"]
+    raw = (m.text or "").strip()
+    if f == "stats":
+        sp, ac, pw, hd, rl = _parse_stats(raw)
+        await ctx.session.execute(text(
+            "UPDATE cars SET max_speed=:sp,accel_0_100=:ac,power=:pw,handling=:hd,reliability=:rl WHERE id=:i"),
+            {"sp": sp, "ac": ac, "pw": pw, "hd": hd, "rl": rl, "i": cid})
+    else:
+        if f == "name":
+            if not raw:
+                raise AppError("Напиши название")
+            col, val = "name", raw
+        elif f == "country":
+            col, val = "country", None if raw == "-" else raw
+        elif f == "price":
+            col, val = "price", _num(m)
+        else:
+            col, val = "photo_file_id", m.photo[-1].file_id if m.photo else None
+        await ctx.session.execute(text(f"UPDATE cars SET {col}=:v WHERE id=:i"), {"v": val, "i": cid})
+    await ctx.session.commit()
+    await state.clear()
+    await _send(m, ctx, cid)

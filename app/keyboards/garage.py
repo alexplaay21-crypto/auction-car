@@ -1,5 +1,6 @@
 """Клавиатуры раздела гаража: пагинация + (в ЛС) кнопка расширения."""
 from __future__ import annotations
+from app.utils.loc import loc
 
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -26,8 +27,7 @@ def garage_keyboard(language: Language, page_obj: Page, show_upgrade: bool) -> I
 
     if show_upgrade:
         builder.button(text=t("garage_upgrade_btn", language), callback_data=GarageUpgradeCallback(action="buy"))
-        builder.button(text=t("garage_containers_btn", language), callback_data=ContainerInvCallback(action="list"))
-        row_sizes.extend([1, 1])
+        row_sizes.append(1)
 
     if row_sizes:
         builder.adjust(*row_sizes)
@@ -39,7 +39,7 @@ def container_inventory_keyboard(language: Language, rows: list) -> InlineKeyboa
     builder = InlineKeyboardBuilder()
     for user_container, container in rows:
         builder.button(
-            text=t("container_inv_open_btn", language, name=container.name, qty=user_container.quantity),
+            text=t("container_inv_open_btn", language, name=loc(container, "name", language), qty=user_container.quantity),
             callback_data=ContainerInvCallback(action="open", container_id=container.id),
         )
     builder.adjust(1)

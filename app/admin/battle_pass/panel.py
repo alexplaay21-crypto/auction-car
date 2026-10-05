@@ -1,0 +1,291 @@
+"""Админка Battle Pass кнопками: создать, изменить, награды уровней, удалить."""
+from __future__ import annotations
+
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import text
+
+from app.admin.permissions import require_permission
+from app.callbacks.admin import AdminMenuCallback
+from app.core.context import RequestContext
+from app.core.enums import RewardType
+from app.core.exceptions import AppError
+from app.models.car import Car
+from app.repositories.battle_pass import (
+    BattlePassLevelRepository, BattlePassRepository, BattlePassRewardRepository,
+)
+
+router = Router(name="admin_bp_panel")
+NOCMD = ~F.text.startswith("/")
+
+
+class BpCb(CallbackData, prefix="abp"):
+    a: str
+    n: int = 0
+    k: str = "-"
+
+
+class S(StatesGroup):
+    name = State()
+    price = State()
+    levels = State()
+    days = State()
+    edit = State()
+    lvl = State()
+    value = State()
+
+
+KINDS = {
+    "money": ("💰 Деньги", "Сколько денег? (число)"),
+    "car": ("🚗 Машина", "ID машины (число)"),
+    "container": ("📦 Контейнер", "ID контейнера и количество: 3 2 (или только 3)"),
+    "skill": ("⬆️ Навык", "ID навыка и уровень: 1 5 (или только 1)"),
+    "vip": ("👑 VIP", ""),
+}
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+async def _desc(ctx, r) -> str:
+    t = getattr(r.reward_type, "value", r.reward_type)
+    p = r.payload or {}
+    if t == "money":
+        return f"💰 ${_fmt(int(p.get('amount', 0)))}"
+    if t == "car":
+        car = await ctx.session.get(Car, int(p.get("car_id", 0)))
+        return f"🚗 {car.name if car else '#' + str(p.get('car_id'))}"
+    if t == "container":
+        return f"📦 Контейнер #{p.get('container_id')} ×{p.get('quantity', 1)}"
+    if t == "skill":
+        return f"⬆️ Навык #{p.get('skill_id')} ур. {p.get('level', 1)}"
+    if t == "vip":
+        return "👑 VIP"
+    return "🎁 Награда"
+
+
+async def _render(ctx: RequestContext):
+    bp = await BattlePassRepository(ctx.session).get_active()
+    b = InlineKeyboardBuilder()
+    if bp is None:
+        b.button(text="➕ Создать пасс", callback_data=BpCb(a="new"))
+        return "🎫 <b>Battle Pass</b>\n\nАктивного пасса нет.", b.as_markup()
+    lines = [
+        f"🎫 <b>{bp.name}</b>",
+        f"⭐ Цена: {bp.price} Stars · Уровней: {bp.levels_count}",
+        f"📅 Длительность: {bp.duration_days} дн.", "",
+    ]
+    levels = await BattlePassLevelRepository(ctx.session).list_for_pass(bp.id)
+    if not levels:
+        lines.append("Уровней пока нет.")
+    for lv in levels:
+        rs = await BattlePassRewardRepository(ctx.session).list_for_level(lv.id)
+        lines.append(f"<b>{lv.level_number}</b> · " + (" + ".join([await _desc(ctx, r) for r in rs]) or "—"))
+    b.button(text="✏️ Название", callback_data=BpCb(a="ed", k="name"))
+    b.button(text="⭐ Цена", callback_data=BpCb(a="ed", k="price"))
+    b.button(text="📅 Дни", callback_data=BpCb(a="ed", k="days"))
+    b.button(text="➕ Награда уровня", callback_data=BpCb(a="addlvl"))
+    for lv in levels:
+        b.button(text=f"🗑 {lv.level_number}", callback_data=BpCb(a="dl", n=lv.level_number))
+    b.button(text="🗑 Удалить пасс", callback_data=BpCb(a="delpass"))
+    b.button(text="🆕 Новый пасс", callback_data=BpCb(a="new"))
+    b.adjust(2, 2, *([5] * ((len(levels) + 4) // 5)), 1, 1)
+    return "\n".join(lines), b.as_markup()
+
+
+async def _show(target, ctx):
+    text_, kb = await _render(ctx)
+    if isinstance(target, CallbackQuery):
+        await target.message.edit_text(text_, reply_markup=kb, parse_mode="HTML")
+    else:
+        await target.answer(text_, reply_markup=kb, parse_mode="HTML")
+
+
+def _kinds_kb():
+    b = InlineKeyboardBuilder()
+    for k, (title, _) in KINDS.items():
+        b.button(text=title, callback_data=BpCb(a="rk", k=k))
+    b.button(text="✅ Готово", callback_data=BpCb(a="done"))
+    b.adjust(2, 2, 1, 1)
+    return b.as_markup()
+
+
+@router.callback_query(AdminMenuCallback.filter(F.section == "battle_pass"))
+async def on_open(query: CallbackQuery, callback_data: AdminMenuCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "battle_pass"):
+        return
+    await state.clear()
+    await _show(query, ctx)
+    await query.answer()
+
+
+@router.callback_query(BpCb.filter())
+async def on_cb(query: CallbackQuery, callback_data: BpCb, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "battle_pass") or query.message is None:
+        return
+    a = callback_data.a
+    repo = BattlePassRepository(ctx.session)
+    bp = await repo.get_active()
+    if a == "new":
+        await state.clear()
+        await state.set_state(S.name)
+        await query.message.answer("🎫 Название пасса? (например Сезон 2)")
+    elif a == "ed":
+        await state.set_state(S.edit)
+        await state.update_data(field=callback_data.k)
+        ask = {"name": "Новое название?", "price": "Новая цена в Stars? (число)", "days": "Сколько дней? (число)"}
+        await query.message.answer(ask[callback_data.k])
+    elif a == "addlvl":
+        await state.set_state(S.lvl)
+        await query.message.answer("Номер уровня, к которому добавить награду? (число)")
+    elif a == "rk":
+        kind = callback_data.k
+        data = await state.get_data()
+        if kind == "vip":
+            await _add_reward(ctx, data["lvl"], "vip", {})
+            await query.message.answer(f"✅ Уровень {data['lvl']}: добавлено 👑 VIP", reply_markup=_kinds_kb())
+        else:
+            await state.update_data(kind=kind)
+            await state.set_state(S.value)
+            await query.message.answer(KINDS[kind][1])
+    elif a == "done":
+        await state.clear()
+        await _show(query, ctx)
+    elif a == "dl" and bp:
+        lv = await BattlePassLevelRepository(ctx.session).get_by_number(bp.id, callback_data.n)
+        if lv:
+            await ctx.session.execute(text("DELETE FROM battle_pass_levels WHERE id=:i"), {"i": lv.id})
+            mx = (await ctx.session.execute(
+                text("SELECT COALESCE(MAX(level_number),0) FROM battle_pass_levels WHERE battle_pass_id=:i"),
+                {"i": bp.id})).scalar_one()
+            await repo.update_fields(bp.id, levels_count=mx)
+            await ctx.session.commit()
+        await _show(query, ctx)
+    elif a == "delpass" and bp:
+        n = (await ctx.session.execute(
+            text("SELECT count(*) FROM battle_pass_progress WHERE battle_pass_id=:i AND purchased_at IS NOT NULL"),
+            {"i": bp.id})).scalar_one()
+        b = InlineKeyboardBuilder()
+        b.button(text="✅ Да, удалить", callback_data=BpCb(a="delyes"))
+        b.button(text="❌ Нет", callback_data=BpCb(a="done"))
+        b.adjust(2)
+        await query.message.edit_text(
+            f"ⓘ Удалить <b>{bp.name}</b>?\nКупили: <b>{n}</b> игр. Их прогресс тоже удалится.",
+            reply_markup=b.as_markup(), parse_mode="HTML")
+    elif a == "delyes" and bp:
+        await ctx.session.execute(text("DELETE FROM battle_passes WHERE id=:i"), {"i": bp.id})
+        await ctx.session.commit()
+        await _show(query, ctx)
+    await query.answer()
+
+
+async def _add_reward(ctx, level_number: int, kind: str, payload: dict):
+    bp = await BattlePassRepository(ctx.session).get_active()
+    if bp is None:
+        raise AppError("Нет активного пасса")
+    lrepo = BattlePassLevelRepository(ctx.session)
+    lv = await lrepo.get_by_number(bp.id, level_number)
+    if lv is None:
+        lv = await lrepo.create(bp.id, level_number)
+        await ctx.session.flush()
+    await BattlePassRewardRepository(ctx.session).add_reward(lv.id, RewardType(kind), payload)
+    if level_number > bp.levels_count:
+        await BattlePassRepository(ctx.session).update_fields(bp.id, levels_count=level_number)
+    await ctx.session.commit()
+
+
+def _num(m: Message) -> int:
+    raw = (m.text or "").strip()
+    if not raw.isdigit() or int(raw) <= 0:
+        raise AppError("Нужно число больше 0")
+    return int(raw)
+
+
+@router.message(S.name, NOCMD)
+async def s_name(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    if not (m.text or "").strip():
+        raise AppError("Напиши название")
+    await state.update_data(name=m.text.strip())
+    await state.set_state(S.price)
+    await m.answer("⭐ Цена в Stars? (число)")
+
+
+@router.message(S.price, NOCMD)
+async def s_price(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(price=_num(m))
+    await state.set_state(S.levels)
+    await m.answer("🏆 Сколько уровней? (число)")
+
+
+@router.message(S.levels, NOCMD)
+async def s_levels(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(levels=_num(m))
+    await state.set_state(S.days)
+    await m.answer("📅 Сколько дней длится? (число)")
+
+
+@router.message(S.days, NOCMD)
+async def s_days(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    days = _num(m)
+    repo = BattlePassRepository(ctx.session)
+    old = await repo.get_active()
+    if old:
+        await repo.update_fields(old.id, is_active=False)
+    await repo.create(name=d["name"], price=d["price"], levels_count=d["levels"], duration_days=days, is_active=True)
+    await ctx.session.commit()
+    await state.clear()
+    await m.answer("✅ Пасс создан. Добавь награды кнопкой «➕ Награда уровня».")
+    await _show(m, ctx)
+
+
+@router.message(S.edit, NOCMD)
+async def s_edit(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    field = (await state.get_data()).get("field")
+    bp = await BattlePassRepository(ctx.session).get_active()
+    if bp is None:
+        raise AppError("Нет активного пасса")
+    if field == "name":
+        val = (m.text or "").strip()
+        if not val:
+            raise AppError("Напиши название")
+        await BattlePassRepository(ctx.session).update_fields(bp.id, name=val)
+    elif field == "price":
+        await BattlePassRepository(ctx.session).update_fields(bp.id, price=_num(m))
+    else:
+        await BattlePassRepository(ctx.session).update_fields(bp.id, duration_days=_num(m))
+    await ctx.session.commit()
+    await state.clear()
+    await _show(m, ctx)
+
+
+@router.message(S.lvl, NOCMD)
+async def s_lvl(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    n = _num(m)
+    await state.update_data(lvl=n)
+    await state.set_state(None)
+    await m.answer(f"🎁 Что дать на уровне {n}?", reply_markup=_kinds_kb())
+
+
+@router.message(S.value, NOCMD)
+async def s_value(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    nums = (m.text or "").replace(",", " ").split()
+    if not nums or not all(x.isdigit() for x in nums) or int(nums[0]) <= 0:
+        raise AppError("Нужны числа, например: 5000")
+    a = int(nums[0])
+    b = int(nums[1]) if len(nums) > 1 else 1
+    payload = {
+        "money": {"amount": a},
+        "car": {"car_id": a},
+        "container": {"container_id": a, "quantity": b},
+        "skill": {"skill_id": a, "level": b},
+    }[d["kind"]]
+    await _add_reward(ctx, d["lvl"], d["kind"], payload)
+    await state.set_state(None)
+    await m.answer(f"✅ Уровень {d['lvl']}: награда добавлена. Ещё?", reply_markup=_kinds_kb())

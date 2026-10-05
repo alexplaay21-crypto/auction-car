@@ -42,7 +42,7 @@ async def on_open_groups_section(
         return
     await state.clear()
     groups = await GroupRepository(ctx.session).list_all()
-    title = t("admin_groups_title", ctx.language) if groups else t("admin_groups_empty", ctx.language)
+    title = t("admin_groups_title", ctx.language) if groups else "👥 Групп пока нет. Нажми «➕ Добавить группу»."
     if query.message is not None:
         await query.message.edit_text(title, reply_markup=admin_groups_list_keyboard(ctx.language, groups))
     await query.answer()

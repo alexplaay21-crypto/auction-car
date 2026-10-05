@@ -83,6 +83,15 @@ async def grant_reward(
             user.id, int(container_id), int(payload.get("quantity", 1))
         )
 
+    elif reward_type.value == "battle_pass":
+        from app.repositories.battle_pass import BattlePassProgressRepository, BattlePassRepository
+
+        bp = await BattlePassRepository(session).get_active()
+        if bp is not None:
+            progress = await BattlePassProgressRepository(session).find_by_user_and_pass(user.id, bp.id)
+            if progress is not None and progress.purchased_at is not None:
+                progress.current_level = min(progress.current_level + int(payload.get("levels", 1)), bp.levels_count)
+
     else:
         # OTHER / BATTLE_PASS-as-reward — специфично для места использования.
         return

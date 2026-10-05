@@ -29,6 +29,7 @@ class UserRepository(BaseRepository[User]):
     async def create(self, user_id: int, username: str | None, first_name: str | None, language: str) -> User:
         user = User(id=user_id, username=username, first_name=first_name, language=language)
         self.add(user)
+        await self.flush()
         record_event(self.session, user_id, "registered", {"language": str(getattr(language, "value", language))})
         return user
 
@@ -115,7 +116,8 @@ class UserRepository(BaseRepository[User]):
         if query.isdigit():
             stmt = select(User).where(User.id == int(query))
         else:
-            stmt = select(User).where(User.username.ilike(f"%{query.lstrip('@')}%"))
+            q = f"%{query.lstrip('@')}%"
+            stmt = select(User).where(User.username.ilike(q) | User.first_name.ilike(q)).limit(10)
         return list((await self.session.execute(stmt)).scalars())
 
 

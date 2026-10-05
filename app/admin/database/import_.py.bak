@@ -1,0 +1,74 @@
+"""Импорт: восстановление из .dump с подтверждением и копией перед заменой."""
+from __future__ import annotations
+
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
+
+from app.callbacks.admin import AdminDatabaseCallback
+from app.core.context import RequestContext
+from app.core.exceptions import AppError
+from app.keyboards.admin import admin_database_confirm_keyboard
+from app.services.backups.postgres import restore_database
+from app.services.backups.service import BACKUP_DIR, run_backup
+from app.states.admin_database import AdminDatabaseStates
+
+router = Router(name="admin_database_import")
+MAX_BYTES = 20 * 1024 * 1024
+
+
+@router.callback_query(AdminDatabaseCallback.filter(F.action == "import_prompt"))
+async def on_import_prompt(query: CallbackQuery, callback_data: AdminDatabaseCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not ctx.is_owner:
+        await query.answer("Только владелец", show_alert=True)
+        return
+    await state.set_state(AdminDatabaseStates.waiting_for_import_file)
+    if query.message is not None:
+        await query.message.answer("📥 Пришли файл <b>.dump</b> (до 20 МБ).", parse_mode="HTML")
+    await query.answer()
+
+
+@router.message(AdminDatabaseStates.waiting_for_import_file)
+async def on_import_file(message: Message, ctx: RequestContext, state: FSMContext) -> None:
+    doc = message.document
+    if not ctx.is_owner or doc is None or not (doc.file_name or "").endswith(".dump"):
+        raise AppError("📎 Нужен файл с расширением .dump")
+    if (doc.file_size or 0) > MAX_BYTES:
+        raise AppError("Файл больше 20 МБ. Используй scripts/restore.py на сервере.")
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = BACKUP_DIR / "import_pending.dump"
+    await message.bot.download(doc, destination=tmp)
+    with open(tmp, "rb") as f:
+        if f.read(5) != b"PGDMP":
+            tmp.unlink(missing_ok=True)
+            raise AppError("Это не дамп PostgreSQL.")
+    await state.set_state(AdminDatabaseStates.waiting_for_import_confirm)
+    await message.answer(
+        f"⚠️ <b>Заменить ВСЕ данные</b> файлом {doc.file_name}?\nПеред заменой будет сделана копия текущей базы.",
+        reply_markup=admin_database_confirm_keyboard(ctx.language), parse_mode="HTML")
+
+
+@router.callback_query(AdminDatabaseCallback.filter(F.action == "import_cancel"))
+async def on_import_cancel(query: CallbackQuery, callback_data: AdminDatabaseCallback, ctx: RequestContext, state: FSMContext) -> None:
+    await state.clear()
+    (BACKUP_DIR / "import_pending.dump").unlink(missing_ok=True)
+    if query.message is not None:
+        await query.message.edit_text("❌ Импорт отменён.")
+    await query.answer()
+
+
+@router.callback_query(AdminDatabaseCallback.filter(F.action == "import_confirm"))
+async def on_import_confirm(query: CallbackQuery, callback_data: AdminDatabaseCallback, ctx: RequestContext, state: FSMContext) -> None:
+    await state.clear()
+    tmp = BACKUP_DIR / "import_pending.dump"
+    if not ctx.is_owner or not tmp.exists():
+        await query.answer("Файл не найден, начни заново", show_alert=True)
+        return
+    await query.answer("Восстанавливаю…")
+    if query.message is not None:
+        await query.message.edit_text("⏳ Делаю копию текущей базы и восстанавливаю…")
+    await run_backup(query.bot, updated_by=ctx.user.id)
+    await restore_database(tmp)
+    tmp.unlink(missing_ok=True)
+    if query.message is not None:
+        await query.message.answer("✅ База восстановлена. Если что-то выглядит странно, перезапусти бота.")

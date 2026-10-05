@@ -10,3 +10,4 @@ class AdminContainerStates(StatesGroup):
     waiting_for_edit = State()
     waiting_for_add_car = State()
     waiting_for_remove_car = State()
+    waiting_for_chances = State()

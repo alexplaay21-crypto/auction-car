@@ -16,6 +16,8 @@ class Car(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    name_en: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    country_en: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     rarity: Mapped[Rarity] = mapped_column(nullable=False)
 

@@ -26,5 +26,6 @@ class BattlePassProgress(Base, TimestampMixin):
 
     purchased_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     current_level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    claimed_level: Mapped[int] = mapped_column(default=0, server_default="0", nullable=False)
     last_level_up_date: Mapped[dt.date | None] = mapped_column(nullable=True)
     opened_container_today: Mapped[bool] = mapped_column(default=False, nullable=False)

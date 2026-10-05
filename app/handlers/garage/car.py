@@ -23,4 +23,8 @@ async def cmd_car(message: Message, ctx: RequestContext, command_args: str) -> N
         raise AppError(t("car_id_required", ctx.language))
 
     car = await CarService(ctx.session).get_car_or_raise(int(car_id_raw), ctx.language)
-    await message.answer(CarService.format_card(car, ctx.language))
+    text = CarService.format_card(car, ctx.language)
+    if car.photo_file_id:
+        await message.answer_photo(car.photo_file_id, caption=text, parse_mode="HTML")
+    else:
+        await message.answer(text, parse_mode="HTML")

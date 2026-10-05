@@ -28,8 +28,8 @@ from app.services.containers.service import ContainerService
 from app.services.garage.service import GarageService
 
 DEFAULT_AUCTION_TIMER_SECONDS = 30
-DEFAULT_NEXT_CONTAINER_DELAY_SECONDS = 5
-DEFAULT_KICK_AFTER_INACTIVE_CONTAINERS = 3
+DEFAULT_NEXT_CONTAINER_DELAY_SECONDS = 3
+DEFAULT_KICK_AFTER_INACTIVE_CONTAINERS = 2
 
 
 @dataclasses.dataclass(slots=True)
@@ -41,6 +41,7 @@ class FinalizeResult:
     car: Car | None                 # None, если ставок не было
     user_car_id: int | None         # None, если авто-продано (см. auto_sold_amount)
     auto_sold_amount: int | None
+    garage_low: bool = __import__('dataclasses').field(default=False, kw_only=True)
     kicked_user_ids: list[int]
     next_auction: Auction | None    # новый контейнер, если запущен
     room_closed: bool
@@ -119,6 +120,7 @@ class AuctionService:
                 car: Car | None = None
                 user_car_id: int | None = None
                 auto_sold_amount: int | None = None
+                garage_low = False
 
                 if winner_user_id is not None:
                     car = await self.container_service.roll_car_for_container(
@@ -129,6 +131,8 @@ class AuctionService:
                         winner, car.id, car.price, ObtainedFrom.CONTAINER, now,
                     )
                     user_car_id = user_car.id if user_car is not None else None
+                    from app.services.garage.service import pop_garage_low
+                    garage_low = pop_garage_low(self.session, winner_user_id)
                     # Профит от контейнера = ценность выпавшей машины (или сумма
                     # авто-продажи при полном гараже) минус оплаченная ставка.
                     drop_value = auto_sold_amount if auto_sold_amount is not None else car.price
@@ -170,26 +174,18 @@ class AuctionService:
                         await member_repo.mark_left(auction.room_id, member.user_id, now)
                         kicked_user_ids.append(member.user_id)
 
-                # Следующий контейнер (или закрытие комнаты) — по тем же правилам,
-                # что и первый запуск.
+                # Следующий контейнер запускается отдельно после паузы.
+                # Здесь только проверяем, нужно ли закрыть комнату.
                 remaining_members = await member_repo.list_active_members(auction.room_id)
                 next_auction: Auction | None = None
                 room_closed = False
                 if not remaining_members or room.stop_requested:
                     await room_repo.mark_closed(auction.room_id, now)
                     room_closed = True
-                else:
-                    container = await self.container_service.pick_random_enabled_container(Language.RU)
-                    ends_at = now + dt.timedelta(
-                        seconds=await self._next_container_delay() + await self._timer_seconds()
-                    )
-                    next_auction = await auction_repo.create(
-                        room_id=auction.room_id, container_id=container.id,
-                        initial_bid=container.price, ends_at=ends_at,
-                    )
 
         return FinalizeResult(
             room=room, auction=auction, winner_user_id=winner_user_id, bid_amount=bid_amount,
             car=car, user_car_id=user_car_id, auto_sold_amount=auto_sold_amount,
+            garage_low=garage_low,
             kicked_user_ids=kicked_user_ids, next_auction=next_auction, room_closed=room_closed,
         )

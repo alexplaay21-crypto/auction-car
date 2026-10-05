@@ -11,6 +11,6 @@ from app.models.shop_lot import ShopLot
 def shop_keyboard(lots: list[ShopLot]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for lot in lots:
-        builder.button(text=f"{lot.title} — {lot.price}", callback_data=ShopCallback(lot_id=lot.id))
+        builder.button(text=f"{lot.title} — ⭐ {lot.price}", callback_data=ShopCallback(lot_id=lot.id))
     builder.adjust(1)
     return builder.as_markup()

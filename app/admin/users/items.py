@@ -175,4 +175,12 @@ async def on_item_input(message: Message, ctx: RequestContext, state: FSMContext
     if not await require_permission(message, ctx, _PERMISSION[action]):
         return
     error = await _execute(ctx, action, int(target_id), message.text or "")
+    if error is None and action == "container_give":
+        from app.services.containers.auto_open import auto_open_and_notify
+        try:
+            target = await UserRepository(ctx.session).get(int(target_id))
+            if target is not None:
+                await auto_open_and_notify(message.bot, ctx.session, target, int(target_id))
+        except Exception:
+            await message.answer("ⓘ Контейнер выдан, но открыть и уведомить игрока не удалось.")
     await _reply_card(message, ctx, int(target_id), t(error or "admin_item_done", ctx.language))

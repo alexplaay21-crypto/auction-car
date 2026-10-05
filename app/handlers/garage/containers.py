@@ -13,6 +13,7 @@ from app.localization.manager import t
 from app.repositories.container import UserContainerRepository
 from app.services.cars.service import CarService
 from app.services.containers.inventory import ContainerInventoryService
+from app.services.garage.service import GARAGE_LOW_TEXT, pop_garage_low
 
 router = Router(name="garage_containers")
 
@@ -41,5 +42,7 @@ async def on_open(query: CallbackQuery, callback_data: ContainerInvCallback, ctx
         text += "\n\n" + t("container_inv_auto_sold", ctx.language, amount=result.auto_sold_amount)
     if query.message is not None:
         await query.message.answer(text)
+        if pop_garage_low(ctx.session, ctx.user.id):
+            await query.message.answer(GARAGE_LOW_TEXT)
     await _show_list(query, ctx)
     await query.answer()

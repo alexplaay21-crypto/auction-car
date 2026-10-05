@@ -1,0 +1,65 @@
+"""Добавление группы из админки бота: @username или ID."""
+from __future__ import annotations
+
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+
+from app.admin.permissions import require_permission
+from app.core.context import RequestContext
+from app.core.exceptions import AppError
+from app.repositories.group import GroupRepository
+
+router = Router(name="admin_groups_add_form")
+
+
+class GroupAddCallback(CallbackData, prefix="agadd"):
+    action: str = "start"
+
+
+class GroupAddStates(StatesGroup):
+    waiting = State()
+
+
+@router.callback_query(GroupAddCallback.filter())
+async def on_start(query: CallbackQuery, callback_data: GroupAddCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "groups"):
+        return
+    await state.set_state(GroupAddStates.waiting)
+    if query.message is not None:
+        await query.message.answer(
+            "➕ <b>Добавить группу</b>\n\nПришли <b>@username</b> группы или её <b>ID</b> (-100...).\n"
+            "Бот уже должен быть в этой группе.\n/cancel — отмена",
+            parse_mode="HTML",
+        )
+    await query.answer()
+
+
+@router.message(GroupAddStates.waiting)
+async def on_group(message: Message, ctx: RequestContext, state: FSMContext) -> None:
+    raw = (message.text or "").strip()
+    ref = int(raw) if raw.lstrip("-").isdigit() else (raw if raw.startswith("@") else "@" + raw.lstrip("@"))
+    try:
+        chat = await message.bot.get_chat(ref)
+    except Exception:
+        raise AppError("🔍 Группа не найдена или бота в ней нет. Добавь бота в группу и повтори.")
+    if chat.type not in ("group", "supergroup"):
+        raise AppError("Это не группа.")
+    link = chat.invite_link or (f"https://t.me/{chat.username}" if chat.username else None)
+    if link is None:
+        try:
+            link = (await message.bot.create_chat_invite_link(chat.id)).invite_link
+        except Exception:
+            link = None
+    await state.clear()
+    repo = GroupRepository(ctx.session)
+    group = await repo.upsert(chat.id, chat.title, ctx.user.id, ctx.language.value)
+    group.invite_link = link
+    await ctx.session.commit()
+    await message.answer(
+        f"✅ Группа <b>{chat.title}</b> добавлена.\n"
+        + (f"🔗 {link}" if link else "⚠️ Ссылку создать не удалось: сделай бота админом с правом приглашать."),
+        parse_mode="HTML", disable_web_page_preview=True,
+    )

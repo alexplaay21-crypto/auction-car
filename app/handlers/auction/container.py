@@ -7,7 +7,7 @@ services/containers/randomizer.py.
 как по кнопке 'Играть')."""
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.types import Message
 
 from app.core.context import RequestContext
@@ -25,7 +25,6 @@ from app.services.rooms.membership import RoomMembershipService
 
 router = Router(name="auction_container")
 
-CHANCE_ALIASES = ("chance", "ch", "шансы", "шанс")
 CONTAINER_ALIASES = ("container", "cont", "конты", "конт")
 
 _RARITY_ORDER = (Rarity.COMMON, Rarity.RARE, Rarity.EPIC, Rarity.MYTHIC)
@@ -37,19 +36,8 @@ _RARITY_LABEL_KEYS = {
 }
 
 
-@router.message(CommandAlias(*CHANCE_ALIASES))
-async def cmd_chance(message: Message, ctx: RequestContext, command_args: str) -> None:
-    chances = await ContainerRandomizer(ctx.session).get_rarity_chances()
-    total = sum(float(chances.get(rarity.value, 0)) for rarity in _RARITY_ORDER) or 1.0
 
-    lines = [t("chance_title", ctx.language)]
-    for rarity in _RARITY_ORDER:
-        weight = float(chances.get(rarity.value, 0))
-        percent = round(weight / total * 100, 2)
-        label = t(_RARITY_LABEL_KEYS[rarity], ctx.language)
-        lines.append(t("chance_line", ctx.language, label=label, percent=percent))
 
-    await message.answer("\n".join(lines))
 
 
 @router.message(CommandAlias(*CONTAINER_ALIASES))
@@ -60,7 +48,15 @@ async def cmd_container(message: Message, ctx: RequestContext, command_args: str
     room = await room_repo.find_active_room_for_user(ctx.user.id, scope, scope_id)
     if room is None:
         # Ещё не входил в комнату — входим автоматически, как по кнопке 'Играть'.
-        room = await RoomMembershipService(ctx.session).join_current_room(ctx.user, scope, scope_id)
+        room = await RoomMembershipService(ctx.session).join_current_room(
+            ctx.user,
+            scope,
+            scope_id,
+        )
+
+        if room is None:
+            await message.answer(t("room_waiting", ctx.language))
+            return
 
     auction_service = AuctionService(ctx.session)
     auction = await auction_service.start_next_container(room, ctx.language)

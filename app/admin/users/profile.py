@@ -32,10 +32,18 @@ async def render_profile_card(ctx: RequestContext, user: User) -> str:
         t("stats_wins", ctx.language, value=stats.wins),
         t("stats_referrals_count", ctx.language, value=referrals_count),
     ]
+    def _d(x):
+        return x.strftime("%d.%m.%Y %H:%M") if x else "—"
+    lines.append(f"📅 Регистрация: {_d(getattr(user, 'created_at', None))}")
+    lines.append(f"🕒 Был: {_d(user.last_seen_at)}")
+    if user.referred_by:
+        lines.append(f"🤝 Пригласил: {user.referred_by}")
     if user.is_vip:
         lines.append(t("profile_vip", ctx.language))
     if user.is_banned:
         lines.append(t("admin_user_banned_label", ctx.language))
+        if user.ban_reason:
+            lines.append(f"Причина: {user.ban_reason}")
 
     return "\n".join(lines)
 

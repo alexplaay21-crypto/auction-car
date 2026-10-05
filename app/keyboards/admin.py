@@ -11,7 +11,7 @@ from app.localization.manager import t
 from app.models.user import User
 
 ADMIN_SECTIONS = (
-    "users", "cars", "containers", "garage", "skills", "shop", "battle_pass",
+    "users", "cars", "containers", "shop", "battle_pass",
     "vip", "promo", "groups", "broadcasts", "statistics",
     "documentation", "database", "backups", "admins",
 )
@@ -24,6 +24,7 @@ def admin_menu_keyboard(language: Language) -> InlineKeyboardMarkup:
             text=t(f"admin_section_{section}", language),
             callback_data=AdminMenuCallback(section=section),
         )
+    builder.button(text="💸 Комиссии", callback_data=AdminMenuCallback(section="commissions"))
     builder.adjust(2)
     return builder.as_markup()
 
@@ -32,7 +33,7 @@ def admin_user_card_keyboard(language: Language, user: User) -> InlineKeyboardMa
     builder = InlineKeyboardBuilder()
     builder.button(
         text=t("admin_action_balance", language),
-        callback_data=AdminUserCallback(user_id=user.id, action="balance_prompt"),
+        callback_data=AdminUserCallback(user_id=user.id, action="bal_menu"),
     )
     if user.is_banned:
         builder.button(
@@ -62,11 +63,15 @@ def admin_user_card_keyboard(language: Language, user: User) -> InlineKeyboardMa
         )
     from app.callbacks.admin import AdminHistoryCallback
 
+    builder.button(text="✉️ Написать", callback_data=AdminUserCallback(user_id=user.id, action="msg"))
+    builder.button(text="🎁 Сбросить бонус", callback_data=AdminUserCallback(user_id=user.id, action="reset_bonus"))
     builder.button(
         text=t("admin_action_history", language),
         callback_data=AdminHistoryCallback(user_id=user.id, page=0),
     )
-    builder.adjust(1, 2, 1, 2, 2, 1, 1, 1)
+    builder.button(text="🔄 Обновить", callback_data=AdminUserCallback(user_id=user.id, action="refresh"))
+    builder.button(text="◀️ К списку", callback_data=AdminMenuCallback(section="users"))
+    builder.adjust(1, 2, 2, 2, 2, 1, 2, 2, 1)
     return builder.as_markup()
 
 
@@ -144,6 +149,10 @@ def admin_container_card_keyboard(language: Language, container) -> InlineKeyboa
             text=t(key, language),
             callback_data=AdminContainerCallback(container_id=container.id, action=action),
         )
+    builder.button(
+        text="🎲 Шансы",
+        callback_data=AdminContainerCallback(container_id=container.id, action="chances"),
+    )
     toggle_key = "admin_container_disable_btn" if container.is_enabled else "admin_container_enable_btn"
     builder.button(
         text=t(toggle_key, language),
@@ -265,6 +274,8 @@ def admin_groups_list_keyboard(language: Language, groups: list) -> InlineKeyboa
         mark = "" if group.is_active else "🔴 "
         title = group.title or str(group.id)
         builder.button(text=f"{mark}{title}", callback_data=AdminGroupCallback(group_id=group.id, action="view"))
+    from app.admin.groups.add_form import GroupAddCallback
+    builder.button(text="➕ Добавить группу", callback_data=GroupAddCallback())
     builder.adjust(1)
     return builder.as_markup()
 
@@ -501,3 +512,26 @@ def admin_skill_card_keyboard(language: Language, skill) -> InlineKeyboardMarkup
     builder.button(text=t("btn_back", language), callback_data=AdminMenuCallback(section="skills"))
     builder.adjust(1)
     return builder.as_markup()
+
+
+# ---- «◀️ В меню» на главных экранах разделов ----
+def _with_main_back(fn):
+    def wrapper(*args, **kwargs):
+        from aiogram.types import InlineKeyboardButton
+
+        kb = fn(*args, **kwargs)
+        main = AdminMenuCallback(section="main").pack()
+        if not any(b.callback_data == main for row in kb.inline_keyboard for b in row):
+            kb.inline_keyboard.append([InlineKeyboardButton(text="◀️ В меню", callback_data=main)])
+        return kb
+
+    return wrapper
+
+
+for _n in (
+    "admin_garage_keyboard", "admin_shop_list_keyboard", "admin_bp_keyboard",
+    "admin_promo_list_keyboard", "admin_groups_list_keyboard", "admin_admins_list_keyboard",
+    "admin_docs_list_keyboard", "admin_database_keyboard", "admin_broadcasts_list_keyboard",
+    "admin_stats_keyboard", "admin_backups_keyboard", "admin_skills_keyboard",
+):
+    globals()[_n] = _with_main_back(globals()[_n])

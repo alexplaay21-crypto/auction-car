@@ -30,7 +30,14 @@ async def resolve_user_ref(session: AsyncSession, raw: str, language) -> User:
     без собаки, и числовой Telegram ID (разделы 15-16 ТЗ)."""
     raw = raw.strip()
     user_repo = UserRepository(session)
-    user = await user_repo.get(int(raw)) if raw.isdigit() else await user_repo.get_by_username(raw)
+    raw = raw.lstrip("@")
+    if raw.isdigit():
+        user = await user_repo.get(int(raw))
+    else:
+        from sqlalchemy import func, select
+        user = (await session.execute(
+            select(User).where(func.lower(User.username) == raw.lower()).limit(1)
+        )).scalar_one_or_none()
     if user is None:
         raise AppError(t("error_not_found", language))
     return user

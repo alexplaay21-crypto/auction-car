@@ -71,3 +71,34 @@ class ShopPurchaseService:
 
         user.balance = new_balance
         return purchase
+
+    async def check_lot(self, user: User, lot_id: int):
+        """Проверяет, что лот можно купить (до выставления счёта)."""
+        shop_settings = await ShopSettingsRepository(self.session).get_singleton()
+        lot = await ShopLotRepository(self.session).get(lot_id)
+        now = dt.datetime.now(dt.timezone.utc)
+        if (
+            not shop_settings.is_enabled
+            or lot is None
+            or not lot.is_available
+            or (lot.available_from is not None and lot.available_from > now)
+            or (lot.available_until is not None and lot.available_until < now)
+        ):
+            raise AppError(t("shop_purchase_unavailable", user.language))
+        return lot
+
+    async def deliver_paid_lot(self, user: User, lot_id: int, stars: int) -> Purchase:
+        """Выдаёт предметы лота после успешной оплаты Stars (баланс не списывается)."""
+        async with distributed_lock(f"shop_purchase:{user.id}:{lot_id}"):
+            async with atomic(self.session):
+                purchase = await PurchaseRepository(self.session).create(user.id, lot_id, stars)
+                await self.session.flush()
+                items = await ShopLotItemRepository(self.session).list_for_lot(lot_id)
+                for item in items:
+                    for _ in range(item.quantity):
+                        await grant_reward(
+                            self.session, user, item.item_type, item.payload,
+                            f"shop_lot_{lot_id}_item_{item.id}",
+                        )
+                await ReferralService(self.session).on_purchase_made(user.id)
+        return purchase

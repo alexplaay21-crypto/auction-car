@@ -1,5 +1,6 @@
 """Логика каталога машин: получение по ID, форматирование карточки для /car."""
 from __future__ import annotations
+from app.utils.loc import loc
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,13 +35,13 @@ class CarService:
             "car_card",
             language,
             rarity_label=rarity_label,
-            name=car.name,
-            car_id=car.id,
+            name=loc(car, "name", language),
+            car_id=f"{car.id:03d}",
             country=car.country or "—",
             max_speed=car.max_speed,
             accel=car.accel_0_100,
             power=car.power,
             handling=car.handling,
             reliability=car.reliability,
-            price=car.price,
+            price=f"{car.price:,}".replace(",", " "),
         )

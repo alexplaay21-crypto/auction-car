@@ -1,0 +1,335 @@
+"""Админка контейнеров кнопками."""
+from __future__ import annotations
+from app.utils.loc import split_bi
+
+from html import escape
+
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import text
+
+from app.admin.permissions import require_permission
+from app.callbacks.admin import AdminMenuCallback
+from app.core.context import RequestContext
+from app.core.exceptions import AppError
+
+router = Router(name="admin_containers_panel")
+NOCMD = ~F.text.startswith("/")
+TXT_OR_PHOTO = F.photo | (F.text & ~F.text.startswith("/"))
+
+
+class CtCb(CallbackData, prefix="act"):
+    a: str
+    i: int = 0
+    k: str = "-"
+
+
+class S(StatesGroup):
+    name = State()
+    price = State()
+    desc = State()
+    photo = State()
+    edit = State()
+    car = State()
+    chances = State()
+    newchances = State()
+
+
+KEYS = ("common", "rare", "epic", "mythic")
+
+
+def _parse_chances(raw: str):
+    raw = raw.strip()
+    if raw == "-":
+        return None
+    try:
+        v = [float(x) for x in raw.replace(",", ".").split()]
+    except ValueError:
+        v = []
+    if len(v) != 4 or any(x < 0 for x in v) or sum(v) <= 0:
+        raise AppError("Нужно 4 числа: обычный редкий эпический легендарный\nПример: 60 30 9 1\n«-» = общие шансы")
+    return dict(zip(KEYS, v))
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+def _num(m: Message) -> int:
+    raw = (m.text or "").strip()
+    if not raw.isdigit() or int(raw) <= 0:
+        raise AppError("Нужно число больше 0")
+    return int(raw)
+
+
+async def _row(ctx, cid: int):
+    r = (await ctx.session.execute(text(
+        "SELECT id,name,country,photo_file_id,price,is_enabled,description,rarity_chances FROM containers WHERE id=:i"),
+        {"i": cid})).first()
+    if r is None:
+        raise AppError("Контейнер не найден")
+    return r
+
+
+async def _card(ctx, cid: int):
+    c = await _row(ctx, cid)
+    cars = (await ctx.session.execute(text(
+        "SELECT cc.car_id, cars.name, cars.rarity, cc.drop_weight FROM container_cars cc "
+        "JOIN cars ON cars.id=cc.car_id WHERE cc.container_id=:i ORDER BY cc.car_id"), {"i": cid})).all()
+    lines = [f"📦 <b>{escape(c.name)}</b> · ID {c.id:02d}",
+             escape(c.description) if c.description else "",
+             f"💰 Первая ставка: <b>${_fmt(c.price)}</b>",
+             f"🌍 Страна: {escape(c.country) if c.country else '—'}",
+             "🟢 Включён" if c.is_enabled else "🔴 Выключен",
+             "🎲 Шансы: " + (" / ".join(f"{c.rarity_chances.get(k, 0):g}" for k in KEYS) if c.rarity_chances else "общие"),
+             "", "🚗 <b>Состав:</b>"]
+    if not cars:
+        lines.append("пусто")
+    for car in cars:
+        lines.append(f"{car.car_id:03d} · {escape(car.name)} · вес {car.drop_weight}")
+    b = InlineKeyboardBuilder()
+    for k, t_ in (("name", "✏️ Название"), ("price", "💰 Цена"), ("desc", "📝 Описание"),
+                  ("photo", "🖼 Фото"), ("country", "🌍 Страна"),
+                  ("name_en", "🌐 Название EN"), ("desc_en", "🌐 Описание EN"), ("country_en", "🌐 Страна EN")):
+        b.button(text=t_, callback_data=CtCb(a="ed", i=cid, k=k))
+    b.button(text="🎲 Шансы", callback_data=CtCb(a="chances", i=cid))
+    b.button(text="➕ Машина", callback_data=CtCb(a="addcar", i=cid))
+    for car in cars:
+        b.button(text=f"🗑 {car.car_id:03d}", callback_data=CtCb(a="rmcar", i=cid, k=str(car.car_id)))
+    b.button(text="🔴 Выключить" if c.is_enabled else "🟢 Включить", callback_data=CtCb(a="tog", i=cid))
+    b.button(text="🗑 Удалить", callback_data=CtCb(a="del", i=cid))
+    b.button(text="◀️ К списку", callback_data=CtCb(a="list"))
+    b.adjust(2, 2, 2, 2, 1, 1, *([5] * ((len(cars) + 4) // 5)), 2, 1)
+    return "\n".join(lines), b.as_markup(), c
+
+
+async def _send(msg: Message, ctx, cid: int):
+    txt, kb, c = await _card(ctx, cid)
+    if c.photo_file_id:
+        await msg.answer_photo(c.photo_file_id, caption=txt, reply_markup=kb, parse_mode="HTML")
+    else:
+        await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+
+
+async def _list(ctx):
+    rows = (await ctx.session.execute(text(
+        "SELECT id,name,price,is_enabled FROM containers ORDER BY id"))).all()
+    lines = ["📦 <b>Контейнеры</b>", ""]
+    b = InlineKeyboardBuilder()
+    b.button(text="➕ Новый контейнер", callback_data=CtCb(a="new"))
+    for r in rows:
+        lines.append(f"{'🟢' if r.is_enabled else '🔴'} {r.id:02d} · {escape(r.name)} · ${_fmt(r.price)}")
+        b.button(text=f"{r.id:02d} · {r.name}"[:30], callback_data=CtCb(a="view", i=r.id))
+    if not rows:
+        lines.append("Контейнеров пока нет.")
+    b.button(text="◀️ В меню", callback_data=AdminMenuCallback(section="main"))
+    n = len(rows)
+    b.adjust(1, *([2] * (n // 2)), *([1] if n % 2 else []), 1)
+    return "\n".join(lines), b.as_markup()
+
+
+@router.callback_query(AdminMenuCallback.filter(F.section == "containers"))
+async def on_open(query: CallbackQuery, callback_data: AdminMenuCallback, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "containers"):
+        return
+    await state.clear()
+    txt, kb = await _list(ctx)
+    if query.message is not None:
+        await query.message.edit_text(txt, reply_markup=kb, parse_mode="HTML")
+    await query.answer()
+
+
+@router.callback_query(CtCb.filter())
+async def on_cb(query: CallbackQuery, callback_data: CtCb, ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "containers") or query.message is None:
+        return
+    a, i, k = callback_data.a, callback_data.i, callback_data.k
+    msg = query.message
+    await query.answer()
+    if a == "list":
+        await state.clear()
+        txt, kb = await _list(ctx)
+        await msg.delete()
+        await msg.answer(txt, reply_markup=kb, parse_mode="HTML")
+    elif a == "new":
+        await state.clear()
+        await state.set_state(S.name)
+        await msg.answer("📦 Название: RU | EN (английский можно пропустить)")
+    elif a == "view":
+        await state.clear()
+        await msg.delete()
+        await _send(msg, ctx, i)
+    elif a == "ed":
+        await state.set_state(S.edit)
+        await state.update_data(cid=i, field=k)
+        ask = {"name_en": "English name? (- remove)", "desc_en": "English description? (- remove)", "country_en": "English country? (- remove)", "name": "Новое название?", "price": "Новая цена первой ставки? (число)",
+               "desc": "Новое описание? (- убрать)", "photo": "Пришли фото (- убрать)",
+               "country": "Страна? (- убрать)"}
+        await msg.answer(ask[k])
+    elif a == "chances":
+        await state.set_state(S.chances)
+        await state.update_data(cid=i)
+        await msg.answer("🎲 Шансы редкостей одной строкой:\nобычный редкий эпический легендарный\n"
+                         "Пример: 60 30 9 1 (сумма не обязана быть 100)\n«-» = общие шансы")
+    elif a == "addcar":
+        await state.set_state(S.car)
+        await state.update_data(cid=i)
+        await msg.answer("🚗 Пришли ID машин списком (через пробел, запятую или с новой строки):\n001\n002\n003\n\nВес выпадения через двоеточие: 005:10 (по умолчанию 1)")
+    elif a == "rmcar":
+        await ctx.session.execute(text("DELETE FROM container_cars WHERE container_id=:c AND car_id=:r"),
+                                  {"c": i, "r": int(k)})
+        await ctx.session.commit()
+        await msg.delete()
+        await _send(msg, ctx, i)
+    elif a == "tog":
+        await ctx.session.execute(text("UPDATE containers SET is_enabled = NOT is_enabled WHERE id=:i"), {"i": i})
+        await ctx.session.commit()
+        await msg.delete()
+        await _send(msg, ctx, i)
+    elif a == "del":
+        b = InlineKeyboardBuilder()
+        b.button(text="✅ Да, удалить", callback_data=CtCb(a="delyes", i=i))
+        b.button(text="❌ Нет", callback_data=CtCb(a="view", i=i))
+        b.adjust(2)
+        await msg.answer("ⓘ Удалить контейнер? Он пропадёт и из инвентарей игроков. "
+                         "Если по нему были аукционы, удаление не пройдёт: тогда «Выключить».",
+                         reply_markup=b.as_markup())
+    elif a == "delyes":
+        try:
+            await ctx.session.execute(text("DELETE FROM containers WHERE id=:i"), {"i": i})
+            await ctx.session.commit()
+            await msg.answer("🗑 Контейнер удалён.")
+        except Exception:
+            await ctx.session.rollback()
+            await msg.answer("Нельзя удалить: есть аукционы. Нажми «Выключить» в карточке.")
+
+
+@router.message(S.name, NOCMD)
+async def s_name(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    if not (m.text or "").strip():
+        raise AppError("Напиши название")
+    ru, en = split_bi(m.text)
+    await state.update_data(name=ru, name_en=en)
+    await state.set_state(S.price)
+    await m.answer("💰 Цена первой ставки? (число)")
+
+
+@router.message(S.price, NOCMD)
+async def s_price(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(price=_num(m))
+    await state.set_state(S.desc)
+    await m.answer("📝 Описание: RU | EN (- пропустить)")
+
+
+@router.message(S.desc, NOCMD)
+async def s_desc(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    raw = (m.text or "").strip()
+    ru, en = split_bi(raw)
+    await state.update_data(desc=ru, desc_en=en)
+    await state.set_state(S.photo)
+    await m.answer("🖼 Пришли фото (- пропустить)")
+
+
+@router.message(S.photo, TXT_OR_PHOTO)
+async def s_photo(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    await state.update_data(photo=m.photo[-1].file_id if m.photo else None)
+    await state.set_state(S.newchances)
+    await m.answer("🎲 Шансы редкостей одной строкой:\nобычный редкий эпический легендарный\n"
+                   "Пример: 60 30 9 1 (сумма не обязана быть 100)\n«-» = общие шансы")
+
+
+@router.message(S.chances, NOCMD)
+async def s_chances(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    import json
+    d = await state.get_data()
+    ch = _parse_chances(m.text or "")
+    await ctx.session.execute(text("UPDATE containers SET rarity_chances = CAST(:v AS json) WHERE id=:i"),
+                              {"v": json.dumps(ch) if ch else None, "i": d["cid"]})
+    await ctx.session.commit()
+    await state.clear()
+    await _send(m, ctx, d["cid"])
+
+
+@router.message(S.newchances, NOCMD)
+async def s_newchances(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    import json
+    d = await state.get_data()
+    ch = _parse_chances(m.text or "")
+    cid = (await ctx.session.execute(text(
+        "INSERT INTO containers (name, name_en, price, description, description_en, photo_file_id, rarity_chances, is_enabled) "
+        "VALUES (:n,:ne,:p,:d,:de,:f,CAST(:r AS json),true) RETURNING id"),
+        {"n": d["name"], "ne": d.get("name_en"), "p": d["price"], "d": d.get("desc"),
+         "de": d.get("desc_en"), "f": d.get("photo"),
+         "r": json.dumps(ch) if ch else None})).scalar_one()
+    await ctx.session.commit()
+    await state.clear()
+    await m.answer("✅ Контейнер создан. Добавь машины кнопкой «➕ Машина».")
+    await _send(m, ctx, cid)
+
+
+@router.message(S.edit, TXT_OR_PHOTO)
+async def s_edit(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    d = await state.get_data()
+    f, cid = d["field"], d["cid"]
+    raw = (m.text or "").strip()
+    if f in ("name_en", "desc_en", "country_en"):
+        col = "description_en" if f == "desc_en" else f
+        await ctx.session.execute(text(f"UPDATE containers SET {col}=:v WHERE id=:i"),
+                                  {"v": None if raw == "-" else raw, "i": cid})
+        await ctx.session.commit()
+        await state.clear()
+        await _send(m, ctx, cid)
+        return
+    if f == "name":
+        if not raw:
+            raise AppError("Напиши название")
+        col, val = "name", raw
+    elif f == "price":
+        col, val = "price", _num(m)
+    elif f == "desc":
+        col, val = "description", None if raw == "-" else raw
+    elif f == "country":
+        col, val = "country", None if raw == "-" else raw
+    else:
+        col, val = "photo_file_id", m.photo[-1].file_id if m.photo else None
+    await ctx.session.execute(text(f"UPDATE containers SET {col}=:v WHERE id=:i"), {"v": val, "i": cid})
+    await ctx.session.commit()
+    await state.clear()
+    await _send(m, ctx, cid)
+
+
+@router.message(S.car, NOCMD)
+async def s_car(m: Message, ctx: RequestContext, state: FSMContext) -> None:
+    import re
+    d = await state.get_data()
+    tokens = [t_ for t_ in re.split(r"[\s,;]+", (m.text or "").strip()) if t_]
+    if not tokens:
+        raise AppError("Пришли ID машин, например: 001 002 003")
+    added, missing, bad = [], [], []
+    for tok in tokens:
+        idp, _, wp = tok.partition(":")
+        if not idp.isdigit() or int(idp) <= 0 or (wp and (not wp.isdigit() or int(wp) <= 0)):
+            bad.append(tok)
+            continue
+        car_id, weight = int(idp), int(wp) if wp else 1
+        if (await ctx.session.execute(text("SELECT 1 FROM cars WHERE id=:i"), {"i": car_id})).first() is None:
+            missing.append(f"{car_id:03d}")
+            continue
+        await ctx.session.execute(text(
+            "INSERT INTO container_cars (container_id, car_id, drop_weight) VALUES (:c,:r,:w) "
+            "ON CONFLICT (container_id, car_id) DO UPDATE SET drop_weight=:w"),
+            {"c": d["cid"], "r": car_id, "w": weight})
+        added.append(f"{car_id:03d}")
+    await ctx.session.commit()
+    await state.set_state(None)
+    report = f"✅ Добавлено: {len(added)}"
+    if missing:
+        report += f"\n🔍 Нет такой машины: {' '.join(missing)}"
+    if bad:
+        report += f"\nⓘ Не понял: {' '.join(bad)}"
+    await m.answer(report)
+    await _send(m, ctx, d["cid"])

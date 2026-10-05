@@ -18,10 +18,11 @@ from app.core.enums import BroadcastContentType, BroadcastSchedule, BroadcastSta
 from app.database.session import get_session
 from app.repositories.broadcast import BroadcastRepository, BroadcastTargetRepository
 from app.repositories.user import UserRepository
+from app.services.notifications import FOOTER, filter_news
 
 logger = get_logger(__name__)
 
-DEFAULT_POLL_INTERVAL_SECONDS = 5.0
+DEFAULT_POLL_INTERVAL_SECONDS = 15.0
 ACTIVE_WINDOW_DAYS = 7  # "активен" = была активность за последние N дней
 
 
@@ -41,21 +42,22 @@ def _build_keyboard(buttons: list | None) -> InlineKeyboardMarkup | None:
 
 async def _send_one(bot: Bot, user_id: int, broadcast) -> bool:
     keyboard = _build_keyboard(broadcast.buttons)
+    text = (text) + FOOTER
     try:
         if broadcast.content_type is BroadcastContentType.TEXT:
-            await bot.send_message(user_id, broadcast.text or "", reply_markup=keyboard)
+            await bot.send_message(user_id, text, reply_markup=keyboard)
         elif broadcast.content_type is BroadcastContentType.PHOTO:
-            await bot.send_photo(user_id, broadcast.media_file_id, caption=broadcast.text, reply_markup=keyboard)
+            await bot.send_photo(user_id, broadcast.media_file_id, caption=text, reply_markup=keyboard)
         elif broadcast.content_type is BroadcastContentType.VIDEO:
-            await bot.send_video(user_id, broadcast.media_file_id, caption=broadcast.text, reply_markup=keyboard)
+            await bot.send_video(user_id, broadcast.media_file_id, caption=text, reply_markup=keyboard)
         elif broadcast.content_type is BroadcastContentType.DOCUMENT:
-            await bot.send_document(user_id, broadcast.media_file_id, caption=broadcast.text, reply_markup=keyboard)
+            await bot.send_document(user_id, broadcast.media_file_id, caption=text, reply_markup=keyboard)
         elif broadcast.content_type is BroadcastContentType.ANIMATION:
             await bot.send_animation(
-                user_id, broadcast.media_file_id, caption=broadcast.text, reply_markup=keyboard
+                user_id, broadcast.media_file_id, caption=text, reply_markup=keyboard
             )
         elif broadcast.content_type is BroadcastContentType.VOICE:
-            await bot.send_voice(user_id, broadcast.media_file_id, caption=broadcast.text, reply_markup=keyboard)
+            await bot.send_voice(user_id, broadcast.media_file_id, caption=text, reply_markup=keyboard)
         elif broadcast.content_type is BroadcastContentType.STICKER:
             await bot.send_sticker(user_id, broadcast.media_file_id, reply_markup=keyboard)
         else:
@@ -80,6 +82,7 @@ async def run_broadcast_tick(bot: Bot) -> None:
                 broadcast.audience, active_cutoff=now - dt.timedelta(days=ACTIVE_WINDOW_DAYS)
             )
 
+            user_ids = await filter_news(session, user_ids)
             target_repo = BroadcastTargetRepository(session)
             await target_repo.clear_targets(broadcast.id)
             await target_repo.bulk_add(broadcast.id, user_ids)

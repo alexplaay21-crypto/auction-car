@@ -49,6 +49,7 @@ def register_middlewares(dp: Dispatcher) -> None:
             observer.outer_middleware(middleware_cls())
 
 
+
 def register_routers(dp: Dispatcher) -> None:
     """Подключение роутеров. Порядок важен: более специфичные раньше
     общих catch-all. Заполняется поэтапно."""

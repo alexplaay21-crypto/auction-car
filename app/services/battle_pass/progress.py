@@ -56,7 +56,3 @@ class BattlePassProgressService:
         progress.current_level = new_level
         progress.last_level_up_date = today
         progress.opened_container_today = False
-
-        from app.services.battle_pass.service import BattlePassService  # без цикла импортов
-
-        await BattlePassService(self.session).grant_level_rewards(user_id, bp.id, new_level)

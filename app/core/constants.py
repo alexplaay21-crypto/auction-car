@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 # Антифлуд: одна команда от пользователя не чаще, чем раз в N секунд.
-ANTIFLOOD_INTERVAL_SECONDS = 2.0
+ANTIFLOOD_INTERVAL_SECONDS = 0.2
 
 # Очистка временных/старых данных.
 CLEANUP_INTERVAL_HOURS = 24

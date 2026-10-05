@@ -23,6 +23,11 @@ async def render_container_admin_card(ctx: RequestContext, container: Container)
         f"🌍 {container.country or '—'}",
         t("admin_container_price_line", ctx.language, price=container.price),
     ]
+    ch = getattr(container, "rarity_chances", None)
+    if ch:
+        lines.append("🎲 Шансы: " + " / ".join(f"{ch.get(k, 0):g}" for k in ("common", "rare", "epic", "mythic")))
+    else:
+        lines.append("🎲 Шансы: общие")
     if not container.is_enabled:
         lines.append(t("admin_container_disabled_label", ctx.language))
 

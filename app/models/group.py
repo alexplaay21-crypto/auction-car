@@ -17,3 +17,4 @@ class Group(Base, TimestampMixin):
     auction_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     added_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    invite_link: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -21,3 +21,16 @@ class GarageSellCallback(CallbackData, prefix="garage_sell"):
 class ContainerInvCallback(CallbackData, prefix="cinv"):
     action: str  # "list" | "open"
     container_id: int = 0
+
+
+class SellConfirmCallback(CallbackData, prefix="sellc"):
+    kind: str  # "state" | "quick"
+    user_car_id: int
+    yes: bool
+
+
+class SellPlayerCallback(CallbackData, prefix="sellp"):
+    user_car_id: int
+    buyer_id: int
+    price: int
+    yes: bool

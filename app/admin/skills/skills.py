@@ -49,13 +49,15 @@ async def on_create_prompt(
 async def on_create_data(message: Message, ctx: RequestContext, state: FSMContext) -> None:
     await state.clear()
     parts = [p.strip() for p in (message.text or "").split("|")]
-    if len(parts) != 3 or not parts[0] or not parts[2].isdigit() or int(parts[2]) < 1:
+    if len(parts) not in (3, 5) or not parts[0] or not parts[2].isdigit() or int(parts[2]) < 1:
         await message.answer(t("admin_skill_create_invalid", ctx.language))
         return
     skill = await SkillRepository(ctx.session).create(
         name=parts[0], description=parts[1] or None, effect={}, max_level=int(parts[2]),
+        name_en=(parts[3] or None) if len(parts) == 5 else None,
+        description_en=(parts[4] or None) if len(parts) == 5 else None,
     )
-    await ctx.session.flush()
+    await ctx.session.commit()
     await message.answer(
         t("admin_skill_created", ctx.language, id=skill.id, name=skill.name),
     )
@@ -83,6 +85,6 @@ async def on_delete(query: CallbackQuery, callback_data: AdminSkillCallback, ctx
     skill = await SkillRepository(ctx.session).get(callback_data.skill_id)
     if skill is not None:
         await ctx.session.delete(skill)
-        await ctx.session.flush()
+        await ctx.session.commit()
     await _show_list(query, ctx)
     await query.answer(t("admin_action_done", ctx.language))

@@ -19,16 +19,6 @@ router = Router(name="admin_users_search")
 MAX_SEARCH_RESULTS = 10
 
 
-@router.callback_query(AdminMenuCallback.filter(F.section == "users"))
-async def on_open_users_section(
-    query: CallbackQuery, callback_data: AdminMenuCallback, ctx: RequestContext, state: FSMContext
-) -> None:
-    if not await require_permission(query, ctx, "users"):
-        return
-    await state.set_state(AdminUserStates.waiting_for_search)
-    if query.message is not None:
-        await query.message.edit_text(t("admin_users_search_prompt", ctx.language))
-    await query.answer()
 
 
 @router.message(AdminUserStates.waiting_for_search)

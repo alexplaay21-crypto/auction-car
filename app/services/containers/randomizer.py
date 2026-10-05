@@ -52,21 +52,18 @@ class ContainerRandomizer:
         return await SettingsRepository(self.session).get_value("rarity_chances", DEFAULT_RARITY_CHANCES)
 
     async def roll_car(self, container_id: int, language: Language) -> Car:
+        from app.models.container import Container
+
         rows = await ContainerCarRepository(self.session).list_for_container_with_car(container_id)
-
-        by_rarity: dict[Rarity, list[tuple[Car, int]]] = defaultdict(list)
-        for link, car in rows:
-            if car.is_active:
-                by_rarity[car.rarity].append((car, link.drop_weight))
-
-        if not by_rarity:
+        options = [(car, float(link.drop_weight)) for link, car in rows if car.is_active]
+        if not options:
             raise AppError(t("container_empty", language))
 
-        rarity_chances = await self.get_rarity_chances()
-        rarity_options = [
-            (rarity, float(rarity_chances.get(rarity.value, 0))) for rarity in by_rarity
-        ]
-        chosen_rarity = weighted_choice(rarity_options)
+        container = await self.session.get(Container, container_id)
+        chances = (container.rarity_chances if container else None) or await self.get_rarity_chances()
 
-        car_options = [(car, float(weight)) for car, weight in by_rarity[chosen_rarity]]
-        return weighted_choice(car_options)
+        by_rarity: dict[str, list[tuple[Car, float]]] = defaultdict(list)
+        for car, weight in options:
+            by_rarity[getattr(car.rarity, "value", car.rarity)].append((car, weight))
+        rarity = weighted_choice([(r, float(chances.get(r, 0))) for r in by_rarity])
+        return weighted_choice(by_rarity[rarity])

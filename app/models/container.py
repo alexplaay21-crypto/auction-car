@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Boolean, String
+from sqlalchemy import JSON, BigInteger, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base, TimestampMixin
@@ -13,8 +13,11 @@ class Container(Base, TimestampMixin):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    name_en: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    country_en: Mapped[str | None] = mapped_column(String(100), nullable=True)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     price: Mapped[int] = mapped_column(BigInteger, nullable=False)  # первоначальная ставка
 
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    rarity_chances: Mapped[dict | None] = mapped_column(JSON, nullable=True)

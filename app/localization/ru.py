@@ -10,13 +10,13 @@ TEXTS: dict[str, str] = {
     "btn_yes": "Да",
     "btn_no": "Нет",
 
-    "error_generic": "Что-то пошло не так. Попробуйте ещё раз.",
-    "error_permission_denied": "Недостаточно прав.",
-    "error_not_found": "Не найдено.",
-    "error_concurrency": "Кто-то уже делает это. Попробуйте через секунду.",
-    "error_insufficient_funds": "Не хватает средств.",
-    "error_banned": "Доступ ограничен.",
-    "error_flood": "Слишком быстро. Подождите немного.",
+    "error_generic": "ⓘ Что-то пошло не так. Попробуй ещё раз.",
+    "error_permission_denied": "🚫 Нет прав.",
+    "error_not_found": "🔍 Не найдено.",
+    "error_concurrency": "⏳ Уже выполняется. Подожди секунду.",
+    "error_insufficient_funds": "💸 Не хватает денег.",
+    "error_banned": "⛔ Доступ ограничен.",
+    "error_flood": "🐢 Не так быстро!",
 
     # --- Первый запуск / документация ---
     "choose_language": "Выберите язык:",
@@ -57,43 +57,45 @@ TEXTS: dict[str, str] = {
     "chance_line": "{label}: {percent}%",
     "bet_too_low": "Ставка ниже минимальной. Нужно не меньше {min_amount}.",
     "bet_accepted": "Ставка принята: {amount}.",
-    "auction_won": "🏆 Контейнер выигран за {amount}.",
+    "auction_won": "🏆 Контейнер твой! Ставка: ${amount}",
     "room_full_new_opened": "Комната заполнена. Открыта новая — №{room_number}.",
     "room_status": "Комната №{room_number} · {count}/{capacity} игроков.",
-    "kicked_inactivity": "Вы пропустили несколько контейнеров подряд и выведены из комнаты.",
+    "room_waiting": "⏳ Сейчас идёт аукцион. Вы в очереди и войдёте в комнату после его окончания.",
+    "kicked_inactivity": "😴 Ты пропустил несколько контейнеров и вышел из комнаты.",
     "leave_room_btn": "🚪 Выйти из комнаты",
     "group_auction_disabled": "Аукцион в этой группе сейчас недоступен.",
-    "left_room": "Вы вышли из комнаты.",
-    "stop_scheduled": "Аукцион остановится после текущего контейнера.",
+    "left_room": "🚪 Ты вышел из комнаты.",
+    "stop_scheduled": "⏹ Аукцион остановится после этого контейнера.",
 
     # --- Машина после открытия ---
     "car_card": (
-        "{rarity_label} {name}\n"
-        "🆔 {car_id}\n"
-        "🌍 {country}\n"
-        "🏁 Макс. скорость: {max_speed} км/ч\n"
-        "⚡ 0-100: {accel} сек\n"
-        "💪 Мощность: {power} л.с.\n"
-        "🎮 Управляемость: {handling}\n"
-        "🔧 Надёжность: {reliability}\n"
-        "💵 Стоимость: {price}"
+        "🚗 <b>{name}</b>\n"
+        "{rarity_label} · 🆔 <code>{car_id}</code>\n"
+        "🌍 {country}\n\n"
+        "🏁 Скорость: <b>{max_speed}</b> км/ч\n"
+        "⚡ 0-100: <b>{accel}</b> сек\n"
+        "💪 Мощность: <b>{power}</b> л.с.\n"
+        "🎮 Управляемость: <b>{handling}</b>\n"
+        "🔧 Надёжность: <b>{reliability}</b>\n\n"
+        "💰 Стоимость: <b>${price}</b>"
     ),
     "rarity_common": "⚪ Обычная",
     "rarity_rare": "🔵 Редкая",
     "rarity_epic": "🟣 Эпическая",
-    "rarity_mythic": "🟡 Мифическая",
-    "car_not_found": "Машина с таким ID не найдена.",
-    "car_id_required": "Укажите ID машины, например: /car 12",
-    "sell_invalid_args": "Формат: /sellcar ID  или  /sell ID ПОКУПАТЕЛЬ ЦЕНА",
-    "transfer_invalid_args": "Формат: /transfer ПОЛУЧАТЕЛЬ СУММА",
+    "rarity_mythic": "🟡 Легендарная",
+    "car_not_found": "🔍 Машина с таким ID не найдена.",
+    "car_id_required": "🚗 Укажи ID машины, например: /car 001",
+    "sell_invalid_args": "📝 /sellcar ID — государству\n/sell ID ИГРОК ЦЕНА — игроку",
+    "transfer_invalid_args": "📝 /transfer ИГРОК СУММА",
     "sell_btn": "💰 Продать",
-    "sell_success": "Продано за {amount}.",
+    "sell_success": "💰 Продано! +${amount}",
     "sell_prompt_expired": "Время на решение вышло.",
 
     # --- Гараж ---
-    "garage_title": "🚗 Гараж: {count}/{capacity}",
-    "garage_empty": "Гараж пуст.",
-    "garage_full_auto_sold": "Гараж был полон — новая машина автоматически продана за {amount}.",
+    "garage_title": "🏁 <b>Твой гараж</b> · 🏠 Слотов: {count}/{capacity}",
+    "garage_empty": "🕳 Здесь пока пусто. Выигрывай аукционы и открывай контейнеры, чтобы собрать свою коллекцию!",
+    "garage_hint": "💡 Тапни по /car 001 — скопируется, отправь боту и увидишь карточку.",
+    "garage_full_auto_sold": "🏠 Гараж полон! Машина продана за ${amount}.",
     "garage_upgrade_btn": "➕ Увеличить гараж",
     "garage_upgrade_success": "Гараж увеличен до {capacity}.",
     "garage_upgrade_max": "Достигнут максимум вместимости.",
@@ -104,8 +106,13 @@ TEXTS: dict[str, str] = {
     "profile_vip": "👑 VIP",
     "profile_cars_count": "🚗 Машин: {count}",
     "daily_bonus_btn": "🎁 Ежедневный бонус",
-    "daily_bonus_claimed": "Начислено: {amount}.",
-    "daily_bonus_already": "Бонус уже получен сегодня.",
+    "daily_bonus_claimed": "🎁 Вы получили: {name}.",
+    "daily_bonus_opened": "🎁 {container} открыт!\n🚗 Выпало: {car}",
+    "daily_bonus_next": "⏳ Следующий бонус через: {hours} ч {minutes} мин",
+    "daily_bonus_auto_sold": "Гараж полон, машина продана за {amount}.",
+    "daily_bonus_already": "Бонус уже получен. Следующий через: {hours} ч {minutes} мин.",
+    "daily_bonus_rich": "💰 Бонус только для тех, у кого меньше ${limit}.",
+    "daily_bonus_rich": "💰 Бонус только для тех, у кого меньше ${limit}.",
 
     "stats_title": "📊 Статистика",
     "stats_containers_opened": "Открыто контейнеров: {value}",
@@ -120,9 +127,9 @@ TEXTS: dict[str, str] = {
 
     # --- VIP ---
     "vip_username_prefix": "👑 ",
-    "vip_purchase_success": "VIP активирован — навсегда.",
-    "vip_already_owned": "У вас уже есть VIP.",
-    "vip_offer": "👑 VIP — навсегда.\nЦена: {price}\n\nПреимущества: сниженные комиссии, +10 мест в гараже.",
+    "vip_purchase_success": "👑 VIP активирован навсегда!",
+    "vip_already_owned": "👑 VIP у тебя уже есть.",
+    "vip_offer": "👑 <b>VIP навсегда</b>\n\n💰 Цена: ${price}\n✅ Меньше комиссии\n✅ +10 мест в гараже",
     "vip_buy_btn": "👑 Купить VIP",
 
     # --- Лидерборд ---
@@ -177,14 +184,14 @@ TEXTS: dict[str, str] = {
     "support_sent": "Обращение отправлено.",
 
     # --- Экономика ---
-    "transfer_success": "Переведено {amount} игроку {target}.",
-    "sell_state_success": "Продано государству за {amount}.",
-    "sell_player_offer_sent": "Предложение отправлено.",
-    "sell_player_offer_received": "💰 Вам предлагают купить {car_name} за {price}.",
-    "sell_player_buy_btn": "💰 Купить",
-    "sell_player_decline_btn": "❌ Отклонить",
-    "sell_player_accepted": "Сделка завершена.",
-    "sell_player_declined": "Предложение отклонено.",
+    "transfer_success": "💸 Перевод отправлен!\n${amount} → {target}",
+    "sell_state_success": "💰 Продано государству!\n+${amount}",
+    "sell_player_offer_sent": "📨 Предложение отправлено!",
+    "sell_player_offer_received": "🤝 <b>Предложение!</b>\n🚗 {car_name} · 💰 ${price}",
+    "sell_player_buy_btn": "✅ Купить",
+    "sell_player_decline_btn": "❌ Отказ",
+    "sell_player_accepted": "🎉 Машина теперь твоя!",
+    "sell_player_declined": "🙅 Предложение отклонено.",
 
     # --- Админ ---
     "admin_permission_denied": "Недостаточно прав администратора.",
@@ -221,8 +228,8 @@ TEXTS: dict[str, str] = {
     "admin_cars_title": "🚗 Машины",
     "admin_cars_empty": "Машин пока нет.",
     "admin_car_create_btn": "➕ Создать машину",
-    "admin_car_create_prompt": "Пришлите одним сообщением (можно с фото — тогда в подписи):\nназвание | страна | редкость | макс.скорость | 0-100 | мощность | управляемость | надёжность | стоимость\n\nРедкость: common / rare / epic / mythic.\nПример: Toyota Supra | Япония | rare | 285 | 4.6 | 340 | 82 | 75 | 90000",
-    "admin_car_format_invalid": "Не удалось разобрать данные машины. Нужно 9 полей через « | », редкость — common/rare/epic/mythic, числа — целые (0-100 можно с точкой).",
+    "admin_car_create_prompt": "Пришлите одним сообщением (можно с фото — тогда в подписи):\nназвание | страна | редкость | макс.скорость | 0-100 | мощность | управляемость | надёжность | стоимость\n\nРедкость: common / rare / epic / legendary.\nПример: Toyota Supra | Япония | rare | 285 | 4.6 | 340 | 82 | 75 | 90000",
+    "admin_car_format_invalid": "Не удалось разобрать данные машины. Нужно 9 полей через « | », редкость — common/rare/epic/legendary, числа — целые (0-100 можно с точкой).",
     "admin_car_created": "Машина создана: ID {car_id}.",
     "admin_car_updated": "Машина обновлена.",
     "admin_car_edit_btn": "✏️ Изменить",
@@ -365,7 +372,7 @@ TEXTS: dict[str, str] = {
     "admin_stats_period_week": "7 дн",
     "admin_stats_period_month": "30 дн",
     "admin_stats_period_all": "Всё время",
-    "admin_stats_text": "📊 Статистика · {period}\n\n👥 Игроков: {players}\n🟢 Активных: {active}\n🆕 Новых: {new}\n👑 VIP: {vip}\n🚫 Забанено: {banned}\n\n📦 Контейнеров: {containers}\n🔥 Ставок: {bets}\n🏆 Побед: {wins}\n🚗 Машин выдано: {cars}\n💰 Продано государству/быстро: {cars_sold}\n🤝 Продаж игрокам: {player_sales}\n\n🛒 Покупок: {purchases} ({purchases_sum})\n💵 Выдано денег: {issued}\n💸 Потрачено: {spent}\n🏦 Комиссии: {commissions}\n\n👥 Рефералов: {referrals}\n🎫 BP куплено: {bp}\n🎟 Промокодов активировано: {promo}\n⚠️ Ошибок: {errors}\n💬 Групп: {groups}\n📣 Рассылок отправлено: {broadcasts}",
+    "admin_stats_text": "📊 Статистика · {period}\n\n👥 Игроков: {players}\n🟢 Активных: {active}\n🆕 Новых: {new}\n👑 VIP: {vip}\n🚫 Забанено: {banned}\n\n📦 Контейнеров: {containers}\n🔥 Ставок: {bets}\n🏆 Побед: {wins}\n🚗 Машин выдано: {cars}\n💰 Продано государству/быстро: {cars_sold}\n🤝 Продаж игрокам: {player_sales}\n\n🛒 Покупок: {purchases} ({purchases_sum})\n💵 Выдано денег: {issued}\n💸 Потрачено: {spent}\n🏦 Комиссии: {commissions}\n\n👥 Рефералов: {referrals}\n🎫 BP куплено: {bp}\n🎟 Промокодов активировано: {promo}\nⓘ Ошибок: {errors}\n💬 Групп: {groups}\n📣 Рассылок отправлено: {broadcasts}",
 
     # --- History ---
     "admin_action_history": "📜 История",
@@ -392,7 +399,7 @@ TEXTS: dict[str, str] = {
     "hist_admin_unban": "🛡 Админ: разблокировка",
     "hist_admin_vip_grant": "🛡 Админ: выдал VIP",
     "hist_admin_vip_revoke": "🛡 Админ: снял VIP",
-    "hist_system_error": "⚠️ Ошибка",
+    "hist_system_error": "ⓘ Ошибка",
     "hist_money_bet": "💵 Ставка (списание)",
     "hist_money_bet_refund": "💵 Возврат ставки",
     "hist_money_container_win_cost": "💵 Оплата выигранного контейнера",
@@ -424,7 +431,7 @@ TEXTS: dict[str, str] = {
     "admin_bkp_started": "Создаю копию…",
     "admin_bkp_done": "Готово: {name}\nФайл отправлен владельцу.",
     "admin_bkp_failed": "Не удалось создать копию. Подробности в логах.",
-    "admin_bkp_unsent": "⚠️ Не отправлено владельцу: {name}. Повторю автоматически.",
+    "admin_bkp_unsent": "ⓘ Не отправлено владельцу: {name}. Повторю автоматически.",
 
     # --- Container inventory ---
     "garage_containers_btn": "📦 Контейнеры",

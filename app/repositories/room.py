@@ -14,6 +14,23 @@ from app.repositories.base import BaseRepository
 class RoomRepository(BaseRepository[Room]):
     model = Room
 
+    async def get_latest_active_room(
+        self,
+        scope: RoomScope,
+        scope_id: int,
+    ) -> Room | None:
+        result = await self.session.execute(
+            select(Room)
+            .where(
+                Room.scope == scope,
+                Room.scope_id == scope_id,
+                Room.status != RoomStatus.CLOSED,
+            )
+            .order_by(Room.room_number.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def get_open_room(self, scope: RoomScope, scope_id: int) -> Room | None:
         stmt = (
             select(Room)

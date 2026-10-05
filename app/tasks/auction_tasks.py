@@ -12,10 +12,14 @@ from aiogram.exceptions import TelegramForbiddenError, TelegramNotFound
 
 from app.config.logging import get_logger
 from app.core.enums import Language, RoomScope
+from app.core.constants import MAX_PLAYERS_PER_ROOM
 from app.database.session import get_session
+from app.database.transaction import atomic, distributed_lock
 from app.localization.manager import t
+from app.repositories.auction import AuctionRepository
 from app.repositories.container import ContainerRepository
-from app.repositories.room import RoomMemberRepository
+from app.repositories.room import RoomMemberRepository, RoomRepository
+from app.repositories.room_waiter import RoomWaiterRepository
 from app.repositories.user import UserRepository
 from app.services.auctions.presentation import render_container_card
 from app.services.auctions.service import AuctionService, FinalizeResult
@@ -75,6 +79,9 @@ async def _send_to_room(bot: Bot, session, room, text_by_language) -> None:
             logger.exception("auction_notify_failed", chat_id=chat_id)
 
 
+_bg_tasks: set[asyncio.Task] = set()
+
+
 async def _announce_result(bot: Bot, session, result: FinalizeResult) -> None:
     container = await ContainerRepository(session).get(result.auction.container_id)
 
@@ -109,6 +116,9 @@ async def _announce_result(bot: Bot, session, result: FinalizeResult) -> None:
                         callback_data=GarageSellCallback(user_car_id=result.user_car_id),
                     )
                     await bot.send_message(winner.id, card, reply_markup=builder.as_markup())
+                if result.garage_low:
+                    from app.services.garage.service import GARAGE_LOW_TEXT
+                    await bot.send_message(winner.id, GARAGE_LOW_TEXT)
             except Exception:
                 logger.exception("auction_car_card_failed", user_id=winner.id)
 
@@ -123,31 +133,168 @@ async def _announce_result(bot: Bot, session, result: FinalizeResult) -> None:
     if result.room_closed:
         return
 
-    if result.next_auction is not None:
-        leader = None
-        await _send_to_room(
-            bot, session, result.room,
-            lambda lang: render_container_card(result.next_auction, container, leader, lang),
-        )
+
+
+async def _admit_waiting_players(bot: Bot, room) -> None:
+    """После завершения аукциона переводит ожидающих игроков в комнату."""
+    async with get_session() as session:
+        async with distributed_lock(
+            f"room_join:{room.scope.value}:{room.scope_id}"
+        ):
+            async with atomic(session):
+                room_repo = RoomRepository(session)
+                member_repo = RoomMemberRepository(session)
+                waiter_repo = RoomWaiterRepository(session)
+                user_repo = UserRepository(session)
+
+                current_room = await room_repo.get_open_room(
+                    room.scope,
+                    room.scope_id,
+                )
+
+                if current_room is None:
+                    current_room = await room_repo.create_room(
+                        room.scope,
+                        room.scope_id,
+                        MAX_PLAYERS_PER_ROOM,
+                    )
+
+                waiters = await waiter_repo.list_for_scope(
+                    room.scope.value,
+                    room.scope_id,
+                )
+
+                for waiter in waiters:
+                    count = await member_repo.count_members(current_room.id)
+
+                    if count >= current_room.max_players:
+                        await room_repo.mark_full(current_room.id)
+
+                        current_room = await room_repo.create_room(
+                            room.scope,
+                            room.scope_id,
+                            MAX_PLAYERS_PER_ROOM,
+                        )
+
+                        count = 0
+
+                    existing = await member_repo.get_member(
+                        current_room.id,
+                        waiter.user_id,
+                    )
+
+                    if existing is None:
+                        await member_repo.add_member(
+                            current_room.id,
+                            waiter.user_id,
+                        )
+                    elif existing.left_at is not None:
+                        await member_repo.rejoin(
+                            current_room.id,
+                            waiter.user_id,
+                        )
+
+                    await waiter_repo.remove(waiter.id)
+
+                    new_count = count + 1
+
+                    if new_count >= current_room.max_players:
+                        await room_repo.mark_full(current_room.id)
+
+                    user = await user_repo.get(waiter.user_id)
+
+                    if user is not None:
+                        try:
+                            await bot.send_message(
+                                user.id,
+                                t(
+                                    "room_status",
+                                    user.language,
+                                    room_number=current_room.room_number,
+                                    count=new_count,
+                                    capacity=current_room.max_players,
+                                ),
+                            )
+                        except Exception:
+                            logger.exception(
+                                "waiting_player_notify_failed",
+                                user_id=user.id,
+                            )
+
+
+async def _start_next_container_after_delay(bot: Bot, room_id: int) -> None:
+    """Запускает следующий контейнер после паузы между раундами."""
+    try:
+        async with get_session() as session:
+            service = AuctionService(session)
+            delay = await service._next_container_delay()
+
+        await asyncio.sleep(delay)
+
+        # Сначала даём ожидающим игрокам войти в доступную комнату.
+        async with get_session() as session:
+            room = await RoomRepository(session).get(room_id)
+            if room is None:
+                return
+
+        await _admit_waiting_players(bot, room)
+
+        # Продолжаем именно ту комнату, в которой закончился аукцион.
+        async with get_session() as session:
+            room = await RoomRepository(session).get(room_id)
+            if room is None:
+                return
+
+            service = AuctionService(session)
+            auction = await service.start_next_container(room, Language.RU)
+            if auction is None:
+                return
+
+            container = await ContainerRepository(session).get(auction.container_id)
+            if container is None:
+                return
+
+            members = await RoomMemberRepository(session).list_active_members(room.id)
+            if not members:
+                return
+
+            await _send_to_room(
+                bot,
+                session,
+                room,
+                lambda lang: render_container_card(auction, container, None, lang),
+            )
+    except Exception:
+        logger.exception("next_container_start_failed", room_id=room_id)
 
 
 async def run_auction_tick(bot: Bot) -> None:
-    """Один проход: найти и завершить все истёкшие аукционы. Вызывается и
-    периодическим циклом (run_auction_timer_loop), и восстановлением при
-    старте (services/auctions/recovery.py использует due_auctions напрямую,
-    этот таск — обёртка с отправкой сообщений)."""
+    """Один проход: найти и завершить все истёкшие аукционы. Каждый аукцион
+    обрабатывается в своей сессии, чтобы atomic() открывал настоящую
+    транзакцию (а не savepoint) и результат реально коммитился."""
     async with get_session() as session:
-        overdue = await due_auctions(session)
-        service = AuctionService(session)
-        for auction in overdue:
-            # Сбой одного аукциона не должен останавливать остальные: он
-            # будет повторён на следующем тике (finalize идемпотентен).
-            try:
-                result = await service.finalize_auction(auction)
+        overdue_ids = [a.id for a in await due_auctions(session)]
+
+    for auction_id in overdue_ids:
+        try:
+            async with get_session() as session:
+                auction = await AuctionRepository(session).get(auction_id)
+                if auction is None:
+                    continue
+                result = await AuctionService(session).finalize_auction(auction)
+                await session.commit()
+
+            async with get_session() as session:
                 await _announce_result(bot, session, result)
-            except Exception:
-                logger.exception("auction_finalize_failed", auction_id=auction.id)
-                await session.rollback()
+
+            if not result.room_closed:
+                task = asyncio.create_task(
+                    _start_next_container_after_delay(bot, result.room.id)
+                )
+                _bg_tasks.add(task)
+                task.add_done_callback(_bg_tasks.discard)
+        except Exception:
+            logger.exception("auction_finalize_failed", auction_id=auction_id)
 
 
 async def run_auction_timer_loop(bot: Bot, poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS) -> None:

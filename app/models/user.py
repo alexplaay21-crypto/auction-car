@@ -20,7 +20,7 @@ class User(Base, TimestampMixin):
 
     language: Mapped[Language] = mapped_column(default=Language.RU, nullable=False)
 
-    balance: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
+    balance: Mapped[int] = mapped_column(BigInteger, default=15000, server_default="15000", nullable=False)
 
     is_vip: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     vip_since: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

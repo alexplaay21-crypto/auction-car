@@ -24,6 +24,7 @@ from app.admin.shop import router as shop_router
 from app.admin.skills import router as skills_router
 from app.admin.statistics import router as statistics_router
 from app.admin.vip import router as vip_router
+from app.admin.commissions import router as commissions_router
 from app.admin.menu import admin_menu_text
 from app.admin.users import router as users_router
 from app.core.context import RequestContext
@@ -46,6 +47,8 @@ async def cmd_admin(
     await message.answer(admin_menu_text(ctx.language), reply_markup=admin_menu_keyboard(ctx.language))
 
 
+from app.admin.back import router as back_router
+router.include_router(back_router)
 router.include_router(users_router)
 router.include_router(cars_router)
 router.include_router(containers_router)
@@ -62,3 +65,4 @@ router.include_router(broadcasts_router)
 router.include_router(statistics_router)
 router.include_router(backups_router)
 router.include_router(skills_router)
+router.include_router(commissions_router)

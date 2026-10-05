@@ -18,7 +18,8 @@ router = Router(name="garage_sell")
 async def on_quick_sell(
     query: CallbackQuery, callback_data: GarageSellCallback, ctx: RequestContext
 ) -> None:
-    amount = await GarageService(ctx.session).quick_sell(ctx.user, callback_data.user_car_id)
-    if query.message is not None:
-        await query.message.edit_text(t("sell_success", ctx.language, amount=amount))
+    from app.handlers.economy.sell_confirm import send_sell_preview
+
     await query.answer()
+    if query.message is not None:
+        await send_sell_preview(query.message, ctx, "quick", callback_data.user_car_id)

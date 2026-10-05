@@ -10,3 +10,7 @@ from app.handlers.economy.transfer import router as transfer_router
 router = Router(name="economy")
 router.include_router(sales_router)
 router.include_router(transfer_router)
+
+from app.handlers.economy.sell_confirm import router as sell_confirm_router
+
+router.include_router(sell_confirm_router)

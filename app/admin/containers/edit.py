@@ -131,3 +131,36 @@ async def on_remove_car_data(message: Message, ctx: RequestContext, state: FSMCo
     await ctx.session.flush()
     await state.clear()
     await _show_card(message, ctx, container_id, "admin_action_done")
+
+
+@router.callback_query(AdminContainerCallback.filter(F.action == "chances"))
+async def on_chances_prompt(query: CallbackQuery, callback_data: AdminContainerCallback,
+                            ctx: RequestContext, state: FSMContext) -> None:
+    if not await require_permission(query, ctx, "containers"):
+        return
+    await state.set_state(AdminContainerStates.waiting_for_chances)
+    await state.update_data(admin_container_id=callback_data.container_id)
+    if query.message is not None:
+        await query.message.answer(
+            "🎲 Шансы редкостей одной строкой:\n"
+            "обычный редкий эпический легендарный\n"
+            "Пример: 60 30 9 1 (сумма не обязана быть 100)\n"
+            "«-» = общие шансы"
+        )
+    await query.answer()
+
+
+@router.message(AdminContainerStates.waiting_for_chances, F.text, ~F.text.startswith("/"))
+async def on_chances_data(message: Message, ctx: RequestContext, state: FSMContext) -> None:
+    from app.admin.containers.create import parse_chances
+    from app.models.container import Container
+
+    container_id = (await state.get_data()).get("admin_container_id")
+    chances = parse_chances(message.text or "")
+    container = await ctx.session.get(Container, container_id) if container_id else None
+    if container is None:
+        raise AppError(t("admin_format_invalid", ctx.language))
+    container.rarity_chances = chances
+    await ctx.session.flush()
+    await state.clear()
+    await _show_card(message, ctx, container_id, "admin_action_done")

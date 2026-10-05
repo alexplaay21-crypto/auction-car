@@ -28,6 +28,7 @@ from app.models.purchase import Purchase
 from app.models.referral import Referral
 from app.models.room import Room
 from app.models.room_member import RoomMember
+from app.models.room_waiter import RoomWaiter
 from app.models.sale import Sale
 from app.models.setting import Setting
 from app.models.shop import ShopSettings
@@ -72,6 +73,7 @@ __all__ = [
     "Referral",
     "Room",
     "RoomMember",
+    "RoomWaiter",
     "Sale",
     "Setting",
     "ShopSettings",

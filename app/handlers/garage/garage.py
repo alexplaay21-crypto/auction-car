@@ -19,6 +19,13 @@ router = Router(name="garage_main")
 
 ALIASES = ("inventory", "inv", "инвентарь", "инв", "гараж")
 
+_RARITY_ICON = {
+    Rarity.COMMON: "⚪",
+    Rarity.RARE: "🔵",
+    Rarity.EPIC: "🟣",
+    Rarity.MYTHIC: "🟡",
+}
+
 _RARITY_LABEL_KEYS = {
     Rarity.COMMON: "rarity_common",
     Rarity.RARE: "rarity_rare",
@@ -32,14 +39,25 @@ async def _render(ctx: RequestContext, page: int) -> tuple[str, Page]:
     garage = await service.get_or_create_garage(ctx.user.id)
     page_obj = await service.get_cars_page(ctx.user.id, page)
 
-    lines = [t("garage_title", ctx.language, count=page_obj.total, capacity=garage.capacity)]
+    from html import escape
+    user = ctx.user
+    name = escape(user.first_name or (f"@{user.username}" if user.username else str(user.id)))
+    vip = "👑 " if user.is_vip else ""
+    lines = [
+        f'🏁 <b>Гараж</b> {vip}<a href="tg://user?id={user.id}">{name}</a>',
+        f"🏠 Слотов: {page_obj.total}/{garage.capacity}",
+        "",
+    ]
     if not page_obj.items:
         lines.append(t("garage_empty", ctx.language))
     else:
         for user_car, car in page_obj.items:
             rarity_label = t(_RARITY_LABEL_KEYS[car.rarity], ctx.language)
-            lines.append(f"🆔 {user_car.id} · {rarity_label} {car.name}")
-
+            price = f"{car.price:,}".replace(",", " ")
+            lines.append(f"🚗 <b>{car.name}</b>")
+            lines.append(f"{rarity_label} · 💰 ${price} · <code>/car {car.id:03d}</code>")
+            lines.append("")
+        lines.append(t("garage_hint", ctx.language))
     return "\n".join(lines), page_obj
 
 

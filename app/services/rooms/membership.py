@@ -1,14 +1,4 @@
-"""Вступление/выход из комнаты.
-
-Правила из раздела 5 ТЗ:
-- В группе участвовать может только игрок этой группы.
-- Максимум 30 игроков в комнате.
-- Вторая комната появляется только после полного заполнения первой (и так далее).
-- Игрок участвует только в той комнате, в которую он вошёл.
-
-Вся операция — под distributed-локом на (scope, scope_id) и в одной
-транзакции, чтобы одновременные вступления не переполнили комнату сверх
-лимита и не создали две "следующие" комнаты одновременно."""
+"""Вступление/выход из комнаты."""
 from __future__ import annotations
 
 import datetime as dt
@@ -22,8 +12,10 @@ from app.database.transaction import atomic, distributed_lock
 from app.localization.manager import t
 from app.models.room import Room
 from app.models.user import User
+from app.repositories.auction import AuctionRepository
 from app.repositories.group import GroupMemberRepository, GroupRepository
 from app.repositories.room import RoomMemberRepository, RoomRepository
+from app.repositories.room_waiter import RoomWaiterRepository
 from app.services.rooms.service import RoomService
 
 
@@ -32,12 +24,21 @@ class RoomMembershipService:
         self.session = session
         self.room_service = RoomService(session)
 
-    async def join_current_room(self, user: User, scope: RoomScope, scope_id: int) -> Room:
+    async def join_current_room(
+        self,
+        user: User,
+        scope: RoomScope,
+        scope_id: int,
+    ) -> Room | None:
         if scope is RoomScope.GROUP:
             group = await GroupRepository(self.session).get(scope_id)
             if group is None or not group.is_active or not group.auction_enabled:
                 raise AppError(t("group_auction_disabled", user.language))
-            is_member = await GroupMemberRepository(self.session).is_member(scope_id, user.id)
+
+            is_member = await GroupMemberRepository(self.session).is_member(
+                scope_id,
+                user.id,
+            )
             if not is_member:
                 raise AppError(t("error_permission_denied", user.language))
 
@@ -45,19 +46,55 @@ class RoomMembershipService:
             async with atomic(self.session):
                 room_repo = RoomRepository(self.session)
                 member_repo = RoomMemberRepository(self.session)
+                waiter_repo = RoomWaiterRepository(self.session)
+                auction_repo = AuctionRepository(self.session)
 
-                room = await self.room_service.get_or_open_room(scope, scope_id)
+                # Сначала ищем последнюю незакрытую комнату.
+                # Это важно: если она FULL и в ней идёт аукцион,
+                # новую комнату создавать пока нельзя.
+                room = await room_repo.get_latest_active_room(
+                    scope,
+                    scope_id,
+                )
+
+                # Если комнат вообще нет — создаём первую.
+                if room is None:
+                    room = await room_repo.create_room(
+                        scope,
+                        scope_id,
+                        MAX_PLAYERS_PER_ROOM,
+                    )
+
                 existing = await member_repo.get_member(room.id, user.id)
 
                 if existing is not None and existing.left_at is None:
-                    return room  # уже активный участник — идемпотентно
+                    return room
+
+                # Если в текущей комнате идёт аукцион — ждём его окончания.
+                # Даже если комната уже FULL, новую комнату здесь НЕ создаём.
+                active_auction = await auction_repo.get_active_for_room(room.id)
+
+                if active_auction is not None:
+                    await waiter_repo.add(
+                        scope.value,
+                        scope_id,
+                        user.id,
+                    )
+                    return None
 
                 count = await member_repo.count_members(room.id)
+
+                # Комната заполнена и аукциона уже нет —
+                # теперь можно открыть следующую.
                 if count >= room.max_players:
-                    # Комнату заполнили, пока мы её проверяли, — открываем следующую.
                     await room_repo.mark_full(room.id)
-                    room = await room_repo.create_room(scope, scope_id, MAX_PLAYERS_PER_ROOM)
-                    existing = None
+
+                    room = await room_repo.create_room(
+                        scope,
+                        scope_id,
+                        MAX_PLAYERS_PER_ROOM,
+                    )
+
                     count = 0
 
                 if existing is not None:
@@ -72,10 +109,11 @@ class RoomMembershipService:
 
     async def leave_room(self, user_id: int, room_id: int) -> None:
         await RoomMemberRepository(self.session).mark_left(
-            room_id, user_id, dt.datetime.now(dt.timezone.utc)
+            room_id,
+            user_id,
+            dt.datetime.now(dt.timezone.utc),
         )
 
     async def room_status(self, room: Room) -> tuple[int, int]:
-        """(текущее число активных участников, вместимость)."""
         count = await RoomMemberRepository(self.session).count_members(room.id)
         return count, room.max_players

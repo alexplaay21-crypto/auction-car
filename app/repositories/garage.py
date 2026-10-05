@@ -54,7 +54,7 @@ class UserCarRepository(BaseRepository[UserCar]):
         stmt = (
             select(UserCar)
             .where(UserCar.user_id == user_id, UserCar.is_sold.is_(False))
-            .order_by(UserCar.id.desc())
+            .order_by(Car.price.desc(), UserCar.id)
             .limit(limit)
             .offset(offset)
         )
@@ -69,7 +69,7 @@ class UserCarRepository(BaseRepository[UserCar]):
             select(UserCar, Car)
             .join(Car, Car.id == UserCar.car_id)
             .where(UserCar.user_id == user_id, UserCar.is_sold.is_(False))
-            .order_by(UserCar.id.desc())
+            .order_by(Car.price.desc(), UserCar.id)
             .limit(limit)
             .offset(offset)
         )

@@ -31,9 +31,9 @@ class AntiFloodMiddleware(BaseMiddleware):
 
         redis = get_redis()
         key = f"antiflood:{tg_user.id}"
-        interval = max(1, round(ANTIFLOOD_INTERVAL_SECONDS))
+        interval = max(0.2, ANTIFLOOD_INTERVAL_SECONDS)
         try:
-            allowed = await redis.set(key, "1", nx=True, ex=interval)
+            allowed = await redis.set(key, "1", nx=True, px=int(interval * 1000))
         except RedisError:
             # Redis недоступен — антифлуд не должен класть всего бота.
             logger.warning("antiflood.redis_unavailable")
