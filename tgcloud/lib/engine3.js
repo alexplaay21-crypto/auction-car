@@ -2,7 +2,7 @@
 // динамические цены контейнеров. Деньги проводят триггеры миграции 3 (lib/ddl3.js).
 import { GameError, toGameError, settings, getUser, findUser, now } from './engine.js';
 import { runTime, pickBot, TRACKS } from './race.js';
-import { reaction, skillPrice, SKILL_MAX } from './ddl3.js';
+import { reaction, skillPrice, skillLevel, SKILL_MAX, SKILL_LEVELS } from './ddl3.js';
 
 const NOW = '(SELECT now FROM v_now)';
 async function exec(db, q, p) { try { return await db.run(q, p); } catch (e) { throw toGameError(e) ?? e; } }
@@ -21,7 +21,7 @@ export async function skillView(db, uid) {
   const u = await getUser(db, uid);
   const next = (k) => (p + k <= SKILL_MAX ? Array.from({ length: k }, (_, i) => skillPrice(p + i + 1)).reduce((a, b) => a + b, 0) : null);
   return {
-    purchases: p, max: SKILL_MAX, level: Math.floor(p / 4), max_level: SKILL_MAX / 4,
+    purchases: p, max: SKILL_MAX, level: skillLevel(p), max_level: SKILL_LEVELS, total_cost: Array.from({ length: SKILL_MAX }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b, 0),
     reaction: reaction(p), next_reaction: p < SKILL_MAX ? reaction(p + 1) : null, reaction10: p + 10 <= SKILL_MAX ? reaction(p + 10) : null,
     price1: next(1), price10: next(10), balance: u.balance, best: 0.2,
   };
@@ -285,8 +285,8 @@ export async function playerView(db, viewerId, targetId) {
     user: { id: u.id, username: u.username, first_name: u.first_name, photo_url: u.photo_url, is_vip: u.is_vip, created_at: u.created_at, online: t - u.last_seen < 300, last_seen: u.last_seen },
     me: viewerId === u.id, is_friend: isFriend, place, balance: u.balance,
     garage: { owned: g.n, value: g.v, capacity: u.garage_capacity, rarities: Object.fromEntries(rarities.map((r) => [r.rarity, r.n])) },
-    cars, skill: { purchases: skill, level: Math.floor(skill / 4), reaction: reaction(skill) },
-    bp: { level: Math.min(st.bp_levels, Math.floor((bp?.xp ?? 0) / st.bp_xp_level)), premium: bp?.premium === 1 },
+    cars, skill: { purchases: skill, level: skillLevel(skill), reaction: reaction(skill) },
+    bp: { level: Math.min(st.bp_levels, Math.floor((bp?.xp ?? 0) / st.bp_xp_level)), max: st.bp_levels, premium: bp?.premium === 1 },
     stats: {
       containers_opened: u.containers_opened, wins: u.wins, bids_made: u.bids_made, cars_obtained: u.cars_obtained, cars_sold: u.cars_sold,
       earned_total: u.earned_total, spent_total: u.spent_total, referrals: u.referrals_count, races: races.n, race_wins: races.wins,

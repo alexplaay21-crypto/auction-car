@@ -44,7 +44,7 @@ export function Race() {
           <button className="card blue press" onClick={() => push({ name: 'skill' })}>
             <div className="row">
               <Ic icon={Gauge} tone="blue" />
-              <div className="grow"><div className="h3">Навык гонщика · {d.skill.level}/100</div><div className="sm muted">Реакция на старте {d.skill.reaction.toFixed(2).replace('.', ',')} с · в гонках решает именно он</div></div>
+              <div className="grow"><div className="h3">Навык гонщика · {d.skill.level}/100</div><div className="sm muted">Показатель {d.skill.reaction.toFixed(2).replace('.', ',')} → 0,20 · в гонках решает именно он</div></div>
               <span className="btn info s">Качать</span>
             </div>
           </button>

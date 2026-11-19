@@ -82,11 +82,15 @@ test('гонка с ботом: ставка и выплата; вызов иг�
   await ok();
 });
 
-test('навык гонщика: цена по таблице, реакция 0,98 → 0,20 с, максимум 400', async () => {
+test('навык гонщика: 210 улучшений за $2 000 000, показатель 0,98 → 0,20', async () => {
   const v = await G.buySkill(db, 2, 10, op());
   assert.equal(v.purchases, 10);
   assert.equal(await bal(2), 15_000 - Array.from({ length: 10 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b));
-  assert.ok(reaction(0) > 0.99 && reaction(400) === 0.2);
+  assert.equal(Array.from({ length: 210 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b), 2_000_000);
+  assert.ok(Math.abs(reaction(0) - 0.98) < 1e-9 && reaction(210) === 0.2 && reaction(209) > reaction(210));
+  assert.equal(v.level, 4);
+  await db.run('UPDATE racer_skill SET purchases = 205 WHERE user_id = 2');
+  await assert.rejects(G.buySkill(db, 2, 10, op()), { code: 'SKILL_MAX' });
   await ok();
 });
 
@@ -101,8 +105,12 @@ test('Battle Pass: опыт за действия, бесплатная нагр
   await db.run('UPDATE users SET is_admin = 1 WHERE id = 4');
   await E.adminAdjust(db, 4, 2, 200_000, 'x', op());
   await G.bpBuy(db, 2);
-  const p = await G.bpClaim(db, 2, 5, 'premium');
+  const p = await G.bpClaim(db, 2, 4, 'premium');
   assert.equal(p.kind, 'container');
+  const c = await G.bpClaim(db, 2, 5, 'premium');
+  assert.equal(c.kind, 'car');
+  assert.equal(c.car.rarity, 'rare');
+  assert.equal((await G.bpView(db, 2)).levels.length, 14);
   await ok();
 });
 

@@ -8,30 +8,38 @@ export const SETTINGS_3 = {
   race_min_stake: 100, race_max_stake: 100_000,
   race_bot_win_bps: 9000,     // победа над ботом: +90% ставки
   race_pvp_fee_bps: 500,      // PvP: победитель забирает банк минус 5%
-  bp_price: 150_000, bp_xp_level: 1000, bp_levels: 30, bp_season: 1,
+  bp_price: 150_000, bp_xp_level: 1000, bp_levels: 14, bp_season: 1,
   price_floor_pct: 60, price_cap_pct: 160, price_step_pct: 10, // динамика цен контейнеров
 };
 
-// Навык гонщика (как в исходной игре): 400 покупок, на экране уровень = покупки / 4.
-// Цена n-й покупки = 1000 + K·n⁶ (всего 20 000 000), время реакции 0,98 → 0,20 с.
-export const SKILL_MAX = 400;
-const SKILL_BASE = 1000, SKILL_TOTAL = 20_000_000;
-const K = (SKILL_TOTAL - SKILL_BASE * SKILL_MAX) / Array.from({ length: SKILL_MAX }, (_, i) => (i + 1) ** 6).reduce((a, b) => a + b, 0);
-export const skillPrice = (n) => Math.round(SKILL_BASE + K * n ** 6);
-export const reaction = (p) => 0.20 + 0.80 * Math.max(1 - p / 180, 0) ** 4.5;
+// Навык гонщика: 210 улучшений на 100 уровней, вся прокачка — ровно $2 000 000.
+// Показатель навыка улучшается от 0,98 до 0,20 с каждым улучшением, до самого последнего
+// (в заезде он прибавляется ко времени, поэтому чем меньше — тем быстрее).
+// Цена n-го улучшения = 1000 + K·n⁴; последняя цена подогнана, чтобы сумма была точной.
+export const SKILL_MAX = 210;
+export const SKILL_LEVELS = 100;
+const SKILL_BASE = 1000, SKILL_TOTAL = 2_000_000;
+const K = (SKILL_TOTAL - SKILL_BASE * SKILL_MAX) / Array.from({ length: SKILL_MAX }, (_, i) => (i + 1) ** 4).reduce((a, b) => a + b, 0);
+const PRICES = Array.from({ length: SKILL_MAX }, (_, i) => Math.round(SKILL_BASE + K * (i + 1) ** 4));
+PRICES[SKILL_MAX - 1] += SKILL_TOTAL - PRICES.reduce((a, b) => a + b, 0);
+export const skillPrice = (n) => PRICES[n - 1];
+export const skillLevel = (p) => Math.floor((p * SKILL_LEVELS) / SKILL_MAX);
+export const reaction = (p) => 0.20 + 0.78 * Math.max(1 - p / SKILL_MAX, 0) ** 1.6;
 
 // Награды Battle Pass: kind money | container | car (value: 1 редкая, 2 эпическая, 3 мифическая) | skill (покупки навыка)
 export function bpRewards() {
+  // 14 уровней. Бесплатно: деньги, контейнеры на 4/8/12, редкая машина на 14.
+  // Премиум: больше денег, улучшения навыка на 3/6/9/13, контейнеры на 4/8/12, машины на 5/10/14.
   const out = [];
   for (let l = 1; l <= SETTINGS_3.bp_levels; l++) {
-    let free = ['money', 500 + l * 150], prem = ['money', 2_000 + l * 600];
-    if (l % 5 === 0) free = ['container', ((l / 5 - 1) % 8) + 1];
-    if (l % 3 === 0) prem = ['skill', 4 + Math.floor(l / 6) * 2];
-    if (l % 5 === 0) prem = ['container', ((l / 5 + 3) % 8) + 1];
-    if (l === 10) prem = ['car', 1];
-    if (l === 20) prem = ['car', 2];
-    if (l === 30) prem = ['car', 3];
-    if (l === 25) free = ['car', 1];
+    let free = ['money', 1_000 + l * 400], prem = ['money', 4_000 + l * 1_500];
+    if (l % 4 === 0) free = ['container', [3, 2, 4][l / 4 - 1]];
+    if (l === 14) free = ['car', 1];
+    if ([3, 6, 9, 13].includes(l)) prem = ['skill', 5];
+    if (l % 4 === 0) prem = ['container', [8, 7, 4][l / 4 - 1]];
+    if (l === 5) prem = ['car', 1];
+    if (l === 10) prem = ['car', 2];
+    if (l === 14) prem = ['car', 3];
     out.push([l, ...free, ...prem]);
   }
   return out;
@@ -301,4 +309,17 @@ const triggers = [
 ];
 
 export const MIGRATION_3 = [...tables, ...triggers, ...seed()];
+
+// Миграция 4: навык — 210 улучшений за $2 000 000, Battle Pass — 14 уровней.
+const find3 = (prefix) => { const x = triggers.find((t) => t.startsWith(prefix)); if (!x) throw new Error('ddl3: ' + prefix); return x; };
+export const MIGRATION_4 = [
+  `UPDATE settings SET v = ${SETTINGS_3.bp_levels} WHERE k = 'bp_levels'`,
+  'DELETE FROM skill_prices',
+  ...seed().filter((x) => x.startsWith('INSERT INTO skill_prices')),
+  `UPDATE racer_skill SET purchases = min(purchases, ${SKILL_MAX})`,
+  'DROP TRIGGER IF EXISTS skill_buys_bi', find3('CREATE TRIGGER IF NOT EXISTS skill_buys_bi'),
+  'DROP TRIGGER IF EXISTS bp_claim_ai', find3('CREATE TRIGGER IF NOT EXISTS bp_claim_ai'),
+  'DELETE FROM bp_levels WHERE season = 1',
+  ...seed().filter((x) => x.startsWith('INSERT INTO bp_levels')),
+];
 void DAY; void giveCar; void RARITY_OF;

@@ -6,7 +6,7 @@ import { Avatar, CarArt, CarCard, RarityTag, Sheet, Stat, Money } from '../compo
 import { AppBar, Sect, Li, Seg, Empty, Ic, Nick, Kv, FriendPicker } from '../ui';
 import { useApp } from '../App';
 
-const sec = (s: number) => s.toFixed(2).replace('.', ',') + ' с';
+const num = (s: number) => s.toFixed(2).replace('.', ',');
 
 // Профиль игрока: свой (с личным меню) или чужой (статистика, гараж, друзья, перевод).
 export function Player({ id, root = false }: { id: number; root?: boolean }) {
@@ -56,13 +56,13 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
         <div className="grid2">
           <button className="card blue press" style={{ gap: 6 }} onClick={mine ? () => push({ name: 'skill' }) : undefined}>
             <div className="row between"><Ic icon={Gauge} tone="blue" size={34} /><span className="h3">{p.skill.level}/100</span></div>
-            <div className="sb">Навык гонщика</div><div className="xs muted">реакция {sec(p.skill.reaction)}</div>
+            <div className="sb">Навык гонщика</div><div className="xs muted">показатель {num(p.skill.reaction)}</div>
             <div className="bar blue"><i style={{ width: `${p.skill.level}%` }} /></div>
           </button>
           <button className="card press" style={{ gap: 6, borderColor: 'rgba(180,107,255,.4)' }} onClick={mine ? () => push({ name: 'bp' }) : undefined}>
-            <div className="row between"><Ic icon={Trophy} tone="gold" size={34} /><span className="h3">{p.bp.level}/30</span></div>
+            <div className="row between"><Ic icon={Trophy} tone="gold" size={34} /><span className="h3">{p.bp.level}/{p.bp.max}</span></div>
             <div className="sb">Battle Pass</div><div className="xs muted">{p.bp.premium ? 'премиум' : 'бесплатный'}</div>
-            <div className="bar"><i style={{ width: `${(p.bp.level / 30) * 100}%` }} /></div>
+            <div className="bar"><i style={{ width: `${(p.bp.level / p.bp.max) * 100}%` }} /></div>
           </button>
         </div>
 
@@ -83,8 +83,8 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
             <Sect>Моё</Sect>
             <div className="card list">
               <Li icon={CarFront} tone="gold" title="Гараж" sub={`${p.garage.owned} из ${p.garage.capacity} мест`} onClick={() => push({ name: 'garage' })} />
-              <Li icon={Gauge} tone="blue" title="Навык гонщика" sub="Качай реакцию — в гонках решает она" onClick={() => push({ name: 'skill' })} />
-              <Li icon={Trophy} tone="gold" title="Battle Pass" sub={`Уровень ${p.bp.level} из 30`} onClick={() => push({ name: 'bp' })} />
+              <Li icon={Gauge} tone="blue" title="Навык гонщика" sub="Качай показатель до 0,20 — в гонках решает он" onClick={() => push({ name: 'skill' })} />
+              <Li icon={Trophy} tone="gold" title="Battle Pass" sub={`Уровень ${p.bp.level} из ${p.bp.max}`} onClick={() => push({ name: 'bp' })} />
               <Li icon={Users} tone="green" title="Друзья" sub="Список, приглашения, быстрый выбор" onClick={() => push({ name: 'friends' })} />
               <Li icon={Send} title="Перевести деньги" sub={`Комиссия ${me.fees.transfer / 100}%`} onClick={() => push({ name: 'transfer' })} />
               <Li icon={Ticket} tone="blue" title="Промокод" onClick={() => push({ name: 'promo' })} />
@@ -147,17 +147,18 @@ export function SkillPage() {
             <div className="card blue">
               <div className="row"><Ic icon={Gauge} tone="blue" size={46} /><div className="grow"><div className="sm muted">Уровень</div><div className="skill-big">{s.level}<span className="h3 muted"> / {s.max_level}</span></div></div></div>
               <div className="bar blue"><i style={{ width: `${(s.purchases / s.max) * 100}%` }} /></div>
-              <Kv k="Реакция на старте" v={sec(s.reaction)} c="var(--blue)" />
-              <Kv k="Лучшая возможная" v={sec(s.best)} />
+              <Kv k="Показатель навыка" v={num(s.reaction)} c="var(--blue)" />
+              <Kv k="Лучший (100 уровень)" v={num(s.best)} />
+              <Kv k="Вся прокачка" v={money(s.total_cost)} />
               <Kv k="Улучшений" v={`${s.purchases} из ${s.max}`} />
-              <div className="xs faint">Реакция прибавляется ко времени каждого заезда. Каждые 4 улучшения — новый уровень. Первые уровни дешёвые и дают больше всего, последние — дорогие.</div>
+              <div className="xs faint">Показатель улучшается с 0,98 до 0,20 с каждым улучшением и прибавляется ко времени заезда: чем меньше, тем быстрее. 210 улучшений — 100 уровней. Первые дешёвые, последние дорогие.</div>
             </div>
             {s.price1 != null ? (
               <div className="card">
-                <Kv k="Следующее улучшение" v={`${sec(s.reaction)} → ${sec(s.next_reaction)}`} />
+                <Kv k="Следующее улучшение" v={`${num(s.reaction)} → ${num(s.next_reaction)}`} />
                 <button className="btn go xl w" disabled={busy || s.balance < s.price1} onClick={() => buy(1)}>Улучшить · {money(s.price1)}</button>
                 {s.price10 != null && <>
-                  <Kv k="Сразу ×10" v={`→ ${sec(s.reaction10)}`} />
+                  <Kv k="Сразу ×10" v={`→ ${num(s.reaction10)}`} />
                   <button className="btn info xl w" disabled={busy || s.balance < s.price10} onClick={() => buy(10)}>Улучшить ×10 · {money(s.price10)}</button>
                 </>}
                 <div className="xs muted center">Баланс {money(s.balance)}</div>
