@@ -89,7 +89,7 @@ export async function profileView(db, uid) {
     `SELECT c.name, c.rarity, c.price FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.user_id = :u AND uc.status = 'owned' ORDER BY c.price DESC LIMIT 1`, { ':u': uid });
   const place = (await db.get('SELECT count(*) + 1 AS p FROM users WHERE id > 0 AND balance > :b', { ':b': u.balance })).p;
   return {
-    user: { id: u.id, username: u.username, first_name: u.first_name, photo_url: u.photo_url, is_vip: u.is_vip, is_admin: u.is_admin, created_at: u.created_at },
+    user: { id: u.id, username: u.username, first_name: u.first_name, photo_url: u.photo_url, is_vip: u.is_vip, is_admin: u.is_admin, created_at: u.created_at, profile_bg: u.profile_bg ?? null, profile_frame: u.profile_frame ?? null },
     balance: u.balance, garage: { owned: g.n, value: g.v, capacity: u.garage_capacity }, best,
     stats: {
       containers_opened: u.containers_opened, wins: u.wins, bids_made: u.bids_made, cars_obtained: u.cars_obtained,
@@ -111,7 +111,7 @@ export async function topView(db, kind = 'balance') {
     wins: 'u.wins',
     racers: `(SELECT count(*) FROM races WHERE status = 'done' AND winner_id = u.id)`,
   }[kind] ?? 'u.balance';
-  return db.all(`SELECT u.id, u.username, u.first_name, u.photo_url, u.is_vip, ${order} AS value FROM users u
+  return db.all(`SELECT u.id, u.username, u.first_name, u.photo_url, u.is_vip, u.profile_frame, ${order} AS value FROM users u
     WHERE u.id > 0 AND u.is_banned = 0 ORDER BY value DESC, u.id LIMIT 30`);
 }
 

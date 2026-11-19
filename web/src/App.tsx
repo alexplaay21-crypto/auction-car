@@ -8,6 +8,7 @@ import { Race } from './screens/Race';
 import { Market } from './screens/Market';
 import { Garage, CarPage } from './screens/Garage';
 import { ShopPage, CatalogPage } from './screens/Shop';
+import { StylePage } from './screens/Style';
 import { Player, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage, SkillPage, FeedbackPage } from './screens/Profile';
 import { BattlePass } from './screens/BattlePass';
 import { Admin } from './screens/Admin';
@@ -18,7 +19,7 @@ import { setFx, select } from './sound';
 export type Tab = 'home' | 'race' | 'auction' | 'market' | 'profile';
 export type Route =
   | { name: 'player'; id: number } | { name: 'car'; id: number } | { name: 'catalog'; id: number } | { name: 'transfer'; to?: string }
-  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' | 'settings' | 'feedback' };
+  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' | 'settings' | 'feedback' | 'style' };
 
 type Ctx = {
   me: any; reload: () => Promise<void>; tab: Tab; setTab: (t: Tab) => void;
@@ -115,5 +116,6 @@ function Page({ r }: { r: Route }) {
     case 'admin': return <Admin />;
     case 'settings': return <SettingsPage />;
     case 'feedback': return <FeedbackPage />;
+    case 'style': return <StylePage />;
   }
 }

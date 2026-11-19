@@ -1,16 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Flag, Swords, Timer as TimerIcon, Gauge, Trophy, X } from 'lucide-react';
+import { Flag, Swords, Timer as TimerIcon, Gauge, Trophy, X, Zap, RotateCw, Mountain, Minus, Plus, CarFront } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money } from '../format';
-import { CarArt, Sheet } from '../components';
+import { CarArt, Sheet, RarityTag } from '../components';
 import { AppBar, Sect, Li, Nick, Seg, CarPicker, Ic, Empty } from '../ui';
 import { useApp } from '../App';
 import { t } from '../i18n';
 
 const TRACK_HINT: Record<string, string> = {
-  drag: t('Решают разгон и мощность'), circuit: t('Решают скорость и управляемость'), rally: t('Решают управляемость и надёжность'),
+  drag: 'Решают разгон и мощность', circuit: 'Решают скорость и управляемость', rally: 'Решают управляемость и надёжность',
 };
 const sec = (ms: number) => (ms / 1000).toFixed(2).replace('.', ',') + t(' с');
+
+const TRACK_ICON: Record<string, any> = { drag: Zap, circuit: RotateCw, rally: Mountain };
+const STATS: [string, string][] = [['speed', 'Скорость'], ['accel', 'Разгон'], ['power', 'Мощность'], ['handling', 'Управление'], ['reliability', 'Надёжность']];
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+// те же формулы, что на сервере (lib/race.js), — чтобы показать форму машины на трассе
+function norm(c: any): Record<string, number> {
+  return {
+    accel: clamp01((12 - c.accel_x100 / 100) / 10), power: clamp01(c.power / 1000), speed: clamp01((c.max_speed - 140) / 280),
+    handling: clamp01(c.handling / 100), reliability: clamp01(c.reliability / 100),
+  };
+}
+const perfOf = (c: any, w: Record<string, number>) => { const n = norm(c); return Object.entries(w ?? {}).reduce((s, [k, v]) => s + (n[k] ?? 0) * v, 0); };
 
 export function Race() {
   const { me, reload, push } = useApp();
@@ -18,7 +30,7 @@ export function Race() {
   const [tab, setTab] = useState<'bot' | 'pvp' | 'history'>('bot');
   const [car, setCar] = useState<any>(null);
   const [track, setTrack] = useState('drag');
-  const [stake, setStake] = useState('1000');
+  const [stake, setStake] = useState(1000);
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState<any>(null);
   const [accept, setAccept] = useState<any>(null);
@@ -37,45 +49,86 @@ export function Race() {
     setBusy(false);
   };
 
+  const tr = d?.tracks?.find((x: any) => x.id === track);
+  const w = tr?.weights ?? {};
+  const form = car ? Math.round(perfOf(car, w) * 100) : null;
+  const lim = d?.limits ?? { min: 100, max: 100000, bot_win_bps: 9000, fee_bps: 500 };
+  const step = stake >= 10000 ? 5000 : stake >= 2000 ? 1000 : 500;
+  const setS = (v: number) => setStake(Math.max(lim.min, Math.min(lim.max, v)));
+  const win = Math.floor(stake * lim.bot_win_bps / 10000);
+
   return (
     <>
       <AppBar title={t('Гонки')} />
       <div className="page">
-        {d && (
-          <button className="card blue press" onClick={() => push({ name: 'skill' })}>
-            <div className="row">
-              <Ic icon={Gauge} tone="blue" />
-              <div className="grow"><div className="h3">{t('Навык гонщика')} · {d.skill.level}/100</div><div className="sm muted">{t('Показатель {v} → 0,20 · в гонках решает именно он', { v: d.skill.reaction.toFixed(2).replace('.', ',') })}</div></div>
-              <span className="btn info s">{t('Качать')}</span>
-            </div>
-          </button>
-        )}
         <Seg value={tab} onChange={setTab} options={[['bot', t('Заезд')], ['pvp', t('Вызовы') + (d?.open?.length ? ' · ' + d.open.length : '')], ['history', t('История')]]} />
 
         {tab === 'bot' && (
           <>
-            <Sect>{t('Машина')}</Sect>
+            <div className={`race-hero t-${track}`}>
+              <div className="race-road" />
+              {car ? (
+                <>
+                  <div className="race-hero-car"><CarArt car={car} height={120} /></div>
+                  <div className="race-hero-top">
+                    <div className="col" style={{ minWidth: 0 }}><b className="ell">{car.name}</b><RarityTag r={car.rarity} /></div>
+                    <div className="form-ring" style={{ ['--p' as any]: form ?? 0 }}><b>{form}</b><span>{t('форма')}</span></div>
+                  </div>
+                </>
+              ) : <div className="race-hero-empty"><CarFront size={34} /><span>{t('Выбери машину ниже')}</span></div>}
+            </div>
             <CarPicker value={car?.user_car_id ?? null} onPick={setCar} />
-            <Sect>{t('Трасса')}</Sect>
-            <div className="grid3">
-              {(d?.tracks ?? []).map((tr: any) => (
-                <button key={tr.id} className={`card press${track === tr.id ? ' accent' : ''}`} style={{ padding: 10, gap: 4 }} onClick={() => setTrack(tr.id)}>
-                  <Flag size={18} className={track === tr.id ? 'c-orange' : 'muted'} /><div className="sb sm">{t(tr.name)}</div>
-                </button>
-              ))}
-            </div>
-            <div className="xs muted">{TRACK_HINT[track]}</div>
-            <Sect>{t('Ставка')}</Sect>
-            <div className="card">
-              <input className="inp big" inputMode="numeric" value={stake} onChange={(e) => setStake(e.target.value.replace(/\D/g, ''))} />
-              <div className="chips">{[500, 1000, 5000, 10000, 50000].map((v) => <button key={v} className={`chip${Number(stake) === v ? ' on' : ''}`} onClick={() => setStake(String(v))}>{money(v)}</button>)}</div>
-              <div className="sm muted">{t('Победа над ботом: +{a} · баланс {b}', { a: money(Math.floor((Number(stake) || 0) * (d?.limits.bot_win_bps ?? 9000) / 10000)), b: money(me.balance) })}</div>
-              <div className="grid2">
-                <button className="btn go xl" disabled={busy || !car} onClick={() => run({ action: 'bot', carId: car.user_car_id, track, stake: Number(stake) })}><Flag size={18} /> {t('Старт')}</button>
-                <button className="btn info xl" disabled={busy || !car} onClick={() => run({ action: 'create', carId: car.user_car_id, track, stake: Number(stake) })}><Swords size={18} /> {t('Вызов')}</button>
+
+            {car && (
+              <div className="card stats-card">
+                {STATS.map(([k, label]) => {
+                  const v = norm(car)[k], key = (w[k] ?? 0) >= 0.25;
+                  return (
+                    <div key={k} className={`stat-row${key ? ' key' : ''}`}>
+                      <span>{t(label)}</span>
+                      <div className="stat-bar"><i style={{ width: `${Math.round(v * 100)}%` }} /></div>
+                      <b className="num">{Math.round(v * 100)}</b>
+                    </div>
+                  );
+                })}
+                <div className="xs faint">{t('Оранжевым — что решает на этой трассе')}</div>
               </div>
-              <div className="xs faint">{t('Вызов увидят все игроки во вкладке «Вызовы». Ставка в залоге, победитель забирает банк минус {n}%.', { n: (d?.limits.fee_bps ?? 500) / 100 })}</div>
+            )}
+
+            <div className="track-tiles">
+              {(d?.tracks ?? []).map((x: any) => {
+                const I = TRACK_ICON[x.id] ?? Flag;
+                return (
+                  <button key={x.id} className={`track-tile press t-${x.id}${track === x.id ? ' on' : ''}`} onClick={() => setTrack(x.id)}>
+                    <I size={22} /><b>{t(x.name)}</b><span>{t(TRACK_HINT[x.id])}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            <div className="card stake-card">
+              <div className="row between"><span className="sm muted">{t('Ставка')}</span><span className="xs muted">{t('баланс {m}', { m: money(me.balance) })}</span></div>
+              <div className="stake-row">
+                <button className="stake-btn press" onClick={() => setS(stake - step)} aria-label="−"><Minus size={20} /></button>
+                <input className="stake-val num" inputMode="numeric" value={money(stake)} onChange={(e) => setStake(Number(e.target.value.replace(/\D/g, '')) || 0)} onBlur={() => setS(stake)} />
+                <button className="stake-btn press" onClick={() => setS(stake + step)} aria-label="+"><Plus size={20} /></button>
+              </div>
+              <div className="chips">{[1000, 5000, 10000, 25000, 50000].filter((v) => v <= lim.max).map((v) => <button key={v} className={`chip${stake === v ? ' on' : ''}`} onClick={() => setS(v)}>{money(v)}</button>)}</div>
+              <div className="win-line"><span>{t('Победа над ботом')}</span><b className="c-green num">+{money(win)}</b></div>
+              <button className="btn go xl w" disabled={busy || !car || stake > me.balance} onClick={() => run({ action: 'bot', carId: car.user_car_id, track, stake })}><Flag size={18} /> {t('Старт')}</button>
+              <button className="btn info w" disabled={busy || !car || stake > me.balance} onClick={() => run({ action: 'create', carId: car.user_car_id, track, stake })}><Swords size={18} /> {t('Бросить вызов игрокам')}</button>
+              <div className="xs faint">{t('Вызов увидят все игроки во вкладке «Вызовы». Ставка в залоге, победитель забирает банк минус {n}%.', { n: lim.fee_bps / 100 })}</div>
+            </div>
+
+            {d && (
+              <button className="card blue press" style={{ padding: 12 }} onClick={() => push({ name: 'skill' })}>
+                <div className="row">
+                  <Ic icon={Gauge} tone="blue" size={36} />
+                  <div className="grow"><div className="sb">{t('Навык гонщика')} · {d.skill.level}/100</div><div className="xs muted">{t('Показатель {v} → 0,20 · в гонках решает именно он', { v: d.skill.reaction.toFixed(2).replace('.', ',') })}</div></div>
+                  <span className="btn info s">{t('Качать')}</span>
+                </div>
+              </button>
+            )}
           </>
         )}
 
@@ -128,38 +181,49 @@ export function Race() {
   );
 }
 
-// Анимация заезда: машины едут к финишу за время, пропорциональное результату.
+// Заезд: светофор 3-2-1, машины едут к финишу за время, пропорциональное результату.
 function RaceReplay({ r, meId }: { r: any; meId: number }) {
-  const [go, setGo] = useState(false);
+  const [light, setLight] = useState(0); // 0..3 красные, 4 — зелёный
   const [done, setDone] = useState(false);
-  useEffect(() => { const a = setTimeout(() => setGo(true), 80); const f = setTimeout(() => setDone(true), 3400); return () => { clearTimeout(a); clearTimeout(f); }; }, []);
+  useEffect(() => {
+    const ts = [1, 2, 3, 4].map((n) => setTimeout(() => setLight(n), n * 450));
+    const f = setTimeout(() => setDone(true), 1800 + 2600);
+    return () => { ts.forEach(clearTimeout); clearTimeout(f); };
+  }, []);
+  const go = light >= 4;
   const fast = Math.min(r.host_ms, r.guest_ms);
-  const dur = (ms: number) => 2.2 * (ms / fast);
+  const dur = (ms: number) => 2.4 * (ms / fast);
   const meHost = r.host_id === meId;
   const won = r.winner_id === meId;
-  const lane = (car: any, ms: number, label: string) => (
-    <div className="lane">
+  const myMs = meHost ? r.host_ms : r.guest_ms, theirMs = meHost ? r.guest_ms : r.host_ms;
+  const lane = (car: any, ms: number, label: string, mine: boolean) => (
+    <div className={`lane${mine ? ' mine' : ''}`}>
       <span className="who">{label}</span>
-      <div className="car" style={{ left: go ? 'calc(100% - 136px)' : '0px', transitionProperty: 'left', transitionDuration: `${dur(ms)}s` }}>
-        <CarArt car={car} height={54} />
+      <div className="car" style={{ left: go ? 'calc(100% - 128px)' : '4px', transitionProperty: 'left', transitionDuration: `${dur(ms)}s` }}>
+        <CarArt car={car} height={50} />
       </div>
     </div>
   );
   return (
     <div className="col g12">
-      <div className="h3 center">{t(r.track_name)}</div>
-      <div className="track">
+      <div className="row between"><div className="h3">{t(r.track_name)}</div>
+        <div className="lights">{[1, 2, 3].map((n) => <i key={n} className={go ? 'g' : light >= n ? 'r' : ''} />)}</div></div>
+      <div className={`track${go && !done ? ' moving' : ''}`}>
         <div className="finish" />
-        {lane(r.host_car_info, r.host_ms, meHost ? t('Ты') : t('Соперник'))}
-        {lane(r.guest_car_info, r.guest_ms, r.kind === 'bot' ? t('Бот') : meHost ? t('Соперник') : t('Ты'))}
+        {lane(r.host_car_info, r.host_ms, meHost ? t('Ты') : t('Соперник'), meHost)}
+        {lane(r.guest_car_info, r.guest_ms, r.kind === 'bot' ? t('Бот') : meHost ? t('Соперник') : t('Ты'), !meHost)}
       </div>
       {done ? (
-        <div className="col g6 center">
-          <div className={`result ${won ? 'c-green' : 'c-red'}`}>{won ? t('Победа!') : t('Поражение')}</div>
-          <div className="sm muted">{sec(r.host_ms)} {t('против')} {sec(r.guest_ms)}</div>
-          <div className="h3">{won ? `+${money(r.kind === 'bot' ? r.payout : r.payout - r.stake)}` : `−${money(r.stake)}`}</div>
+        <div className={`race-result ${won ? 'win' : 'lose'}`}>
+          <div className="result">{won ? t('Победа!') : t('Поражение')}</div>
+          <div className="grid2">
+            <div><div className="xs muted">{t('Ты')}</div><b className="num">{sec(myMs)}</b></div>
+            <div><div className="xs muted">{r.kind === 'bot' ? t('Бот') : t('Соперник')}</div><b className="num">{sec(theirMs)}</b></div>
+          </div>
+          <div className="sm muted">{won ? t('быстрее на {s}', { s: sec(theirMs - myMs) }) : t('медленнее на {s}', { s: sec(myMs - theirMs) })}</div>
+          <div className={`h2 num ${won ? 'c-green' : 'c-red'}`}>{won ? `+${money(r.kind === 'bot' ? r.payout : r.payout - r.stake)}` : `−${money(r.stake)}`}</div>
         </div>
-      ) : <div className="center sm muted">{t('Едем…')}</div>}
+      ) : <div className="center sm muted">{go ? t('Едем…') : t('На старт…')}</div>}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Crown, Sparkles, Coins, Trophy, ParkingSquare, Gift, Zap, Landmark, Store, Send } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast, tg } from '../tg';
 import { money, RARITY } from '../format';
-import { CarCard, ContainerArt, CarArt, RarityTag } from '../components';
+import { CarCard, ContainerArt, CarArt, RarityTag, ProfileBg } from '../components';
 import { AppBar, Sect, Li, Ic, Kv } from '../ui';
 import { Chances } from './Auction';
 import { useApp } from '../App';
@@ -44,7 +44,7 @@ export function useStarsBuy(after: () => void) {
 }
 
 export function ShopPage() {
-  const { reload, pop } = useApp();
+  const { reload, pop, push } = useApp();
   const [s, setS] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const load = useCallback(() => call('app_shop', { action: 'list' }).then(setS, (e) => toast(errorText(e))), []);
@@ -95,6 +95,12 @@ export function ShopPage() {
             {lv && !lv.blocked && <button className="btn ghost w" disabled={stars.busy} onClick={() => stars.buy('bplvl')}>{t('Открыть следующий уровень · ⭐ {s}', { s: lv.stars })}</button>}
           </div>
         )}
+
+        <Sect action={t('Все')} onAction={() => push({ name: 'style' })}>{t('Оформление профиля')}</Sect>
+        <button className="card press" style={{ padding: 12 }} onClick={() => push({ name: 'style' })}>
+          <div className="cos-strip">{['neon', 'flames', 'aurora', 'goldrush'].map((id) => <span key={id}><ProfileBg id={id} /></span>)}</div>
+          <div className="row between"><div className="col"><b>{t('Фоны и рамки профиля')}</b><span className="xs muted">{t('Анимации, узоры и эффекты — видят все игроки')}</span></div><span className="btn go s">{t('Смотреть')}</span></div>
+        </button>
 
         <Sect>{t('Игровая валюта')}</Sect>
         <div className="xs muted" style={{ marginTop: -6 }}>{t('Чем больше пакет — тем больше денег за каждую звезду')}</div>

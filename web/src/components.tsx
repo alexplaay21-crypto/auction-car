@@ -87,11 +87,13 @@ export function RarityTag({ r }: { r: string }) {
 export function Avatar({ u, size = 32 }: { u: any; size?: number }) {
   const [bad, setBad] = useState(false);
   const letter = (u?.first_name || u?.username || '?').slice(0, 1).toUpperCase();
-  return (
-    <span className={`ava${u?.is_vip ? ' vip' : ''}`} style={{ width: size, height: size, fontSize: size * 0.42 }} title={who(u)}>
+  const ava = (
+    <span className={`ava${u?.is_vip && !u?.profile_frame ? ' vip' : ''}`} style={{ width: size, height: size, fontSize: size * 0.42 }} title={who(u)}>
       {u?.photo_url && !bad ? <img src={u.photo_url} alt="" onError={() => setBad(true)} /> : letter}
     </span>
   );
+  // рамка из магазина оформления
+  return u?.profile_frame ? <span className={`fr f-${u.profile_frame}`} style={{ ['--fw' as any]: `${Math.max(2, Math.round(size * 0.07))}px` }}>{ava}</span> : ava;
 }
 
 export function Sheet({ open, onClose, children, title }: { open: boolean; onClose: () => void; children: ReactNode; title?: ReactNode }) {
@@ -159,4 +161,9 @@ export function CarCard({ car, onClick, ribbon }: { car: any; onClick?: () => vo
       <div className="row between g6"><RarityTag r={car.rarity} /><span className="price sm">{money(car.price)}</span></div>
     </button>
   );
+}
+
+// Фон профиля из магазина оформления (кладётся первым ребёнком карточки .phead).
+export function ProfileBg({ id }: { id?: string | null }) {
+  return id ? <div className={`pbg bg-${id}`}><i /></div> : null;
 }

@@ -6,6 +6,7 @@ import { NOW, DAY, S, RATE, OWNED, CAPACITY, post, giveCar } from './sql.js';
 import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
 import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
+import { MIGRATION_11 } from './ddl7.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -23,7 +24,7 @@ export const SETTINGS = {
   daily_bonus: 1_000, daily_bonus_vip: 2_000,
   vip_price: 500_000,
   garage_start: 15, garage_max: 50, garage_vip_bonus: 10,
-  ref_inviter: 10_000, ref_invited: 5_000, ref_first_purchase: 30_000, ref_epic_every: 10,
+  ref_inviter: 10_000, ref_invited: 5_000, ref_first_purchase: 30_000, ref_epic_every: 5,
   sale_offer_ttl_s: 900,
   min_transfer: 1,
   shop_enabled: 1,
@@ -589,4 +590,6 @@ export const MIGRATIONS = [
   { id: 9, statements: MIGRATION_9 },
   // 10: VIP 149⭐; премиум — эпическая машина, легендарная только в делюксе.
   { id: 10, statements: MIGRATION_10 },
+  // 11: фоны и рамки профиля; эпическая машина за каждых 5 друзей.
+  { id: 11, statements: MIGRATION_11 },
 ];

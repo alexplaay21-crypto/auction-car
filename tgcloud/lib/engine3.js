@@ -110,7 +110,7 @@ const CAR_COLS = 'id, name, rarity, color, body, max_speed, accel_x100, power, h
 export async function raceView(db, id) {
   const r = await db.get('SELECT * FROM races WHERE id = :r', { ':r': id });
   if (!r) return null;
-  const userOf = (u) => (u ? db.get('SELECT id, username, first_name, photo_url, is_vip FROM users WHERE id = :u', { ':u': u }) : null);
+  const userOf = (u) => (u ? db.get('SELECT id, username, first_name, photo_url, is_vip, profile_frame FROM users WHERE id = :u', { ':u': u }) : null);
   const carOfUc = (uc) => (uc ? db.get(`SELECT c.${CAR_COLS.split(', ').join(', c.')} FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.id = :i`, { ':i': uc }) : null);
   const st = await settings(db);
   return {
@@ -168,7 +168,7 @@ export async function marketView(db, uid, { rarity = null, country = null, sort 
   const order = { new: 'l.id DESC', cheap: 'l.price ASC', expensive: 'l.price DESC', deal: 'CAST(l.price AS REAL) / c.price ASC' }[sort] ?? 'l.id DESC';
   const rows = await db.all(
     `SELECT l.id AS listing_id, l.price AS ask, l.seller_id, l.created_at AS listed_at, uc.id AS user_car_id,
-            u.username, u.first_name, u.photo_url, u.is_vip, c.*
+            u.username, u.first_name, u.photo_url, u.is_vip, u.profile_frame, c.*
      FROM market_listings l JOIN user_cars uc ON uc.id = l.user_car_id JOIN cars c ON c.id = uc.car_id JOIN users u ON u.id = l.seller_id
      WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT 60`, p);
   const sold = await db.all(
@@ -316,7 +316,7 @@ export async function addFriend(db, uid, ref) {
 export async function removeFriend(db, uid, id) {
   await db.run('DELETE FROM friends WHERE user_id = :u AND friend_id = :f', { ':u': uid, ':f': Number(id) || 0 });
 }
-const PUB = 'u.id, u.username, u.first_name, u.photo_url, u.is_vip, u.last_seen';
+const PUB = 'u.id, u.username, u.first_name, u.photo_url, u.is_vip, u.last_seen, u.profile_bg, u.profile_frame';
 // Друзья для быстрого выбора: мои друзья, приглашённые/пригласивший и с кем недавно были сделки.
 export async function friendsView(db, uid) {
   const friends = await db.all(`SELECT ${PUB}, 'friend' AS why FROM friends f JOIN users u ON u.id = f.friend_id WHERE f.user_id = :u ORDER BY u.last_seen DESC`, { ':u': uid });
@@ -356,7 +356,7 @@ export async function playerView(db, viewerId, targetId) {
   const isFriend = !!(await db.get('SELECT 1 AS x FROM friends WHERE user_id = :v AND friend_id = :u', { ':v': viewerId, ':u': u.id }));
   const t = await now(db);
   return {
-    user: { id: u.id, username: u.username, first_name: u.first_name, photo_url: u.photo_url, is_vip: u.is_vip, created_at: u.created_at, online: t - u.last_seen < 300, last_seen: u.last_seen },
+    user: { id: u.id, username: u.username, first_name: u.first_name, photo_url: u.photo_url, is_vip: u.is_vip, created_at: u.created_at, online: t - u.last_seen < 300, last_seen: u.last_seen, profile_bg: u.profile_bg ?? null, profile_frame: u.profile_frame ?? null },
     me: viewerId === u.id, is_friend: isFriend, place, balance: u.balance,
     garage: { owned: g.n, value: g.v, capacity: u.garage_capacity, rarities: Object.fromEntries(rarities.map((r) => [r.rarity, r.n])) },
     cars, skill: { purchases: skill, level: skillLevel(skill), reaction: reaction(skill) },

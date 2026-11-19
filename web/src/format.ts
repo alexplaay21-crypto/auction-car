@@ -35,7 +35,7 @@ export const left = (sec: number) => {
 };
 
 export const LEDGER: Record<string, string> = {
-  start: 'Стартовый капитал', stars: 'Покупка за Stars', bid: 'Ставка', bid_refund: 'Возврат ставки', auto_sell: 'Авто-продажа (гараж полон)',
+  start: 'Стартовый капитал', stars: 'Покупка за Stars', cosmetic: 'Оформление профиля', bid: 'Ставка', bid_refund: 'Возврат ставки', auto_sell: 'Авто-продажа (гараж полон)',
   sell_state: 'Продажа машины', sell_player: 'Продажа игроку', buy_car: 'Покупка у игрока', transfer_out: 'Перевод',
   transfer_in: 'Перевод от игрока', daily_bonus: 'Ежедневный бонус', vip: 'VIP', garage_upgrade: 'Расширение гаража',
   ref_inviter: 'Друг по приглашению', ref_invited: 'Бонус за приглашение', ref_first_purchase: 'Первая покупка друга',

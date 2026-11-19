@@ -2,6 +2,7 @@
 import { endpoint } from '../lib/endpoint.js';
 import { GameError } from '../lib/engine.js';
 import { sendFeedback, myFeedback } from '../lib/stars.js';
+import { cosmeticsView, buyCosmetic, equipCosmetic } from '../lib/cosmetics.js';
 import { playerView, addFriend, removeFriend, friendsView, skillView, buySkill, containerPrices, userSettings, saveUserSettings } from '../lib/engine3.js';
 
 export default endpoint(async (db, uid, input) => {
@@ -15,6 +16,9 @@ export default endpoint(async (db, uid, input) => {
   if (a === 'prices') return { containers: await containerPrices(db) };
   if (a === 'settings') return userSettings(db, uid);
   if (a === 'feedback') return { id: await sendFeedback(db, uid, input.kind, input.text), list: await myFeedback(db, uid) };
+  if (a === 'cosmetics') return cosmeticsView(db, uid);
+  if (a === 'buy_cosmetic') return buyCosmetic(db, uid, input.id);
+  if (a === 'equip') return equipCosmetic(db, uid, input.id ?? null, input.kind);
   if (a === 'my_feedback') return { list: await myFeedback(db, uid) };
   if (a === 'save_settings') return saveUserSettings(db, uid, input.settings);
   throw new GameError('BAD_INPUT');

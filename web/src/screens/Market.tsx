@@ -36,7 +36,7 @@ export function Market() {
         <Seg value={sort} onChange={setSort} options={[['new', t('Новые')], ['deal', t('Выгодные')], ['cheap', t('Дешевле')], ['expensive', t('Дороже')]]} />
         <div className="chips">
           <button className={`chip${!rarity && !mine ? ' on' : ''}`} onClick={() => { setRarity(null); setMine(false); }}>{t('Все')}</button>
-          {RARITIES.map((r) => <button key={r} className={`chip${rarity === r ? ' on' : ''}`} onClick={() => setRarity(rarity === r ? null : r)}>{RARITY[r].name}</button>)}
+          {RARITIES.filter((r) => r === 'epic' || r === 'mythic').map((r) => <button key={r} className={`chip${rarity === r ? ' on' : ''}`} onClick={() => setRarity(rarity === r ? null : r)}>{RARITY[r].name}</button>)}
           <button className={`chip${mine ? ' on' : ''}`} onClick={() => setMine(!mine)}>{t('Мои лоты')}</button>
         </div>
         {d && (d.list.length ? (

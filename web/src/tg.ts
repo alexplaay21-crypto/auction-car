@@ -57,6 +57,8 @@ const MESSAGES: Record<string, string> = {
   PROMO_LIMIT: 'Промокод больше не действует',
   PROMO_USED: 'Ты уже активировал этот промокод',
   ITEM_UNAVAILABLE: 'Товар недоступен',
+  ALREADY_OWNED: 'Это уже есть у тебя',
+  NOT_OWNED: 'Сначала купи это оформление',
   BP_NO_LEGENDARY: 'Легендарные машины — только за делюкс',
   STARS_ONLY: 'Покупается только за Telegram Stars — в магазине',
   BP_NEED_PREMIUM: 'Сначала купи премиум Battle Pass',

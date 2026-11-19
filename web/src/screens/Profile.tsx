@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown, Share2, CarFront, Gauge, Flag, Store, UserPlus, UserCheck, ShoppingBag, Settings, BarChart3, MessageSquareWarning, Bug, Lightbulb } from 'lucide-react';
+import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown, Share2, CarFront, Gauge, Flag, Store, UserPlus, UserCheck, ShoppingBag, Settings, BarChart3, MessageSquareWarning, Bug, Lightbulb, Palette } from 'lucide-react';
 import { call, clientId, errorText, haptic, share, toast } from '../tg';
 import { money, who, ago, LEDGER, RARITY, RARITIES } from '../format';
 import { t } from '../i18n';
-import { Avatar, CarArt, CarCard, RarityTag, Sheet, Stat, Money } from '../components';
+import { Avatar, CarArt, CarCard, RarityTag, Sheet, Stat, Money, ProfileBg } from '../components';
 import { AppBar, Sect, Li, Seg, Empty, Ic, Nick, Kv, FriendPicker } from '../ui';
 import { useApp } from '../App';
 
@@ -29,7 +29,8 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
     <>
       <AppBar title={mine ? t('Профиль') : who(u)} back={root ? undefined : pop} />
       <div className="page">
-        <div className="card">
+        <div className="card phead">
+          <ProfileBg id={u.profile_bg} />
           <div className="row">
             <div style={{ position: 'relative' }}><Avatar u={u} size={56} />{u.online && <span className="online" style={{ position: 'absolute', right: 1, bottom: 1 }} />}</div>
             <div className="grow col" style={{ gap: 2 }}>
@@ -67,6 +68,7 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
               <Li icon={Send} title={t('Перевести деньги')} onClick={() => push({ name: 'transfer' })} />
               <Li icon={Ticket} tone="blue" title={t('Промокод')} onClick={() => push({ name: 'promo' })} />
               <Li icon={ShoppingBag} tone="red" title={t('Магазин и VIP')} onClick={() => push({ name: 'shop' })} />
+              <Li icon={Palette} tone="blue" title={t('Оформление профиля')} sub={t('Фоны и рамки с анимацией')} onClick={() => push({ name: 'style' })} />
               <Li icon={BarChart3} tone="gray" title={t('Статистика')} onClick={() => setStats(true)} />
               <Li icon={Flag} tone="gray" title={t('Лидеры')} onClick={() => push({ name: 'leaders' })} />
               <Li icon={History} tone="gray" title={t('История операций')} onClick={() => push({ name: 'history' })} />
