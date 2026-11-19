@@ -12,7 +12,7 @@ export const STAR_PRODUCTS = [
   ['m500', 'money', 500, 800_000, null],
   ['m1000', 'money', 1000, 2_000_000, 'best'],
   ['m2500', 'money', 2500, 6_000_000, 'max'],
-  ['vip', 'vip', 199, 0, null],
+  ['vip', 'vip', 149, 0, null],
   ['bp', 'bp', 99, 0, null],
   ['bpdx', 'bpdx', 49, 0, null], // делюкс: только после премиума, +5 уровней
   ['bplvl', 'bplvl', 5, 0, null], // один уровень Battle Pass
@@ -148,4 +148,25 @@ export const MIGRATION_9 = [
   "INSERT INTO bp_levels (season, level, free_kind, free_value, prem_kind, prem_value) SELECT id, 15, 'car', 1, 'car', 3 FROM bp_seasons WHERE true ON CONFLICT DO NOTHING",
   // машина за покупку премиума — по умолчанию легендарная Riviera Hypersport, админ меняет
   "UPDATE bp_seasons SET prem_car_id = (SELECT id FROM cars WHERE name = 'Riviera Hypersport') WHERE prem_car_id IS NULL AND ends_at > " + NOW,
+];
+
+// ---------- миграция 10 ----------
+// VIP — 149⭐. В Battle Pass легендарных машин нет: премиум даёт эпическую машину сезона,
+// легендарная — только в делюксе (выдаётся сразу при покупке делюкса).
+const starPay10 = starPay9.replace(
+  "UPDATE bp_progress SET deluxe = 1,",
+  `INSERT INTO car_grants (op_id, user_id, car_id, source, created_at)
+       SELECT 'bpdx:' || NEW.season || ':' || NEW.user_id, NEW.user_id, dx_car_id, 'bp', ${NOW} FROM bp_seasons
+       WHERE NEW.kind = 'bpdx' AND id = NEW.season AND dx_car_id IS NOT NULL;
+     UPDATE bp_progress SET deluxe = 1,`);
+export const MIGRATION_10 = [
+  'ALTER TABLE bp_seasons ADD COLUMN dx_car_id INTEGER',
+  "UPDATE star_products SET stars = 149 WHERE id = 'vip'",
+  // легендарная машина сезона переезжает в делюкс, за премиум — эпическая
+  "UPDATE bp_seasons SET dx_car_id = COALESCE(prem_car_id, (SELECT id FROM cars WHERE name = 'Riviera Hypersport')) WHERE ends_at > " + NOW,
+  "UPDATE bp_seasons SET prem_car_id = (SELECT id FROM cars WHERE name = 'Toro Tempesta') WHERE ends_at > " + NOW,
+  // наград-легендарок в пассе не остаётся: 15-й уровень премиума — эпическая машина
+  "UPDATE bp_levels SET prem_value = 2 WHERE prem_kind = 'car' AND prem_value = 3",
+  "UPDATE bp_levels SET free_value = 2 WHERE free_kind = 'car' AND free_value = 3",
+  'DROP TRIGGER IF EXISTS star_pay_ai', starPay10,
 ];

@@ -35,14 +35,14 @@ test('оплата валюты зачисляется один раз', async (
 
 test('VIP за звёзды; повторная покупка не проходит проверку, а оплаченная возвращается', async () => {
   const inv = await S.invoiceParams(db, 2, 'vip');
-  assert.equal(inv.currency, 'XTR'); assert.equal(inv.prices[0].amount, 199);
-  assert.deepEqual(await S.precheck(db, { invoice_payload: inv.payload, total_amount: 199, currency: 'XTR', from: { id: 2 } }), { ok: true });
-  await pay(2, 'vip', 199, 'v1');
+  assert.equal(inv.currency, 'XTR'); assert.equal(inv.prices[0].amount, 149);
+  assert.deepEqual(await S.precheck(db, { invoice_payload: inv.payload, total_amount: 149, currency: 'XTR', from: { id: 2 } }), { ok: true });
+  await pay(2, 'vip', 149, 'v1');
   assert.equal((await E.getUser(db, 2)).is_vip, 1);
-  const pc = await S.precheck(db, { invoice_payload: inv.payload, total_amount: 199, currency: 'XTR', from: { id: 2 } });
+  const pc = await S.precheck(db, { invoice_payload: inv.payload, total_amount: 149, currency: 'XTR', from: { id: 2 } });
   assert.equal(pc.ok, false);
   const b0 = await bal(2);
-  const r = await pay(2, 'vip', 199, 'v2');
+  const r = await pay(2, 'vip', 149, 'v2');
   assert.equal(r.refund, true);
   assert.equal(await bal(2), b0);
   await ok();
@@ -57,7 +57,9 @@ test('премиум Battle Pass за звёзды', async () => {
   await pay(2, 'bp', 99, 'b1', se.id);
   assert.equal((await G.bpView(db, 2)).premium, true);
   await assert.rejects(S.invoiceParams(db, 2, 'bp'), (e) => e.code === 'BP_ALREADY');
+  const before = (await db.get("SELECT count(*) AS n FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.user_id = 2 AND c.rarity = 'mythic'")).n;
   await pay(2, 'bpdx', 49, 'd1', se.id);
+  assert.equal((await db.get("SELECT count(*) AS n FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.user_id = 2 AND c.rarity = 'mythic'")).n, before + 1, 'делюкс даёт легендарную');
   let v = await G.bpView(db, 2);
   assert.equal(v.deluxe, true); assert.equal(v.level, 5, 'делюкс: +5 уровней');
   await pay(2, 'bplvl', 5, 'l1', se.id);
@@ -70,7 +72,8 @@ test('премиум Battle Pass за звёзды', async () => {
   await pay(2, 'bplvl', 5, 'l2', se.id);
   assert.equal((await G.bpView(db, 2)).xp, 15000, 'не выше последнего уровня');
   const car = await G.bpClaim(db, 2, 15, 'premium');
-  assert.equal(car.car.rarity, 'mythic');
+  assert.equal(car.car.rarity, 'epic', 'в пассе легендарных нет');
+  await assert.rejects(G.setLevelReward(db, { season: se.id, level: 15, track: 'premium', kind: 'car', value: 3 }), { code: 'BP_NO_LEGENDARY' });
   await ok();
 });
 
@@ -79,7 +82,8 @@ test('порядок в магазине: VIP, Battle Pass, деньги', async
   assert.deepEqual(ids.slice(0, 4), ['vip', 'bp', 'bpdx', 'bplvl']);
   assert.equal(ids[4], 'm50');
   const vip = (await S.starProducts(db, 2)).find((p) => p.id === 'vip');
-  assert.equal(vip.stars, 199);
+  assert.equal(vip.stars, 149);
+  assert.ok(vip.perks.length >= 6);
 });
 
 test('сообщение о проблеме уходит админу, ответ — игроку', async () => {

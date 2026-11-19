@@ -171,4 +171,13 @@ export const EN: Record<string, string> = {
   'Сначала купи премиум Battle Pass': 'Buy Battle Pass premium first',
   'Делюкс уже куплен': 'Deluxe already bought',
   'Все уровни Battle Pass уже открыты': 'All Battle Pass levels are already unlocked',
+  'Все привилегии уже действуют': 'All perks are already active',
+  'Покупается один раз и остаётся навсегда': 'Buy once, keep forever',
+  'Купить VIP за ⭐ {n}': 'Buy VIP for ⭐ {n}',
+  'Делюкс': 'Deluxe',
+  '+{n} уровней и легендарная машина': '+{n} levels and a legendary car',
+  'Сразу в гараж с делюксом': 'Straight to your garage with Deluxe',
+  'Делюкс за ⭐ {s}': 'Deluxe for ⭐ {s}',
+  'Откроется после покупки премиума · ⭐ {s}': 'Unlocks after premium · ⭐ {s}',
+  'Легендарные машины — только за делюкс': 'Legendary cars come only with Deluxe',
 };

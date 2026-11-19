@@ -31,7 +31,9 @@ export async function starProducts(db, uid) {
   const list = await db.all('SELECT * FROM star_products WHERE is_active = 1 ORDER BY sort, id');
   const u = await getUser(db, uid);
   const b = await bpState(db, uid);
-  const car = b.se?.prem_car_id ? await db.get('SELECT * FROM cars WHERE id = :c', { ':c': b.se.prem_car_id }) : null;
+  const carOf = (id) => (id ? db.get('SELECT * FROM cars WHERE id = :c', { ':c': id }) : null);
+  const car = await carOf(b.se?.prem_car_id), dxCar = await carOf(b.se?.dx_car_id);
+  const st = await settings(db);
   const base = list.filter((p) => p.kind === 'money').reduce((m, p) => Math.min(m, p.money / p.stars), Infinity);
   return list.map((p) => ({
     ...p,
@@ -40,7 +42,23 @@ export async function starProducts(db, uid) {
     owned: p.kind === 'vip' ? u.is_vip === 1 : p.kind === 'bp' ? b.premium : p.kind === 'bpdx' ? b.deluxe : false,
     blocked: blocker(p, u, b),
     ...(p.kind === 'bp' ? { season: b.se?.name ?? null, car } : {}),
+    ...(p.kind === 'bpdx' ? { car: dxCar, levels: DELUXE_LEVELS } : {}),
+    ...(p.kind === 'vip' ? { perks: vipPerks(st) } : {}),
   }));
+}
+
+// Что даёт VIP — из текущих настроек, чтобы цифры всегда совпадали с игрой.
+export function vipPerks(st) {
+  const pct = (bps) => `${bps / 100}%`;
+  return [
+    ['garage', `+${st.garage_vip_bonus} мест в гараже`, `до ${st.garage_max + st.garage_vip_bonus} машин вместо ${st.garage_max}`],
+    ['bonus', `Бонус ${money(st.daily_bonus_vip)} вместо ${money(st.daily_bonus)}`, `раз в 4 часа, пока на балансе меньше ${money(st.bonus_cap_vip)} (без VIP — ${money(st.bonus_cap)})`],
+    ['quick', `Быстрая продажа — ${pct(st.comm_quick_vip_bps)} вместо ${pct(st.comm_quick_bps)}`, 'первые 15 минут после выигрыша'],
+    ['state', `Продажа государству — ${pct(st.comm_state_vip_bps)} вместо ${pct(st.comm_state_bps)}`, 'в любое время'],
+    ['market', `Рынок и продажа игроку — ${pct(st.comm_player_vip_bps)} вместо ${pct(st.comm_player_bps)}`, 'комиссия с каждой сделки'],
+    ['transfer', `Переводы — ${pct(st.comm_transfer_vip_bps)} вместо ${pct(st.comm_transfer_bps)}`, 'деньги друзьям без потерь'],
+    ['badge', 'Корона 👑 у ника', 'в профиле, лидерах и на аукционе'],
+  ];
 }
 
 export function productTitle(p, se) {
@@ -52,8 +70,8 @@ export function productTitle(p, se) {
 }
 function productDescription(p, st, car) {
   if (p.kind === 'money') return `Игровая валюта Car Auction: ${money(p.money)} сразу на баланс.`;
-  if (p.kind === 'vip') return `+${st.garage_vip_bonus} мест в гараже, ниже комиссии, бонус ${money(st.daily_bonus_vip)} раз в 4 часа. Навсегда.`;
-  if (p.kind === 'bpdx') return `+${DELUXE_LEVELS} уровней Battle Pass сразу. Только для владельцев премиума.`;
+  if (p.kind === 'vip') return `Навсегда: +${st.garage_vip_bonus} мест в гараже, бонус ${money(st.daily_bonus_vip)} раз в 4 часа, комиссии ниже (переводы ${st.comm_transfer_vip_bps / 100}%, рынок ${st.comm_player_vip_bps / 100}%, быстрая продажа ${st.comm_quick_vip_bps / 100}%).`;
+  if (p.kind === 'bpdx') return `${car ? `Легендарная ${car.name} сразу в гараж + ` : ''}${DELUXE_LEVELS} уровней Battle Pass. Только для владельцев премиума.`;
   if (p.kind === 'bplvl') return 'Сразу открывает следующий уровень Battle Pass.';
   return `${car ? `Машина ${car.name} сразу в гараж + ` : ''}премиум-награды всех уровней сезона.`;
 }
@@ -65,7 +83,8 @@ export async function invoiceParams(db, uid, productId) {
   const why = blocker(p, await getUser(db, uid), b);
   if (why) throw new GameError(why);
   const st = await settings(db);
-  const car = p.kind === 'bp' && b.se?.prem_car_id ? await db.get('SELECT name FROM cars WHERE id = :c', { ':c': b.se.prem_car_id }) : null;
+  const carId = p.kind === 'bp' ? b.se?.prem_car_id : p.kind === 'bpdx' ? b.se?.dx_car_id : null;
+  const car = carId ? await db.get('SELECT name FROM cars WHERE id = :c', { ':c': carId }) : null;
   return {
     title: productTitle(p, b.se).slice(0, 32),
     description: productDescription(p, st, car).slice(0, 255),
@@ -118,7 +137,8 @@ export async function deliver(db, uid, sp) {
   await db.run(`INSERT INTO star_payments (charge_id, user_id, product, kind, stars, money, season, created_at)
     VALUES (:c, :u, :p, :k, :s, :m, :se, ${NOW}) ON CONFLICT (charge_id) DO NOTHING`,
   { ':c': charge, ':u': uid, ':p': p?.id ?? pl?.product ?? '?', ':k': kind, ':s': stars, ':m': kind === 'money' ? amount : 0, ':se': season });
-  const car = p?.kind === 'bp' && kind === 'bp' ? await db.get('SELECT c.* FROM bp_seasons s JOIN cars c ON c.id = s.prem_car_id WHERE s.id = :s', { ':s': season }) : null;
+  const col = kind === 'bp' ? 'prem_car_id' : kind === 'bpdx' ? 'dx_car_id' : null;
+  const car = col ? await db.get(`SELECT c.* FROM bp_seasons s JOIN cars c ON c.id = s.${col} WHERE s.id = :s`, { ':s': season }) : null;
   return { product: p?.id, kind, money: kind === 'money' ? amount : 0, stars, refund: kind === 'refund', charge, car };
 }
 
@@ -127,7 +147,7 @@ export function deliveredText(r) {
   if (r.refund) return '↩️ Этот товар у тебя уже есть или стал недоступен — звёзды возвращены.';
   if (r.kind === 'vip') return '👑 <b>VIP навсегда активирован!</b> Больше мест в гараже, ниже комиссии и бонус побольше.';
   if (r.kind === 'bp') return `🏆 <b>Премиум Battle Pass открыт!</b>${r.car ? ` Машина <b>${r.car.name}</b> уже в гараже.` : ''} Забирай премиум-награды в разделе Battle Pass.`;
-  if (r.kind === 'bpdx') return `💎 <b>Делюкс открыт:</b> +${DELUXE_LEVELS} уровней Battle Pass!`;
+  if (r.kind === 'bpdx') return `💎 <b>Делюкс открыт:</b> +${DELUXE_LEVELS} уровней Battle Pass!${r.car ? ` Легендарная <b>${r.car.name}</b> уже в гараже.` : ''}`;
   if (r.kind === 'bplvl') return '⬆️ <b>Уровень Battle Pass открыт!</b> Забери награду.';
   return `💰 <b>+${money(r.money)}</b> на баланс. Спасибо за покупку!`;
 }

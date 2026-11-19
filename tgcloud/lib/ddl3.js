@@ -29,7 +29,7 @@ export const reaction = (p) => 0.20 + 0.78 * Math.max(1 - p / SKILL_MAX, 0) ** 1
 // Награды Battle Pass: kind money | container | car (value: 1 редкая, 2 эпическая, 3 легендарная) | skill (покупки навыка)
 export function bpRewards() {
   // 15 уровней. Бесплатно: деньги, контейнеры на 4/8/12, редкая машина на 15.
-  // Премиум: больше денег, навык на 3/6/9/13, контейнеры на 4/8/12/14, машины на 5/10, легендарная на 15.
+  // Премиум: больше денег, навык на 3/6/9/13, контейнеры на 4/8/12/14, машины на 5/10/15 (легендарных в пассе нет — они в делюксе).
   const out = [];
   for (let l = 1; l <= SETTINGS_3.bp_levels; l++) {
     let free = ['money', 1_000 + l * 400], prem = ['money', 4_000 + l * 1_500];
@@ -41,7 +41,7 @@ export function bpRewards() {
     if (l === 5) prem = ['car', 1];
     if (l === 10) prem = ['car', 2];
     if (l === 14) prem = ['container', 8];
-    if (l === 15) prem = ['car', 3];
+    if (l === 15) prem = ['car', 2];
     out.push([l, ...free, ...prem]);
   }
   return out;

@@ -7,7 +7,7 @@ import { AppBar, Ic, Kv, Sect, Empty } from '../ui';
 import { left } from '../format';
 import { useApp } from '../App';
 import { t } from '../i18n';
-import { useStarsBuy } from './Shop';
+import { useStarsBuy, SeasonCar } from './Shop';
 
 const CAR_R: Record<number, string> = { 1: 'rare', 2: 'epic', 3: 'mythic' };
 function rewardText(r: any) {
@@ -48,12 +48,13 @@ export function BattlePass() {
           <div className="bar"><i style={{ width: `${bp.level >= bp.levels.length ? 100 : (inLevel / bp.per_level) * 100}%` }} /></div>
           <div className="sm muted">{bp.level >= bp.levels.length ? t('Все уровни пройдены!') : t('{a} / {b} опыта до уровня {c}', { a: inLevel, b: bp.per_level, c: bp.level + 1 })}</div>
           <div className="xs muted">{t('До конца сезона: {t}', { t: left(bp.left_s) })}</div>
-          {!bp.premium && bp.prem_car && (
-            <div className={`bp-car r-${bp.prem_car.rarity}`}><CarArt car={bp.prem_car} height={96} studio /><div className="col"><span className="xs muted">{t('Сразу в гараж с премиумом')}</span><b>{bp.prem_car.name}</b><RarityTag r={bp.prem_car.rarity} /></div></div>
-          )}
+          {!bp.premium && bp.prem_car && <SeasonCar car={bp.prem_car} label={t('Сразу в гараж с премиумом')} />}
           {!bp.premium && bp.stars && <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}><Crown size={18} /> {t('Открыть премиум за ⭐ {n}', { n: bp.stars })}</button>}
           {bp.premium && !bp.deluxe && bp.deluxe_stars && bp.level < bp.levels.length && (
-            <button className="btn go w" disabled={stars.busy} onClick={() => stars.buy('bpdx')}>💎 {t('Делюкс: +{n} уровней · ⭐ {s}', { n: bp.deluxe_levels, s: bp.deluxe_stars })}</button>
+            <>
+              {bp.dx_car && <SeasonCar car={bp.dx_car} label={t('Сразу в гараж с делюксом')} />}
+              <button className="btn go w" disabled={stars.busy} onClick={() => stars.buy('bpdx')}>💎 {t('Делюкс: +{n} уровней · ⭐ {s}', { n: bp.deluxe_levels, s: bp.deluxe_stars })}</button>
+            </>
           )}
           {bp.level_stars && bp.level < bp.levels.length && (
             <button className="btn ghost w" disabled={stars.busy} onClick={() => stars.buy('bplvl')}>{t('Открыть следующий уровень · ⭐ {s}', { s: bp.level_stars })}</button>

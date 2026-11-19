@@ -33,6 +33,7 @@ export const ERRORS = {
   PROMO_LIMIT: 'Промокод больше не действует',
   PROMO_USED: 'Ты уже активировал этот промокод',
   ITEM_UNAVAILABLE: 'Товар недоступен',
+  BP_NO_LEGENDARY: 'Легендарные машины — только за делюкс',
   STARS_ONLY: 'Покупается только за Telegram Stars — в магазине',
   BP_NEED_PREMIUM: 'Сначала купи премиум Battle Pass',
   BP_DELUXE_ALREADY: 'Делюкс уже куплен',

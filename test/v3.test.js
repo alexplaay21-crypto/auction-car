@@ -117,7 +117,8 @@ test('Battle Pass: опыт за действия, бесплатная нагр
   const v = await G.bpView(db, 2);
   assert.equal(v.levels.length, 15);
   assert.equal(v.levels[14].premium.kind, 'car');
-  assert.equal(v.levels[14].premium.value, 3, 'на 15-м уровне — легендарная машина');
+  assert.equal(v.levels[14].premium.value, 2, 'на 15-м уровне — эпическая машина');
+  assert.equal(v.prem_car.rarity, 'epic'); assert.equal(v.dx_car.rarity, 'mythic');
   await ok();
 });
 

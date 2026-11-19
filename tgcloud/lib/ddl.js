@@ -5,7 +5,7 @@
 import { NOW, DAY, S, RATE, OWNED, CAPACITY, post, giveCar } from './sql.js';
 import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
-import { MIGRATION_7, MIGRATION_8, MIGRATION_9 } from './ddl6.js';
+import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -587,4 +587,6 @@ export const MIGRATIONS = [
   { id: 8, statements: MIGRATION_8 },
   // 9: VIP и Battle Pass только за звёзды, делюкс, покупка уровней, 15 уровней, машина сезона.
   { id: 9, statements: MIGRATION_9 },
+  // 10: VIP 149⭐; премиум — эпическая машина, легендарная только в делюксе.
+  { id: 10, statements: MIGRATION_10 },
 ];

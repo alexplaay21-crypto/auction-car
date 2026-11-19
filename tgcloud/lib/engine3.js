@@ -201,7 +201,7 @@ export async function bpView(db, uid) {
   const pr = (await db.get('SELECT xp, premium, deluxe FROM bp_progress WHERE user_id = :u AND season = :s', { ':u': uid, ':s': se.id })) ?? { xp: 0, premium: 0, deluxe: 0 };
   const sp = Object.fromEntries((await db.all("SELECT id, stars FROM star_products WHERE is_active = 1 AND id IN ('bp', 'bpdx', 'bplvl')").catch(() => [])).map((r) => [r.id, r.stars]));
   const cars = Object.fromEntries((await db.all(`SELECT * FROM cars WHERE id IN (SELECT prem_value FROM bp_levels WHERE season = :s AND prem_kind = 'model'
-    UNION SELECT free_value FROM bp_levels WHERE season = :s AND free_kind = 'model' UNION SELECT prem_car_id FROM bp_seasons WHERE id = :s)`, { ':s': se.id })).map((c) => [c.id, c]));
+    UNION SELECT free_value FROM bp_levels WHERE season = :s AND free_kind = 'model' UNION SELECT prem_car_id FROM bp_seasons WHERE id = :s UNION SELECT dx_car_id FROM bp_seasons WHERE id = :s)`, { ':s': se.id })).map((c) => [c.id, c]));
   const levels = await db.all('SELECT * FROM bp_levels WHERE season = :s AND level <= :n ORDER BY level', { ':s': se.id, ':n': se.levels });
   const claims = await db.all('SELECT level, track FROM bp_claims WHERE user_id = :u AND season = :s', { ':u': uid, ':s': se.id });
   const got = new Set(claims.map((c) => `${c.level}:${c.track}`));
@@ -210,7 +210,7 @@ export async function bpView(db, uid) {
     season: se.id, name: se.name, ends_at: se.ends_at, left_s: Math.max(0, se.ends_at - t), now: t,
     xp: pr.xp, premium: pr.premium === 1, level: Math.min(levels.length, Math.floor(pr.xp / se.xp_level)), per_level: se.xp_level, price: se.price,
     deluxe: pr.deluxe === 1, stars: sp.bp ?? null, deluxe_stars: sp.bpdx ?? null, level_stars: sp.bplvl ?? null, deluxe_levels: 5,
-    prem_car: cars[se.prem_car_id] ?? null,
+    prem_car: cars[se.prem_car_id] ?? null, dx_car: cars[se.dx_car_id] ?? null,
     levels: levels.map((l) => ({
       level: l.level, unlocked: pr.xp >= l.level * se.xp_level,
       free: { kind: l.free_kind, value: l.free_value, claimed: got.has(`${l.level}:free`), container: containers[l.free_value] ?? null, car: l.free_kind === 'model' ? cars[l.free_value] ?? null : null },
@@ -247,11 +247,13 @@ export async function bpClaim(db, uid, level, track) {
 
 // Админ: новый сезон начинается сейчас и длится days дней (по умолчанию 21); награды
 // копируются из прошлого сезона (потом их можно поправить по уровням).
-// Машина, которую сразу получает покупатель премиума («лот» сезона).
-export async function setSeasonCar(db, season, carId) {
-  const c = carId ? await db.get('SELECT id FROM cars WHERE id = :c', { ':c': Number(carId) || 0 }) : null;
+// Машины сезона: за премиум (не легендарная) и за делюкс (легендарная) — выдаются сразу при покупке.
+export async function setSeasonCar(db, season, carId, track = 'premium') {
+  const c = carId ? await db.get('SELECT id, rarity FROM cars WHERE id = :c', { ':c': Number(carId) || 0 }) : null;
   if (carId && !c) throw new GameError('CAR_NOT_FOUND');
-  await db.run('UPDATE bp_seasons SET prem_car_id = :c WHERE id = :s', { ':c': c?.id ?? null, ':s': intOf(season, 1, 1e9) });
+  if (c && track !== 'deluxe' && c.rarity === 'mythic') throw new GameError('BP_NO_LEGENDARY');
+  const col = track === 'deluxe' ? 'dx_car_id' : 'prem_car_id';
+  await db.run(`UPDATE bp_seasons SET ${col} = :c WHERE id = :s`, { ':c': c?.id ?? null, ':s': intOf(season, 1, 1e9) });
 }
 export async function createSeason(db, adminId, { name, days = 21, price, levels, xpLevel, carId }) {
   const prev = await db.get('SELECT * FROM bp_seasons ORDER BY id DESC LIMIT 1');
@@ -262,6 +264,7 @@ export async function createSeason(db, adminId, { name, days = 21, price, levels
     { ':n': String(name || 'Новый сезон').slice(0, 40), ':d': intOf(days, 1, 90), ':p': intOf(price ?? prev?.price ?? 150_000, 1, 1e9), ':l': n, ':x': intOf(xpLevel ?? prev?.xp_level ?? 1000, 1, 1e6), ':a': adminId });
   const id = r.lastInsertRowid;
   await setSeasonCar(db, id, carId ?? prev?.prem_car_id ?? null);
+  await setSeasonCar(db, id, prev?.dx_car_id ?? null, 'deluxe');
   const old = prev ? await db.all('SELECT * FROM bp_levels WHERE season = :s ORDER BY level', { ':s': prev.id }) : [];
   for (let l = 1; l <= n; l++) {
     const o = old.find((x) => x.level === l) ?? { free_kind: 'money', free_value: 1_000 + l * 400, prem_kind: 'money', prem_value: 4_000 + l * 1_500 };
@@ -274,7 +277,12 @@ export async function setLevelReward(db, { season, level, track, kind, value }) 
   if (!['money', 'container', 'car', 'skill', 'model'].includes(kind)) throw new GameError('BAD_INPUT');
   const v = intOf(value, 1, 1e9);
   if (kind === 'car' && ![1, 2, 3].includes(v)) throw new GameError('BAD_INPUT');
-  if (kind === 'model' && !(await db.get('SELECT 1 AS x FROM cars WHERE id = :c', { ':c': v }))) throw new GameError('CAR_NOT_FOUND');
+  if (kind === 'car' && v === 3) throw new GameError('BP_NO_LEGENDARY');
+  if (kind === 'model') {
+    const c = await db.get('SELECT rarity FROM cars WHERE id = :c', { ':c': v });
+    if (!c) throw new GameError('CAR_NOT_FOUND');
+    if (c.rarity === 'mythic') throw new GameError('BP_NO_LEGENDARY');
+  }
   const col = track === 'premium' ? 'prem' : 'free';
   await exec(db, `UPDATE bp_levels SET ${col}_kind = :k, ${col}_value = :v WHERE season = :s AND level = :l`,
     { ':k': kind, ':v': v, ':s': intOf(season, 1, 1e9), ':l': intOf(level, 1, 100) });

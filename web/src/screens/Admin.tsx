@@ -342,7 +342,7 @@ function Rooms() {
   );
 }
 
-const KINDS: [string, string][] = [['money', 'Деньги'], ['container', 'Контейнер (ID)'], ['skill', 'Навык +N'], ['car', 'Случайная (1 редк · 2 эпик · 3 легенд)'], ['model', 'Конкретная машина (ID)']];
+const KINDS: [string, string][] = [['money', 'Деньги'], ['container', 'Контейнер (ID)'], ['skill', 'Навык +N'], ['car', 'Случайная (1 редкая · 2 эпическая)'], ['model', 'Конкретная машина (ID)']];
 function BpSeasons() {
   const [d, setD] = useState<any>(null);
   const [form, setForm] = useState<any>(null);
@@ -364,12 +364,16 @@ function BpSeasons() {
           : <div className="hint">Сезон сейчас не идёт</div>}
       </div>
       {cur && (
-        <div><h3>Машина за покупку премиума</h3>
-          <div className="hint small">Покупатель премиума сразу получает эту машину в гараж.</div>
-          <select className="field" value={cur.prem_car_id ?? ''} onChange={async (e) => { if (await doAdm({ action: 'bp_car', season: cur.id, car_id: e.target.value ? Number(e.target.value) : null }, 'Машина сезона сохранена')) load(); }}>
-            <option value="">— без машины —</option>
-            {d.cars.map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
-          </select>
+        <div><h3>Машины сезона</h3>
+          <div className="hint small">Выдаются сразу при покупке. За премиум — до эпической, легендарная — только за делюкс.</div>
+          {([['premium', 'За премиум', cur.prem_car_id, (c: any) => c.rarity !== 'mythic'], ['deluxe', 'За делюкс', cur.dx_car_id, (c: any) => c.rarity === 'mythic']] as const).map(([track, label, val, ok]) => (
+            <label key={track} className="frow"><span>{label}</span>
+              <select className="field" value={val ?? ''} onChange={async (e) => { if (await doAdm({ action: 'bp_car', season: cur.id, track, car_id: e.target.value ? Number(e.target.value) : null }, 'Машина сезона сохранена')) load(); }}>
+                <option value="">— без машины —</option>
+                {d.cars.filter(ok).map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
+              </select>
+            </label>
+          ))}
         </div>
       )}
       <button className="btn primary wide" onClick={() => setForm({ name: `Сезон ${(d.seasons[0]?.id ?? 0) + 1}`, days: 21, price: cur?.price ?? 150000, levels: 14, xp_level: cur?.xp_level ?? 1000 })}>+ Новый сезон (21 день)</button>
@@ -405,7 +409,7 @@ function BpSeasons() {
             {lv.kind === 'model' && (
               <select className="field" value={lv.value ?? ''} onChange={(e) => setLv({ ...lv, value: Number(e.target.value) })}>
                 <option value="">— выбери машину —</option>
-                {d.cars.map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
+                {d.cars.filter((c: any) => c.rarity !== 'mythic').map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
               </select>
             )}
             <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'bp_reward', season: cur.id, level: lv.level, track: lv.track, kind: lv.kind, value: lv.value })) { setLv(null); load(); } }}>Сохранить</button>

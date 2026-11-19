@@ -265,7 +265,7 @@ export default endpoint(async (db, uid, input, { user }) => {
     return { id };
   }
   if (a === 'bp_car') {
-    await setSeasonCar(db, input.season, input.car_id);
+    await setSeasonCar(db, input.season, input.car_id, input.track);
     await log({ season: input.season, car: input.car_id });
     return { ok: true };
   }
