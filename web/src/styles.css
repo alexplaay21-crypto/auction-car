@@ -147,11 +147,12 @@ label.frow > span { width: 44%; color: var(--muted); font-size: 13px; }
 
 /* картинки */
 .car-art { width: 100%; display: block; }
+.car-pic { width: 100%; display: block; object-fit: cover; border-radius: 10px; background: #0d1016; }
 .car-photo { width: 100%; background-size: cover; background-position: center; border-radius: 12px; }
 .ct-art { display: block; flex: none; object-fit: contain; }
 .ct-photo { background-size: cover; background-position: center; border-radius: 12px; flex: none; }
 .hero-img { position: relative; overflow: hidden; border-radius: var(--r) var(--r) 0 0; }
-.hero-img .ct-art, .hero-img .car-art, .hero-img .ct-photo, .hero-img .car-photo { width: 100% !important; height: auto !important; border-radius: 0; }
+.hero-img .ct-art, .hero-img .car-art, .hero-img .ct-photo, .hero-img .car-photo, .hero-img .car-pic { width: 100% !important; height: auto !important; border-radius: 0; }
 .hero-img .ct-art, .hero-img .ct-photo { aspect-ratio: 340 / 190; }
 .hero-img .car-art, .hero-img .car-photo { aspect-ratio: 440 / 200; }
 .hero-img .tag { position: absolute; left: 10px; top: 10px; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 8px; background: rgba(13, 15, 20, .78); font-weight: 800; font-size: 12px; }

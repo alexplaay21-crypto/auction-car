@@ -1,3 +1,4 @@
+import { PHOTOS } from './photos';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { call } from './tg';
 import { RARITY, money, who } from './format';
@@ -69,6 +70,8 @@ function art(key: string, make: () => string) {
 export function CarArt({ car, height = 90, studio = false }: { car: any; height?: number; studio?: boolean }) {
   const photo = useImage(car?.id ? `car:${car.id}` : null);
   if (photo) return <div className="car-photo" style={{ height, backgroundImage: `url(${photo})` }} />;
+  // игровая графика по фото (готовая картинка со студийным фоном)
+  if (car?.id && PHOTOS[car.id]) return <img className="car-pic" style={{ height }} alt="" loading="lazy" src={`art/car-${car.id}.jpg?v=${PHOTOS[car.id]}`} />;
   const key = `c${car?.id}:${car?.body}:${car?.color}:${car?.rarity}:${studio}`;
   return <img className="car-art" style={{ height }} alt="" src={art(key, () => carSvg(car, { studio }))} />;
 }

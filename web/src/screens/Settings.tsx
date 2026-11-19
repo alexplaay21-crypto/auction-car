@@ -11,9 +11,11 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 // Настройки игрока: язык, звук, вибрация, уведомления в боте. Хранятся на сервере.
+import { CREDITS } from '../photos';
 export function SettingsPage() {
   const { me, pop, reload } = useApp();
   const [s, setS] = useState<any>(me.settings ?? { lang: 'ru', sound: 1, haptics: 1, n_auction: 1, n_deals: 1, n_races: 1 });
+  const [cred, setCred] = useState(false);
   const save = async (patch: any) => {
     const next = { ...s, ...patch };
     setS(next); setFx(next);
@@ -37,6 +39,18 @@ export function SettingsPage() {
           <Li icon={Handshake} tone="green" title={t('Сделки')} sub={t('Предложения, продажи на рынке, переводы')} right={<Toggle on={!!s.n_deals} onChange={(v) => save({ n_deals: v ? 1 : 0 })} />} />
           <Li icon={Flag} tone="blue" title={t('Гонки')} sub={t('Кто-то принял твой вызов')} right={<Toggle on={!!s.n_races} onChange={(v) => save({ n_races: v ? 1 : 0 })} />} />
         </div>
+        {CREDITS.length > 0 && (
+          <>
+            <Sect>{t('Авторы фото')}</Sect>
+            <div className="card">
+              <div className="xs muted">{t('Графика машин сделана по фото с Wikimedia Commons. Марки и модели принадлежат их владельцам; игра с ними не связана.')}</div>
+              <button className="btn ghost w" onClick={() => setCred(!cred)}>{cred ? t('Скрыть список') : t('Показать список ({n})', { n: CREDITS.length })}</button>
+              {cred && <div className="col g6">{CREDITS.map((c) => (
+                <a key={c.page} className="xs" href={c.page} target="_blank" rel="noreferrer" style={{ color: 'var(--muted)' }}><b style={{ color: 'var(--text)' }}>{c.car}</b> — {c.author || t('автор не указан')}, {c.license}</a>
+              ))}</div>}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

@@ -223,4 +223,9 @@ export const EN: Record<string, string> = {
   'Управление': 'Handling',
   'Это уже есть у тебя': 'You already own this',
   'Сначала купи это оформление': 'Buy this style first',
+  'Авторы фото': 'Photo credits',
+  'Графика машин сделана по фото с Wikimedia Commons. Марки и модели принадлежат их владельцам; игра с ними не связана.': 'Car artwork is based on photos from Wikimedia Commons. Makes and models belong to their owners; the game is not affiliated with them.',
+  'Скрыть список': 'Hide list',
+  'Показать список ({n})': 'Show list ({n})',
+  'автор не указан': 'author not specified',
 };

@@ -1,0 +1,30 @@
+// ddl8.js — миграция 12: немецкий контейнер — 50 узнаваемых машин (30 / 14 / 4 / 2).
+// Машины старого каталога (keep) превращаются в свою модель на месте — у игроков ничего не пропадает,
+// новые получают id с 101 по порядку списка.
+import { GERMAN } from './catalog_de.js';
+
+export const GERMAN_FIRST_ID = 101;
+const q = (s) => (s == null ? 'NULL' : `'${String(s).replace(/'/g, "''")}'`);
+
+// id машины в базе для каждой строки GERMAN (по порядку)
+export function germanIds() {
+  let next = GERMAN_FIRST_ID;
+  return GERMAN.map((c) => c[11] ?? next++);
+}
+
+export const MIGRATION_12 = (() => {
+  const ids = germanIds();
+  const out = [];
+  GERMAN.forEach(([name, , rarity, speed, accel, power, handling, reliability, price, body, color, keep], i) => {
+    const id = ids[i];
+    const v = `${q(name)}, 'Германия', '${rarity}', ${speed}, ${Math.round(accel * 100)}, ${power}, ${handling}, ${reliability}, ${price}, ${q(color)}, ${q(body)}`;
+    if (keep) {
+      out.push(`UPDATE cars SET (name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body) = (${v}) WHERE id = ${id}`);
+    } else {
+      out.push(`INSERT INTO cars (id, name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body) VALUES (${id}, ${v})
+        ON CONFLICT (id) DO UPDATE SET name = excluded.name, rarity = excluded.rarity, price = excluded.price`);
+    }
+    out.push(`INSERT INTO container_cars (container_id, car_id, weight) VALUES (2, ${id}, 1) ON CONFLICT DO NOTHING`);
+  });
+  return out;
+})();

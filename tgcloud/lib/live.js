@@ -9,6 +9,7 @@ import { tick, sellRate } from './engine.js';
 import { roomView, roomText, roomKeyboard, carCardText, money, who, esc, RARITY } from './views.js';
 import { MINI_APP_URL, appLink } from './config.js';
 import { ART } from './art_manifest.js';
+import { PHOTOS } from './photo_manifest.js';
 
 const COUNTDOWN_EVERY_S = 4;
 
@@ -48,6 +49,7 @@ export function renderRoom(v, chatId) {
 // 2) готовый рисунок стартового каталога (JPEG рядом с Mini App);
 // иначе — без картинки.
 const artUrl = (kind, id) => {
+  if (kind === 'car' && PHOTOS[id]) return `${MINI_APP_URL}art/car-${id}.jpg?v=${PHOTOS[id]}`;
   const max = kind === 'car' ? ART.cars : ART.containers;
   return Number(id) >= 1 && Number(id) <= max ? `${MINI_APP_URL}art/${kind}-${id}.jpg?v=${ART.v}` : null;
 };
@@ -59,7 +61,7 @@ export async function imageFor(db, InputFile, kind, id) {
     return { media: new InputFile(b64(img.data), `${kind}-${id}.jpg`, { type: img.mime }), key: `${kind}:${id}:u${img.v}`, kind, id, v: img.v };
   }
   const url = artUrl(kind, id);
-  return url ? { media: url, key: `${kind}:${id}:a${ART.v}` } : null;
+  return url ? { media: url, key: `${kind}:${id}:a${kind === 'car' && PHOTOS[id] ? 'p' + PHOTOS[id] : ART.v}` } : null;
 }
 
 // после первой загрузки запоминаем file_id, чтобы не загружать картинку снова
