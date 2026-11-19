@@ -1,7 +1,8 @@
 // lib/botui.js — экраны бота: меню, профиль, гараж, магазин, лидеры, друзья.
 // Данные — те же функции views.js, что и в Mini App.
+import { starProducts } from './stars.js';
 import { profileView, garageView, carView, topView, money, who, esc, RARITY, carCardText } from './views.js';
-import { settings, getUser, nextTier } from './engine.js';
+import { settings, getUser } from './engine.js';
 import { MINI_APP_URL, BOT_USERNAME, APP_NAME } from './config.js';
 
 export const MENU = {
@@ -38,11 +39,12 @@ export function helpText() {
     '💵 Ставки — кнопками под сообщением комнаты или командой <code>/bet 7500</code>.\n' +
     '⏳ После каждой ставки таймер запускается заново. Кто поставил последним — забирает контейнер.\n' +
     '💸 Ставка списывается сразу; если тебя перебили — деньги возвращаются.\n' +
-    '😴 Без ставок 3 контейнера подряд — выход из комнаты.\n\n' +
+    '😴 Без ставок 2 контейнера подряд — выход из комнаты.\n\n' +
     '<b>Команды</b>\n' +
     '/play — играть · /bet сумма — ставка · /leave — выйти из комнаты\n' +
-    '/garage — гараж · /profile — профиль · /bonus — ежедневный бонус\n' +
-    '/transfer @игрок сумма — перевод · /promo КОД — промокод · /top — лидеры\n\n' +
+    '/garage — гараж · /profile — профиль · /bonus — бонус раз в 4 часа · /shop — магазин\n' +
+    '/transfer @игрок сумма — перевод · /promo КОД — промокод · /top — лидеры\n' +
+    '/report текст — сообщить о проблеме · /idea текст — предложить идею\n\n' +
     'В группе: добавь бота и напиши /play — у группы будет своя комната.';
 }
 
@@ -95,15 +97,23 @@ export async function carScreen(db, uid, userCarId) {
 export async function shopScreen(db, uid) {
   const st = await settings(db);
   const u = await getUser(db, uid);
-  const lots = await db.all('SELECT * FROM shop_lots WHERE is_available = 1 ORDER BY sort, id LIMIT 8');
-  let text = `🛒 <b>Магазин</b> · баланс ${money(u.balance)}\n`;
+  const items = await starProducts(db, uid);
+  const lots = await db.all('SELECT * FROM shop_lots WHERE is_available = 1 ORDER BY sort, id LIMIT 6');
+  let text = `🛒 <b>Магазин</b> · баланс ${money(u.balance)}\n\n💰 <b>Игровая валюта за звёзды</b> — чем больше пакет, тем выгоднее:`;
   const rows = [];
-  if (!u.is_vip) {
-    text += `\n👑 <b>VIP навсегда</b> — ${money(st.vip_price)}: +${st.garage_vip_bonus} мест в гараже, ниже комиссии, бонус ${money(st.daily_bonus_vip)} в день.`;
-    rows.push([{ text: `👑 Купить VIP за ${money(st.vip_price)}`, callback_data: 'vip' }]);
+  const packs = items.filter((p) => p.kind === 'money');
+  for (const p of packs) text += `\n⭐ ${p.stars} → <b>${money(p.money)}</b>${p.bonus_pct ? ` <i>(+${p.bonus_pct}% выгоды)</i>` : ''}${p.badge === 'popular' ? ' 🔥' : p.badge === 'best' ? ' 💎' : ''}`;
+  for (let i = 0; i < packs.length; i += 2) rows.push(packs.slice(i, i + 2).map((p) => ({ text: `⭐ ${p.stars} → ${money(p.money)}`, callback_data: `st:${p.id}` })));
+  const vip = items.find((p) => p.kind === 'vip');
+  if (vip && !u.is_vip) {
+    text += `\n\n👑 <b>VIP навсегда</b> — ⭐ ${vip.stars} или ${money(st.vip_price)}: +${st.garage_vip_bonus} мест в гараже, ниже комиссии, бонус ${money(st.daily_bonus_vip)} раз в 4 часа.`;
+    rows.push([{ text: `👑 VIP за ⭐ ${vip.stars}`, callback_data: `st:${vip.id}` }, { text: `за ${money(st.vip_price)}`, callback_data: 'vip' }]);
   }
-  const t = await nextTier(db, u);
-  if (t) rows.push([{ text: `🅿️ Гараж до ${t.total} мест — ${money(t.price)}`, callback_data: 'gup' }]);
+  const bp = items.find((p) => p.kind === 'bp');
+  if (bp && bp.available) {
+    text += `\n\n🏆 <b>Премиум Battle Pass</b>${bp.season ? ` · ${esc(bp.season)}` : ''} — ⭐ ${bp.stars}: премиум-награды всех уровней сезона.`;
+    rows.push([{ text: `🏆 Премиум Battle Pass за ⭐ ${bp.stars}`, callback_data: `st:${bp.id}` }]);
+  }
   for (const l of lots) {
     text += `\n\n🎁 <b>${esc(l.title)}</b> — ${money(l.price)}${l.description ? '\n' + esc(l.description) : ''}`;
     rows.push([{ text: `Купить «${l.title}» за ${money(l.price)}`, callback_data: `buy:${l.id}` }]);

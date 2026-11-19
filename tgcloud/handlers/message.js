@@ -5,7 +5,8 @@ import { sync, postRoom } from '../lib/live.js';
 import { money, esc } from '../lib/views.js';
 import { errText } from '../lib/texts.js';
 import { MENU, menuKeyboard, welcomeText, helpText, profileScreen, garageScreen, shopScreen, topScreen, friendsScreen } from '../lib/botui.js';
-import { ADMIN_IDS, BOT_USERNAME } from '../lib/config.js';
+import { ADMIN_IDS, BOT_USERNAME, MINI_APP_URL } from '../lib/config.js';
+import { deliver, deliveredText, sendFeedback } from '../lib/stars.js';
 
 const reply = (m, text, extra = {}) => api.sendMessage({
   chat_id: m.chat.id, text, parse_mode: 'HTML', ...(m.message_thread_id ? { message_thread_id: m.message_thread_id } : {}), ...extra,
@@ -32,6 +33,14 @@ const COMMANDS = {
 
 export default async function (m) {
   if (!m.from || m.from.is_bot) return;
+  // оплата звёздами прошла — выдать товар (раньше любых команд)
+  if (m.successful_payment) {
+    const uid = await ensureUser(db, m.from, { admin: ADMIN_IDS.includes(Number(m.from.id)) });
+    const r = await deliver(db, uid, m.successful_payment);
+    await reply(m, deliveredText(r), { reply_markup: { inline_keyboard: [[{ text: '🎮 Открыть игру', web_app: { url: MINI_APP_URL } }]] } });
+    await sync(db, api, InputFile, { limit: 3 });
+    return;
+  }
   const text = String(m.text ?? '').trim();
   const isPrivate = m.chat.type === 'private';
   const isGroup = m.chat.type === 'group' || m.chat.type === 'supergroup';
@@ -90,6 +99,13 @@ export default async function (m) {
         if (!(await isChatAdmin(m.chat.id, uid)) && !u.is_admin) { await reply(m, 'Останавливать аукцион могут только админы группы.'); break; }
         await db.run(`UPDATE rooms SET stop_requested = 1, rev = rev + 1 WHERE scope = 'group' AND scope_id = :c AND status = 'open'`, { ':c': m.chat.id });
         await reply(m, '⏹ Аукцион остановится после текущего контейнера. Запустить снова — /play');
+        break;
+      }
+      case 'report': case 'idea': case 'bug': {
+        if (!isPrivate) { await reply(m, `Напиши в личку: @${BOT_USERNAME}`); break; }
+        if (!args) { await reply(m, 'Опиши проблему или идею одним сообщением:\n<code>/report не открывается гараж</code>\n<code>/idea добавить турниры</code>'); break; }
+        await sendFeedback(db, uid, cmd === 'idea' ? 'idea' : 'bug', args);
+        await reply(m, '📨 Спасибо! Сообщение отправлено разработчикам — ответ придёт сюда.');
         break;
       }
       case 'garage': case 'profile': case 'shop': case 'friends': case 'bonus': case 'top':

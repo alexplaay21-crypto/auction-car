@@ -6,6 +6,7 @@ import { SETTINGS } from '../lib/ddl.js';
 import { SETTINGS_3 } from '../lib/ddl3.js';
 import { currentSeason, createSeason, setLevelReward } from '../lib/engine3.js';
 import { ADMIN_IDS } from '../lib/config.js';
+import { feedbackList, answerFeedback } from '../lib/stars.js';
 
 const RARITIES = ['common', 'rare', 'epic', 'mythic'];
 const int = (v, min = 0, max = 1e12) => {
@@ -23,6 +24,30 @@ const opt = (v, f) => (v === null || v === undefined || v === '' ? null : f(v));
 export default endpoint(async (db, uid, input, { user }) => {
   const a = String(input.action ?? 'stats');
   const log = (details) => adminLog(db, uid, a, details);
+
+  // ---------- сообщения игроков ----------
+  if (a === 'feedback') return { list: await feedbackList(db, input.status), open: (await db.get("SELECT count(*) AS n FROM feedback WHERE status = 'new'")).n };
+  if (a === 'feedback_answer') {
+    await answerFeedback(db, uid, input.id, input.answer);
+    await log({ id: input.id, answered: !!input.answer });
+    return { ok: true };
+  }
+  // покупки за звёзды и товары
+  if (a === 'stars') {
+    return {
+      products: await db.all('SELECT * FROM star_products ORDER BY sort, id'),
+      recent: await db.all('SELECT p.*, u.username, u.first_name FROM star_payments p LEFT JOIN users u ON u.id = p.user_id ORDER BY p.created_at DESC LIMIT 30'),
+      total: await db.get('SELECT count(*) AS n, COALESCE(sum(stars), 0) AS stars FROM star_payments'),
+    };
+  }
+  if (a === 'save_star_product') {
+    const p = input.product ?? {};
+    const stars = Math.floor(Number(p.stars)), m = Math.floor(Number(p.money ?? 0));
+    if (!Number.isSafeInteger(stars) || stars < 1 || stars > 100000 || !Number.isSafeInteger(m) || m < 0) throw new GameError('BAD_INPUT');
+    await db.run('UPDATE star_products SET stars = :s, money = :m, is_active = :a WHERE id = :i', { ':s': stars, ':m': m, ':a': p.is_active ? 1 : 0, ':i': String(p.id) });
+    await log({ id: p.id, stars, money: m, active: !!p.is_active });
+    return { ok: true };
+  }
 
   if (a === 'stats') {
     const t = await now(db);

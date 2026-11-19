@@ -1,6 +1,7 @@
 // Профили игроков (свой и чужие), друзья, навык гонщика, цены контейнеров.
 import { endpoint } from '../lib/endpoint.js';
 import { GameError } from '../lib/engine.js';
+import { sendFeedback, myFeedback } from '../lib/stars.js';
 import { playerView, addFriend, removeFriend, friendsView, skillView, buySkill, containerPrices, userSettings, saveUserSettings } from '../lib/engine3.js';
 
 export default endpoint(async (db, uid, input) => {
@@ -13,6 +14,8 @@ export default endpoint(async (db, uid, input) => {
   if (a === 'buy_skill') return buySkill(db, uid, input.count, String(input.clientId ?? ''));
   if (a === 'prices') return { containers: await containerPrices(db) };
   if (a === 'settings') return userSettings(db, uid);
+  if (a === 'feedback') return { id: await sendFeedback(db, uid, input.kind, input.text), list: await myFeedback(db, uid) };
+  if (a === 'my_feedback') return { list: await myFeedback(db, uid) };
   if (a === 'save_settings') return saveUserSettings(db, uid, input.settings);
   throw new GameError('BAD_INPUT');
 });

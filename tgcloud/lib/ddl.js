@@ -5,13 +5,14 @@
 import { NOW, DAY, S, RATE, OWNED, CAPACITY, post, giveCar } from './sql.js';
 import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
+import { MIGRATION_7 } from './ddl6.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
   bet_step: 500,              // минимальный шаг ставки
   auction_timer_s: 30,        // таймер контейнера; каждая ставка запускает его заново
   next_delay_s: 5,            // пауза между контейнерами
-  kick_after: 3,              // кик после N контейнеров подряд без ставок
+  kick_after: 2,              // кик после N контейнеров подряд без ставок
   max_players: 30,
   quick_sell_window_s: 900,   // «быстрая продажа» доступна 15 минут после получения
   chance_common: 60, chance_rare: 30, chance_epic: 9, chance_mythic: 1,
@@ -581,4 +582,6 @@ export const MIGRATIONS = [
   { id: 5, statements: MIGRATION_5 },
   // 6: цены расширения гаража — шаг $25 000.
   { id: 6, statements: GARAGE_TIERS.map(([c, p]) => `INSERT INTO garage_tiers (capacity, price) VALUES (${c}, ${p}) ON CONFLICT (capacity) DO UPDATE SET price = excluded.price`) },
+  // 7: покупки за Stars, сообщения о проблемах и идеях, кик после 2 пропусков.
+  { id: 7, statements: MIGRATION_7 },
 ];

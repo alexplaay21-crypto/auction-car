@@ -242,6 +242,15 @@ async function sendOne(db, api, InputFile, o) {
   } else if (o.kind === 'market_sold') {
     const l = await db.get('SELECT l.*, c.name FROM market_listings l JOIN user_cars uc ON uc.id = l.user_car_id JOIN cars c ON c.id = uc.car_id WHERE l.id = :i', { ':i': o.ref });
     if (l) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML', text: `🛒 На рынке купили ${esc(l.name)} за ${money(l.price)}. Тебе зачислено <b>${money(Math.floor((l.price * (10000 - l.rate_bps)) / 10000))}</b>.` });
+  } else if (o.kind === 'feedback') {
+    const f = await db.get('SELECT f.*, u.username, u.first_name FROM feedback f LEFT JOIN users u ON u.id = f.user_id WHERE f.id = :i', { ':i': o.ref });
+    if (f) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML',
+      text: `${f.kind === 'bug' ? '🐞 <b>Проблема</b>' : '💡 <b>Идея</b>'} №${f.id} от ${esc(who({ username: f.username, first_name: f.first_name }))} (id ${f.user_id}):\n\n${esc(f.text)}`,
+      reply_markup: { inline_keyboard: [[{ text: '✍️ Ответить в админке', web_app: { url: MINI_APP_URL + '#admin' } }]] } });
+  } else if (o.kind === 'feedback_reply') {
+    const f = await db.get('SELECT * FROM feedback WHERE id = :i', { ':i': o.ref });
+    if (f?.answer) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML',
+      text: `📬 <b>Ответ на твоё сообщение №${f.id}</b>\n<i>${esc(f.text.slice(0, 200))}</i>\n\n${esc(f.answer)}` });
   } else if (o.kind === 'transfer') {
     const t = await db.get('SELECT t.*, u.username, u.first_name FROM transfers t LEFT JOIN users u ON u.id = t.from_id WHERE t.id = :i', { ':i': o.ref });
     if (t) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML', text: `💸 ${esc(who({ username: t.username, first_name: t.first_name }))} перевёл тебе <b>${money(t.amount - t.commission)}</b>.` });

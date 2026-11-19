@@ -7,6 +7,7 @@ import { AppBar, Ic, Kv, Sect, Empty } from '../ui';
 import { left } from '../format';
 import { useApp } from '../App';
 import { t } from '../i18n';
+import { useStarsBuy } from './Shop';
 
 const CAR_R: Record<number, string> = { 1: 'rare', 2: 'epic', 3: 'mythic' };
 function rewardText(r: any) {
@@ -23,6 +24,7 @@ export function BattlePass() {
   const [busy, setBusy] = useState(false);
   const [got, setGot] = useState<any>(null);
   const load = useCallback(() => call('app_bp', {}).then(setBp, (e) => toast(errorText(e))), []);
+  const stars = useStarsBuy(() => { load(); reload(); });
   useEffect(() => { load(); }, [load]);
   const claim = async (level: number, track: string) => {
     if (busy) return;
@@ -46,9 +48,12 @@ export function BattlePass() {
           <div className="sm muted">{bp.level >= bp.levels.length ? t('Все уровни пройдены!') : t('{a} / {b} опыта до уровня {c}', { a: inLevel, b: bp.per_level, c: bp.level + 1 })}</div>
           <div className="xs muted">{t('До конца сезона: {t}', { t: left(bp.left_s) })}</div>
           {!bp.premium && (
-            <button className="btn go xl w" disabled={busy} onClick={async () => { setBusy(true); try { setBp(await call('app_bp', { action: 'buy' })); haptic('success'); toast(t('Премиум открыт')); reload(); } catch (e) { toast(errorText(e)); } setBusy(false); }}>
-              <Crown size={18} /> {t('Открыть премиум · {m}', { m: money(bp.price) })}
-            </button>
+            <>
+              {bp.stars && <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}><Crown size={18} /> {t('Открыть премиум за ⭐ {n}', { n: bp.stars })}</button>}
+              <button className="btn ghost w" disabled={busy} onClick={async () => { setBusy(true); try { setBp(await call('app_bp', { action: 'buy' })); haptic('success'); toast(t('Премиум открыт')); reload(); } catch (e) { toast(errorText(e)); } setBusy(false); }}>
+                {t('или за {m} игровых', { m: money(bp.price) })}
+              </button>
+            </>
           )}
         </div>
 

@@ -206,6 +206,7 @@ export async function bpView(db, uid) {
   return {
     season: se.id, name: se.name, ends_at: se.ends_at, left_s: Math.max(0, se.ends_at - t), now: t,
     xp: pr.xp, premium: pr.premium === 1, level: Math.min(levels.length, Math.floor(pr.xp / se.xp_level)), per_level: se.xp_level, price: se.price,
+    stars: (await db.get("SELECT stars FROM star_products WHERE id = 'bp' AND is_active = 1").catch(() => null))?.stars ?? null,
     levels: levels.map((l) => ({
       level: l.level, unlocked: pr.xp >= l.level * se.xp_level,
       free: { kind: l.free_kind, value: l.free_value, claimed: got.has(`${l.level}:free`), container: containers[l.free_value] ?? null },

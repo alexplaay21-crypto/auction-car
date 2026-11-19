@@ -34,7 +34,7 @@ async function resizeImage(file: File): Promise<{ mime: string; data: string }> 
 export function Admin() {
   const { pop: onBack } = useApp();
   const [tab, setTab] = useState('stats');
-  const tabs = [['stats', 'Обзор'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['bp', 'Battle Pass'], ['rooms', 'Комнаты']];
+  const tabs = [['stats', 'Обзор'], ['feedback', 'Отзывы'], ['stars', 'Stars'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['bp', 'Battle Pass'], ['rooms', 'Комнаты']];
   return (
     <>
     <AppBar title="Админ-панель" back={onBack} />
@@ -47,6 +47,8 @@ export function Admin() {
       {tab === 'promo' && <Promo />}
       {tab === 'lots' && <Lots />}
       {tab === 'bp' && <BpSeasons />}
+      {tab === 'feedback' && <Feedback />}
+      {tab === 'stars' && <Stars />}
       {tab === 'rooms' && <Rooms />}
     </div>
     </>
@@ -390,6 +392,74 @@ function BpSeasons() {
             <F label="Значение" v={lv.value} num on={(v) => setLv({ ...lv, value: v })} />
             {lv.kind === 'container' && <div className="hint small">{d.containers.map((c: any) => `${c.id} — ${c.name}`).join(' · ')}</div>}
             <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'bp_reward', season: cur.id, level: lv.level, track: lv.track, kind: lv.kind, value: lv.value })) { setLv(null); load(); } }}>Сохранить</button>
+          </div>
+        )}
+      </Sheet>
+    </>
+  );
+}
+
+function Feedback() {
+  const [status, setStatus] = useState('new');
+  const [d, setD] = useState<any>(null);
+  const [open, setOpen] = useState<any>(null);
+  const [answer, setAnswer] = useState('');
+  const load = useCallback(() => adm({ action: 'feedback', status }).then(setD, (e) => toast(errorText(e))), [status]);
+  useEffect(() => { load(); }, [load]);
+  return (
+    <>
+      <div className="chips">{[['new', `Новые${d ? ` · ${d.open}` : ''}`], ['done', 'Отвеченные'], ['all', 'Все']].map(([k, l]) => <button key={k} className={`chip${status === k ? ' on' : ''}`} onClick={() => setStatus(k)}>{l}</button>)}</div>
+      <div className="glass list">
+        {d && !d.list.length && <div className="hint">Пусто</div>}
+        {d?.list.map((f: any) => (
+          <button key={f.id} className="top-row btn-reset" onClick={() => { setOpen(f); setAnswer(f.answer ?? ''); }}>
+            <span>{f.kind === 'bug' ? '🐞' : '💡'}</span>
+            <span className="grow" style={{ whiteSpace: 'normal' }}>{f.text}<div className="hint small">{who(f)} · {ago(f.created_at)}{f.answer ? ' · ✅ отвечено' : ''}</div></span>
+          </button>
+        ))}
+      </div>
+      <Sheet open={!!open} onClose={() => setOpen(null)} title={open ? `${open.kind === 'bug' ? '🐞 Проблема' : '💡 Идея'} №${open.id}` : ''}>
+        {open && (
+          <div className="form">
+            <div className="hint small">{who(open)} · id {open.user_id} · {ago(open.created_at)}</div>
+            <div style={{ whiteSpace: 'pre-wrap' }}>{open.text}</div>
+            <textarea className="inp area" placeholder="Ответ игроку (придёт в бота)" value={answer} onChange={(e) => setAnswer(e.target.value)} />
+            <button className="btn primary wide" disabled={!answer.trim()} onClick={async () => { if (await doAdm({ action: 'feedback_answer', id: open.id, answer }, 'Ответ отправлен')) { setOpen(null); load(); } }}>Ответить</button>
+            {open.status === 'new' && <button className="btn ghost wide" onClick={async () => { if (await doAdm({ action: 'feedback_answer', id: open.id }, 'Отмечено')) { setOpen(null); load(); } }}>Отметить без ответа</button>}
+          </div>
+        )}
+      </Sheet>
+    </>
+  );
+}
+
+const STAR_KIND: Record<string, string> = { money: 'Валюта', vip: 'VIP', bp: 'Премиум Battle Pass' };
+function Stars() {
+  const [d, setD] = useState<any>(null);
+  const [p, setP] = useState<any>(null);
+  const load = useCallback(() => adm({ action: 'stars' }).then(setD, (e) => toast(errorText(e))), []);
+  useEffect(() => { load(); }, [load]);
+  if (!d) return <div className="hint">Загрузка…</div>;
+  return (
+    <>
+      <div className="glass tile"><div className="hint small">Покупок за звёзды</div><b>{d.total.n} · ⭐ {d.total.stars}</b></div>
+      <div><h3>Товары</h3>
+        <div className="glass list">{d.products.map((x: any) => (
+          <button key={x.id} className="top-row btn-reset" onClick={() => setP({ ...x })}>
+            <span className="grow">{STAR_KIND[x.kind]}{x.kind === 'money' ? ` ${money(x.money)}` : ''}{x.is_active ? '' : ' (скрыт)'}<div className="hint small">{x.kind === 'money' ? `${Math.round(x.money / x.stars)} $ за звезду` : x.id}</div></span><b>⭐ {x.stars}</b>
+          </button>))}</div>
+      </div>
+      <div><h3>Последние покупки</h3>
+        <div className="glass list">{!d.recent.length && <div className="hint">Пока нет</div>}{d.recent.map((r: any) => (
+          <div key={r.charge_id} className="top-row small"><span className="grow">{who(r)} · {STAR_KIND[r.kind] ?? r.kind}{r.money ? ` ${money(r.money)}` : ''}</span><span className="hint">⭐ {r.stars} · {ago(r.created_at)}</span></div>))}</div>
+      </div>
+      <Sheet open={!!p} onClose={() => setP(null)} title={p ? STAR_KIND[p.kind] : ''}>
+        {p && (
+          <div className="form">
+            <F label="Цена, звёзд" v={p.stars} num on={(v) => setP({ ...p, stars: v })} />
+            {p.kind === 'money' && <F label="Сколько денег" v={p.money} num on={(v) => setP({ ...p, money: v })} />}
+            <label className="frow"><span>В продаже</span><input type="checkbox" checked={!!p.is_active} onChange={(e) => setP({ ...p, is_active: e.target.checked ? 1 : 0 })} /></label>
+            <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'save_star_product', product: p })) { setP(null); load(); } }}>Сохранить</button>
           </div>
         )}
       </Sheet>

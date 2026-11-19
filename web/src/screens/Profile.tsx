@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown, Share2, CarFront, Gauge, Flag, Store, UserPlus, UserCheck, ShoppingBag, Settings, BarChart3 } from 'lucide-react';
+import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown, Share2, CarFront, Gauge, Flag, Store, UserPlus, UserCheck, ShoppingBag, Settings, BarChart3, MessageSquareWarning, Bug, Lightbulb } from 'lucide-react';
 import { call, clientId, errorText, haptic, share, toast } from '../tg';
 import { money, who, ago, LEDGER, RARITY, RARITIES } from '../format';
 import { t } from '../i18n';
@@ -70,6 +70,7 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
               <Li icon={BarChart3} tone="gray" title={t('Статистика')} onClick={() => setStats(true)} />
               <Li icon={Flag} tone="gray" title={t('Лидеры')} onClick={() => push({ name: 'leaders' })} />
               <Li icon={History} tone="gray" title={t('История операций')} onClick={() => push({ name: 'history' })} />
+              <Li icon={MessageSquareWarning} tone="blue" title={t('Сообщить о проблеме или идее')} onClick={() => push({ name: 'feedback' })} />
               <Li icon={Settings} tone="gray" title={t('Настройки')} sub={t('Язык, звук, уведомления')} onClick={() => push({ name: 'settings' })} />
               {me.user.is_admin ? <Li icon={Shield} tone="red" title={t('Админ-панель')} onClick={() => push({ name: 'admin' })} /> : null}
             </div>
@@ -275,6 +276,47 @@ export function PromoPage() {
           catch (e) { haptic('error'); toast(errorText(e)); }
           setBusy(false);
         }}>{t('Активировать')}</button>
+      </div>
+    </>
+  );
+}
+
+// Сообщение разработчикам: проблема или идея. Ответ приходит в бота и виден здесь.
+export function FeedbackPage() {
+  const { pop } = useApp();
+  const [kind, setKind] = useState<'bug' | 'idea'>('bug');
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [list, setList] = useState<any[] | null>(null);
+  useEffect(() => { call('app_player', { action: 'my_feedback' }).then((r) => setList(r.list), () => setList([])); }, []);
+  const send = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { const r = await call('app_player', { action: 'feedback', kind, text }); setList(r.list); setText(''); haptic('success'); toast(t('Спасибо! Ответ придёт в бота')); }
+    catch (e) { haptic('error'); toast(errorText(e)); }
+    setBusy(false);
+  };
+  return (
+    <>
+      <AppBar title={t('Обратная связь')} back={pop} />
+      <div className="page">
+        <Seg value={kind} onChange={setKind} options={[['bug', t('Проблема')], ['idea', t('Идея')]]} />
+        <textarea className="inp area" maxLength={1000} value={text} onChange={(e) => setText(e.target.value)}
+          placeholder={kind === 'bug' ? t('Что случилось? Где и после чего — так быстрее починим.') : t('Что добавить или улучшить в игре?')} />
+        <button className="btn go xl w" disabled={busy || text.trim().length < 5} onClick={send}>{t('Отправить')}</button>
+        <div className="xs faint center">{t('Не больше 5 сообщений в сутки')}</div>
+        {list && list.length > 0 && (
+          <>
+            <Sect>{t('Мои сообщения')}</Sect>
+            <div className="card list">
+              {list.map((f) => (
+                <Li key={f.id} icon={f.kind === 'bug' ? Bug : Lightbulb} tone={f.kind === 'bug' ? 'red' : 'gold'}
+                  title={<span style={{ whiteSpace: 'normal' }}>{f.text}</span>}
+                  sub={f.answer ? <span className="c-green">{t('Ответ')}: {f.answer}</span> : `${ago(f.created_at)} · ${f.status === 'done' ? t('рассмотрено') : t('ждёт ответа')}`} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

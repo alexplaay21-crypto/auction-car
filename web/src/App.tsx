@@ -8,7 +8,7 @@ import { Race } from './screens/Race';
 import { Market } from './screens/Market';
 import { Garage, CarPage } from './screens/Garage';
 import { ShopPage, CatalogPage } from './screens/Shop';
-import { Player, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage, SkillPage } from './screens/Profile';
+import { Player, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage, SkillPage, FeedbackPage } from './screens/Profile';
 import { BattlePass } from './screens/BattlePass';
 import { Admin } from './screens/Admin';
 import { SettingsPage } from './screens/Settings';
@@ -18,7 +18,7 @@ import { setFx, select } from './sound';
 export type Tab = 'home' | 'race' | 'auction' | 'market' | 'profile';
 export type Route =
   | { name: 'player'; id: number } | { name: 'car'; id: number } | { name: 'catalog'; id: number } | { name: 'transfer'; to?: string }
-  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' | 'settings' };
+  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' | 'settings' | 'feedback' };
 
 type Ctx = {
   me: any; reload: () => Promise<void>; tab: Tab; setTab: (t: Tab) => void;
@@ -35,8 +35,8 @@ function start() {
   const hash = location.hash.replace(/^#/, '');
   const car = /^car-(\d+)$/.exec(hash);
   const tab: Tab = /^g\d+$/.test(sp) || sp === 'play' ? 'auction'
-    : (['race', 'market', 'profile', 'auction'] as string[]).includes(hash) ? hash as Tab : hash === 'top' || hash === 'garage' || car ? 'profile' : 'home';
-  const routes: Route[] = car ? [{ name: 'garage' }, { name: 'car', id: Number(car[1]) }] : hash === 'garage' ? [{ name: 'garage' }] : hash === 'top' ? [{ name: 'leaders' }] : hash === 'shop' ? [{ name: 'shop' }] : [];
+    : (['race', 'market', 'profile', 'auction'] as string[]).includes(hash) ? hash as Tab : hash === 'top' || hash === 'garage' || hash === 'admin' || hash === 'feedback' || car ? 'profile' : 'home';
+  const routes: Route[] = car ? [{ name: 'garage' }, { name: 'car', id: Number(car[1]) }] : hash === 'garage' ? [{ name: 'garage' }] : hash === 'top' ? [{ name: 'leaders' }] : hash === 'shop' ? [{ name: 'shop' }] : hash === 'admin' ? [{ name: 'admin' }] : hash === 'feedback' ? [{ name: 'feedback' }] : [];
   return { scope: /^g\d+$/.test(sp) ? sp : null, tab, routes };
 }
 
@@ -114,5 +114,6 @@ function Page({ r }: { r: Route }) {
     case 'history': return <HistoryPage />;
     case 'admin': return <Admin />;
     case 'settings': return <SettingsPage />;
+    case 'feedback': return <FeedbackPage />;
   }
 }

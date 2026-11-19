@@ -5,7 +5,7 @@
 //   c:<машина> / s:<машина> карточка машины / продать
 //   gp:<стр> гараж, oc:<контейнер> открыть, gup расширить гараж
 //   oa:/od:<предложение>    купить / отказаться
-//   bonus, vip, buy:<лот>, top:<вид>
+//   bonus, vip, buy:<лот>, top:<вид>, st:<товар за звёзды>
 import { api, db, InputFile } from 'sdk';
 import { ensureUser, joinRoom, leaveRoom, bid, sellCar, openContainer, upgradeGarage, answerOffer, claimBonus, buyVip, buyLot, toGameError, getUser } from '../lib/engine.js';
 import { sync, sendCar } from '../lib/live.js';
@@ -13,6 +13,7 @@ import { money, carCardText, RARITY } from '../lib/views.js';
 import { errText } from '../lib/texts.js';
 import { garageScreen, carScreen, topScreen, shopScreen, profileScreen } from '../lib/botui.js';
 import { ADMIN_IDS } from '../lib/config.js';
+import { invoiceParams } from '../lib/stars.js';
 
 const answer = (q, text, alert = false) => api.answerCallbackQuery({ callback_query_id: q.id, text, show_alert: alert }).catch(() => {});
 
@@ -101,6 +102,10 @@ export default async function (q) {
     } else if (kind === 'buy') {
       const r = await buyLot(db, uid, Number(x), `cb${q.id}`);
       await answer(q, `🎁 «${r.lot.title}» куплено!${r.lot.container_qty ? ' Контейнеры — в гараже.' : ''}`, true);
+    } else if (kind === 'st') {
+      const inv = await invoiceParams(db, uid, x);
+      await answer(q);
+      await api.sendInvoice({ chat_id: chat.id, ...inv });
     } else if (kind === 'top') {
       await answer(q);
       await editScreen(q, await topScreen(db, x));

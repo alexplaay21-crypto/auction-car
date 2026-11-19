@@ -61,11 +61,12 @@ test('аукцион: залог, возврат перебитому, тайм�
   await ok();
 });
 
-test('кик после трёх контейнеров без ставок, пустая комната закрывается', async () => {
+test('кик после двух контейнеров без ставок, пустая комната закрывается', async () => {
   const room = await E.joinRoom(db, 2);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     await tick(31); await E.tick(db); // контейнер без ставок
     await tick(5); await E.tick(db);  // следующий
+    if (i === 0) assert.equal((await db.get('SELECT left_at FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room })).left_at, null, 'после одного пропуска ещё в комнате');
   }
   const m = await db.get('SELECT * FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room });
   assert.ok(m.left_at && m.kicked === 1);
