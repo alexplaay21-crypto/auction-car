@@ -102,7 +102,7 @@ test('полный гараж: машина продаётся сразу; пр�
   await ok();
 });
 
-test('VIP: +10 мест, меньше комиссии, двойной бонус; переводы и бонус раз в день', async () => {
+test('VIP: +10 мест, меньше комиссии, двойной бонус; переводы и бонус раз в 4 часа', async () => {
   await assert.rejects(E.buyVip(db, 2), { code: 'INSUFFICIENT_FUNDS' });
   await E.adminAdjust(db, 1, 2, 500_000, 'vip', op());
   await E.buyVip(db, 2);
@@ -111,8 +111,12 @@ test('VIP: +10 мест, меньше комиссии, двойной бону�
   assert.equal(u.garage_capacity, 25);
   await assert.rejects(E.buyVip(db, 2), { code: 'ALREADY_VIP' });
   const b = await E.claimBonus(db, 2);
-  assert.equal(b.amount, 2000);
-  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_TAKEN' });
+  assert.equal(b.amount, 10_000, 'VIP: $10 000 раз в 4 часа');
+  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_TOO_EARLY' });
+  await E.adminAdjust(db, 1, 2, 100_000, 'rich', 'r1');
+  await setClock(db, 14_400);
+  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_RICH' }, 'при балансе от $100 000 у VIP бонуса нет');
+  assert.equal((await E.claimBonus(db, 3)).amount, 5_000);
   const t1 = await E.transfer(db, 3, '@u4', 1000, op());
   assert.equal(t1.net, 900, 'обычный игрок — комиссия 10%');
   const t2 = await E.transfer(db, 2, '4', 1000, op());

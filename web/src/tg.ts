@@ -1,4 +1,6 @@
 // Связь с Telegram и серверными функциями (endpoints) — те же данные, что у бота.
+import { t } from './i18n';
+import { fx } from './sound';
 declare global {
   interface Window { Telegram?: any }
 }
@@ -28,7 +30,22 @@ const MESSAGES: Record<string, string> = {
   RECIPIENT_NOT_FOUND: 'Игрок не найден — он должен хотя бы раз зайти в игру',
   SELF_TRANSFER: 'Нельзя переводить самому себе',
   BAD_AMOUNT: 'Неверная сумма',
-  BONUS_TAKEN: 'Бонус уже получен сегодня',
+  BONUS_TAKEN: 'Бонус уже получен',
+  BONUS_TOO_EARLY: 'Бонус можно брать раз в 4 часа',
+  BONUS_RICH: 'Бонус только при балансе меньше $50 000 (VIP — $100 000)',
+  MARKET_RARITY: 'На рынке продаются только эпические и легендарные машины',
+  BP_NO_SEASON: 'Сезон Battle Pass сейчас не идёт',
+  BP_LOCKED: 'Этот уровень ещё не открыт',
+  BP_NOT_PREMIUM: 'Нужен премиум Battle Pass',
+  SKILL_MAX: 'Навык уже максимальный',
+  BAD_STAKE: 'Ставка в гонке — от $100 до $100 000',
+  RACE_CLOSED: 'Вызов уже закрыт',
+  SELF_RACE: 'Нельзя принять свой вызов',
+  HOST_CAR_GONE: 'У соперника больше нет этой машины — вызов отменён',
+  TOO_MANY_RACES: 'Не больше 3 открытых вызовов',
+  LISTING_CLOSED: 'Лот уже продан или снят',
+  SELF_BUY: 'Это твой лот',
+  SELF_FRIEND: 'Нельзя добавить себя',
   ALREADY_VIP: 'VIP у тебя уже есть',
   BUYER_NOT_FOUND: 'Покупатель не найден — он должен хотя бы раз зайти в игру',
   OFFER_EXISTS: 'На эту машину уже есть активное предложение',
@@ -54,8 +71,8 @@ const MESSAGES: Record<string, string> = {
 };
 
 export function errorText(e: any): string {
-  if (e && typeof e.code === 'string') return MESSAGES[e.code] ?? 'Не получилось, попробуй ещё раз';
-  return 'Ошибка соединения. Попробуй ещё раз.';
+  if (e && typeof e.code === 'string') return t(MESSAGES[e.code] ?? 'Не получилось, попробуй ещё раз');
+  return t('Ошибка соединения. Попробуй ещё раз.');
 }
 
 export function call<T = any>(name: string, input: Record<string, unknown> = {}): Promise<T> {
@@ -75,11 +92,11 @@ export function clientId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+// Отклик на действие: звук и вибрация (их можно выключить в настройках).
 export function haptic(kind: 'success' | 'error' | 'light' | 'heavy' = 'light') {
-  const h = tg?.HapticFeedback;
-  if (!h) return;
-  if (kind === 'light' || kind === 'heavy') h.impactOccurred?.(kind);
-  else h.notificationOccurred?.(kind);
+  if (kind === 'success') fx.coin();
+  else if (kind === 'error') fx.error();
+  else fx.tap();
 }
 
 export function toast(text: string) {

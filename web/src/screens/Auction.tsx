@@ -5,6 +5,7 @@ import { money, RARITY } from '../format';
 import { Avatar, CarArt, ContainerArt, RarityTag, Sheet, Money } from '../components';
 import { AppBar, Sect, Li, Nick } from '../ui';
 import { useApp } from '../App';
+import { t } from '../i18n';
 
 // Аукцион вживую: опрос раз в секунду. Те же данные видит бот — ставка здесь сразу
 // появляется в сообщении комнаты в Telegram, и наоборот.
@@ -36,10 +37,10 @@ export function Auction() {
   const load = useCallback(() => call('app_room', { action: 'state', scope, roomId: room?.id ?? undefined }).then(apply, () => {}), [scope, room?.id, apply]);
   useEffect(() => {
     load();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 1000);
-    return () => clearInterval(t);
+    const iv = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 1000);
+    return () => clearInterval(iv);
   }, [load]);
-  useEffect(() => { const t = setInterval(() => force((x) => x + 1), 250); return () => clearInterval(t); }, []);
+  useEffect(() => { const iv = setInterval(() => force((x) => x + 1), 250); return () => clearInterval(iv); }, []);
   useEffect(() => { if (!catalog) call('app_shop', { action: 'catalog' }).then(setCatalog, () => {}); }, [catalog]);
 
   const act = async (input: any, ok?: string) => {
@@ -50,30 +51,30 @@ export function Auction() {
     setBusy(false);
   };
 
-  if (room === undefined) return <><AppBar title="Аукцион" /><div className="page" /></>;
+  if (room === undefined) return <><AppBar title={t('Аукцион')} /><div className="page" /></>;
 
   if (!room || (!room.in_room && room.status === 'closed')) {
     return (
       <>
-        <AppBar title="Аукцион" />
+        <AppBar title={t('Аукцион')} />
         <div className="page">
           <div className="card pad0">
-            <div className="hero-img"><ContainerArt c={catalog?.containers?.[0] ?? { id: 1, country: 'Япония' }} size={150} studio /></div>
+            <div className="hero-img"><ContainerArt c={catalog?.containers?.[0] ?? { id: 1, country: t('Япония') }} size={150} studio /></div>
             <div className="col g12" style={{ padding: 14 }}>
-              <div className="h2">Торгуйся за контейнеры</div>
-              <Li icon={Gavel} title="Ставь выше других" sub="После каждой ставки 30 секунд таймера начинаются заново" />
-              <Li icon={Package} tone="gold" title="Последняя ставка — твой контейнер" sub="Внутри случайная машина одной из четырёх редкостей" />
-              <Li icon={RotateCcw} tone="blue" title="Перебили — деньги вернутся" sub="Ставка списывается сразу и возвращается, если тебя обошли" />
-              <button className="btn go xl w" disabled={busy} onClick={() => act({ action: 'join' }, 'Ты в комнате')}>Войти в комнату</button>
-              {scope && <div className="xs muted center">Комната этой группы</div>}
+              <div className="h2">{t('Торгуйся за контейнеры')}</div>
+              <Li icon={Gavel} title={t('Ставь выше других')} sub={t('После каждой ставки 30 секунд таймера начинаются заново')} />
+              <Li icon={Package} tone="gold" title={t('Последняя ставка — твой контейнер')} sub={t('Внутри случайная машина одной из четырёх редкостей')} />
+              <Li icon={RotateCcw} tone="blue" title={t('Перебили — деньги вернутся')} sub={t('Ставка списывается сразу и возвращается, если тебя обошли')} />
+              <button className="btn go xl w" disabled={busy} onClick={() => act({ action: 'join' }, t('Ты в комнате'))}>{t('Войти в комнату')}</button>
+              {scope && <div className="xs muted center">{t('Комната этой группы')}</div>}
             </div>
           </div>
           {catalog && (
             <>
-              <Sect>Что может выпасть</Sect>
+              <Sect>{t('Что может выпасть')}</Sect>
               <div className="card list">
                 {catalog.containers.map((x: any) => (
-                  <Li key={x.id} lead={<ContainerArt c={x} size={30} />} title={x.name} sub={<><span>старт {money(x.price)}</span><Chances ch={x.chances} compact /></>} onClick={() => push({ name: 'catalog', id: x.id })} />
+                  <Li key={x.id} lead={<ContainerArt c={x} size={30} />} title={t(x.name)} sub={<Chances ch={x.chances} compact />} onClick={() => push({ name: 'catalog', id: x.id })} />
                 ))}
               </div>
             </>
@@ -93,33 +94,33 @@ export function Auction() {
 
   return (
     <>
-      <AppBar title={`Комната №${room.number}`} />
+      <AppBar title={t('Комната №{n}', { n: room.number })} />
       <div className="page">
         {a?.status === 'active' ? (
           <div className={`card pad0${left < 6 ? ' hot' : ''}`}>
             <div className="hero-img">
               <ContainerArt c={a.container} size={150} studio />
-              <span className="tag"><span className="live-dot" /> Торги · {room.count} игроков</span>
+              <span className="tag"><span className="live-dot" /> {t('Торги · игроков: {n}', { n: room.count })}</span>
             </div>
             <div className="col g12" style={{ padding: 14 }}>
-              <div className="col"><div className="h2">{a.container.name}</div><span className="sm muted">стартовая цена {money(a.initial)} · меняется от торгов</span></div>
+              <div className="h2">{t(a.container.name)}</div>
               <Chances ch={a.chances} />
               <div className="row g12">
                 <Timer pct={pct} left={left} hot={left < 6} />
                 <div className="grow col">
-                  <span className="sm muted">{a.leader ? 'Текущая ставка' : 'Стартовая цена'}</span>
+                  <span className="sm muted">{a.leader ? t('Текущая ставка') : t('Стартовая цена')}</span>
                   <Money value={a.current} className="bid-num" />
-                  {a.leader ? <div className="row g6">{iLead ? <span className="b c-orange">Ты лидер</span> : <><span className="sm muted">лидер</span><Nick u={a.leader} /></>}</div>
-                    : <span className="sm muted">Ставок пока нет</span>}
+                  {a.leader ? <div className="row g6">{iLead ? <span className="b c-orange">{t('Ты лидер')}</span> : <><span className="sm muted">{t('лидер')}</span><Nick u={a.leader} /></>}</div>
+                    : <span className="sm muted">{t('Ставок пока нет')}</span>}
                 </div>
               </div>
               {room.in_room ? (
                 <>
                   <div className="grid3">{steps.map((x: number) => <button key={x} className="bid-btn" disabled={busy} onClick={() => act({ action: 'bid', raise: x })}>+{money(x)}</button>)}</div>
-                  <button className="btn w" onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> Своя сумма</button>
-                  <div className="xs muted center">Баланс {money(me.balance)} · минимум {money(a.min_bid)}{room.my_missed > 0 && <> · пропущено {room.my_missed} из {room.kick_after}</>}</div>
+                  <button className="btn w" onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> {t('Своя сумма')}</button>
+                  <div className="xs muted center">{t('Баланс {a} · минимум {b}', { a: money(me.balance), b: money(a.min_bid) })}{room.my_missed > 0 && ' · ' + t('пропущено {a} из {b}', { a: room.my_missed, b: room.kick_after })}</div>
                 </>
-              ) : <button className="btn go xl w" onClick={() => act({ action: 'join' })}>Войти и торговаться</button>}
+              ) : <button className="btn go xl w" onClick={() => act({ action: 'join' })}>{t('Войти и торговаться')}</button>}
             </div>
           </div>
         ) : (
@@ -127,19 +128,19 @@ export function Auction() {
             {a?.status === 'won' && a.car ? (
               <div className={`reveal r-${a.car.rarity}`}>
                 <div className="reveal-art"><CarArt car={a.car} height={150} studio /></div>
-                <div className="row g6 sm muted">{a.leader?.id === uid ? 'Ты забрал' : <><Nick u={a.leader} /> забирает</>} за {money(a.current)}</div>
+                <div className="row g6 sm muted">{a.leader?.id === uid ? t('Ты забрал') : <><Nick u={a.leader} /> {t('забирает')}</>} {t('за {m}', { m: money(a.current) })}</div>
                 <div className="h2">{a.car.name}</div>
-                <div className="row g8"><RarityTag r={a.car.rarity} /><span className="sm muted">стоимость {money(a.car.price)}</span></div>
+                <div className="row g8"><RarityTag r={a.car.rarity} /><span className="sm muted">{t('стоимость {m}', { m: money(a.car.price) })}</span></div>
               </div>
-            ) : <Li icon={Package} title={a ? `${a.container.name} — без ставок` : 'Ждём игроков'} sub={a ? 'Цена такого контейнера немного снизится' : undefined} />}
+            ) : <Li icon={Package} title={a ? t('{c} — без ставок', { c: a.container.name }) : t('Ждём игроков')} sub={a ? t('Цена такого контейнера немного снизится') : undefined} />}
             <div className="sep" />
-            <div className="center">{room.status === 'open' ? <>Следующий контейнер через <b className="c-orange">{nextIn} с</b></> : 'Комната закрыта'}</div>
+            <div className="center">{room.status === 'open' ? <>{t('Следующий контейнер через')} <b className="c-orange">{t('{n} с', { n: nextIn })}</b></> : t('Комната закрыта')}</div>
           </div>
         )}
 
         {a?.bids?.length > 0 && (
           <>
-            <Sect>Ставки</Sect>
+            <Sect>{t('Ставки')}</Sect>
             <div className="card list feed">
               {a.bids.map((b: any, i: number) => <div key={i} className="fr"><span className="grow"><Nick u={{ id: b.user_id, username: b.username, first_name: b.first_name }} /></span><b className="num">{money(b.amount)}</b></div>)}
             </div>
@@ -147,32 +148,32 @@ export function Auction() {
         )}
 
         <div className="card list">
-          <Li icon={Users} tone="blue" title={`Игроки: ${room.count} из ${room.max}`} sub="Играть можно и в чате с ботом — это та же комната" onClick={() => setPlayers(true)} />
-          {room.in_room && <Li icon={LogOut} tone="red" title="Выйти из комнаты" onClick={() => act({ action: 'leave' }, 'Ты вышел из комнаты')} />}
+          <Li icon={Users} tone="blue" title={t('Игроки: {a} из {b}', { a: room.count, b: room.max })} sub={t('Играть можно и в чате с ботом — это та же комната')} onClick={() => setPlayers(true)} />
+          {room.in_room && <Li icon={LogOut} tone="red" title={t('Выйти из комнаты')} onClick={() => act({ action: 'leave' }, t('Ты вышел из комнаты'))} />}
         </div>
       </div>
 
-      <Sheet open={players} onClose={() => setPlayers(false)} title="Игроки в комнате">
-        <div className="card list">{room.members.map((m: any) => <Li key={m.id} lead={<Avatar u={m} size={34} />} title={<Nick u={m} noAva />} sub={m.missed ? `без ставок: ${m.missed}` : 'активен'} />)}</div>
+      <Sheet open={players} onClose={() => setPlayers(false)} title={t('Игроки в комнате')}>
+        <div className="card list">{room.members.map((m: any) => <Li key={m.id} lead={<Avatar u={m} size={34} />} title={<Nick u={m} noAva />} sub={m.missed ? t('без ставок: {n}', { n: m.missed }) : t('активен')} />)}</div>
       </Sheet>
 
-      <Sheet open={custom} onClose={() => setCustom(false)} title="Своя ставка">
+      <Sheet open={custom} onClose={() => setCustom(false)} title={t('Своя ставка')}>
         <input className="inp big" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} />
-        <div className="sm muted center">Минимум {money(a?.min_bid)} · баланс {money(me.balance)}</div>
-        <button className="btn go xl w" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>Поставить {money(Number(amount) || 0)}</button>
+        <div className="sm muted center">{t('Минимум {a} · баланс {b}', { a: money(a?.min_bid), b: money(me.balance) })}</div>
+        <button className="btn go xl w" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>{t('Поставить {m}', { m: money(Number(amount) || 0) })}</button>
       </Sheet>
 
       <Sheet open={!!reveal} onClose={() => setReveal(null)}>
         {reveal?.car && (
           <div className={`reveal r-${reveal.car.rarity}`}>
-            <div className="sm muted">Контейнер твой за {money(reveal.current)}</div>
+            <div className="sm muted">{t('Контейнер твой за {m}', { m: money(reveal.current) })}</div>
             <div className="reveal-art"><CarArt car={reveal.car} height={170} studio /></div>
             <div className="h2">{reveal.car.name}</div>
             <RarityTag r={reveal.car.rarity} />
-            <div className="h3">Стоимость {money(reveal.car.price)}</div>
+            <div className="h3">{t('Стоимость {m}', { m: money(reveal.car.price) })}</div>
             {reveal.car.auto_sold != null
-              ? <div className="sm muted">Гараж полон — машина сразу продана за {money(reveal.car.auto_sold)}</div>
-              : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>Открыть машину</button>}
+              ? <div className="sm muted">{t('Гараж полон — машина сразу продана за {m}', { m: money(reveal.car.auto_sold) })}</div>
+              : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>{t('Открыть машину')}</button>}
           </div>
         )}
       </Sheet>

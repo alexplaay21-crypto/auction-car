@@ -6,7 +6,7 @@ export const RARITY = {
   common: { ru: 'Обычная', icon: '⚪' },
   rare: { ru: 'Редкая', icon: '🔵' },
   epic: { ru: 'Эпическая', icon: '🟣' },
-  mythic: { ru: 'Мифическая', icon: '🟡' },
+  mythic: { ru: 'Легендарная', icon: '🟡' },
 };
 
 export const money = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('ru-RU').replace(/ /g, ' ');

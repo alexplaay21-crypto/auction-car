@@ -6,6 +6,7 @@ import { call, tg } from './tg';
 import { money, who } from './format';
 import { Avatar, CarArt, Money } from './components';
 import { useApp } from './App';
+import { t } from './i18n';
 
 export function Sect({ children, action, onAction }: { children: ReactNode; action?: string; onAction?: () => void }) {
   return <div className="sect"><span className="t">{children}</span>{action && onAction && <button className="a" onClick={onAction}>{action}</button>}</div>;
@@ -60,8 +61,8 @@ export function AppBar({ title, back }: { title?: ReactNode; back?: () => void }
   }, [back]);
   return (
     <div className="appbar">
-      {back ? <button className="back" onClick={back} aria-label="Назад"><ArrowLeft size={20} /></button>
-        : <button onClick={() => open(me.user.id)} aria-label="Профиль"><Avatar u={me.user} size={34} /></button>}
+      {back ? <button className="back" onClick={back} aria-label={t('Назад')}><ArrowLeft size={20} /></button>
+        : <button onClick={() => open(me.user.id)} aria-label={t('Профиль')}><Avatar u={me.user} size={34} /></button>}
       <div className="title ell">{title}</div>
       <button className="money-pill" onClick={() => push({ name: 'shop' })}>
         <Money value={me.balance} /><span className="plus"><Plus size={16} strokeWidth={3} /></span>
@@ -76,7 +77,7 @@ export function Nick({ u, size = 22, noAva = false }: { u: any; size?: number; n
   if (!u?.id) return <span className="muted">—</span>;
   return (
     <button className={`nick${u.id === me.user.id ? ' me' : ''}`} onClick={(e) => { e.stopPropagation(); open(u.id); }}>
-      {!noAva && <Avatar u={u} size={size} />}<span className="n">{u.id === me.user.id ? 'Ты' : who(u)}</span>
+      {!noAva && <Avatar u={u} size={size} />}<span className="n">{u.id === me.user.id ? t('Ты') : who(u)}</span>
     </button>
   );
 }
@@ -96,7 +97,7 @@ export function Delta({ v }: { v: number }) {
 export function FriendPicker({ value, onPick }: { value: string; onPick: (ref: string) => void }) {
   const [list, setList] = useState<any[] | null>(null);
   useEffect(() => { call('app_player', { action: 'friends' }).then((r) => setList(r.pick), () => setList([])); }, []);
-  if (!list?.length) return list ? <div className="xs faint">Добавь друзей в их профилях — они появятся здесь для быстрого выбора.</div> : null;
+  if (!list?.length) return list ? <div className="xs faint">{t('Добавь друзей в их профилях — они появятся здесь для быстрого выбора.')}</div> : null;
   return (
     <div className="hs">
       {list.map((f) => {
@@ -113,12 +114,12 @@ export function FriendPicker({ value, onPick }: { value: string; onPick: (ref: s
 }
 
 // Выбор своей машины (гонка, рынок).
-export function CarPicker({ value, onPick, exclude = [] as number[] }: { value: number | null; onPick: (c: any) => void; exclude?: number[] }) {
+export function CarPicker({ value, onPick, exclude = [] as number[], only }: { value: number | null; onPick: (c: any) => void; exclude?: number[]; only?: string[] }) {
   const [cars, setCars] = useState<any[] | null>(null);
   useEffect(() => { call('app_garage', { action: 'list' }).then((g) => setCars(g.cars), () => setCars([])); }, []);
-  if (!cars) return <div className="sm muted">Загрузка гаража…</div>;
-  const list = cars.filter((c) => !exclude.includes(c.user_car_id));
-  if (!list.length) return <div className="sm muted">В гараже нет машин — выиграй контейнер на аукционе.</div>;
+  if (!cars) return <div className="sm muted">{t('Загрузка гаража…')}</div>;
+  const list = cars.filter((c) => !exclude.includes(c.user_car_id) && (!only || only.includes(c.rarity)));
+  if (!list.length) return <div className="sm muted">{t('В гараже нет машин — выиграй контейнер на аукционе.')}</div>;
   return (
     <div className="hs">
       {list.map((c) => (

@@ -344,18 +344,24 @@ export async function transfer(db, uid, toRef, amount, opId) {
   return { amount: a, commission, net: a - commission, to };
 }
 
+// Бонус раз в 4 часа: $5 000 (VIP $10 000). Не выдаётся, если на балансе уже от $50 000
+// (VIP — от $100 000): бонус — помощь тем, у кого мало денег.
 export async function bonusState(db, uid) {
   const u = await getUser(db, uid);
   const st = await settings(db);
   const t = await now(db);
-  const day = Math.floor(t / 86400);
-  return { available: u.last_bonus_day < day, amount: u.is_vip ? st.daily_bonus_vip : st.daily_bonus, next_at: (day + 1) * 86400, now: t };
+  const last = (await db.get('SELECT max(created_at) AS t FROM bonus4 WHERE user_id = :u', { ':u': uid }))?.t ?? 0;
+  const cap = u.is_vip ? st.bonus_cap_vip : st.bonus_cap;
+  const next = last + st.bonus_period_s;
+  const rich = u.balance >= cap;
+  return { available: t >= next && !rich, rich, cap, amount: u.is_vip ? st.daily_bonus_vip : st.daily_bonus, next_at: Math.max(next, t), period: st.bonus_period_s, now: t };
 }
 
 export async function claimBonus(db, uid) {
   const b = await bonusState(db, uid);
-  if (!b.available) throw new GameError('BONUS_TAKEN');
-  await exec(db, `INSERT INTO bonus_claims (user_id, day, amount) VALUES (:u, ${NOW} / 86400, :a)`, { ':u': uid, ':a': b.amount });
+  if (b.rich) throw new GameError('BONUS_RICH');
+  if (!b.available) throw new GameError('BONUS_TOO_EARLY');
+  await exec(db, `INSERT INTO bonus4 (user_id, amount, created_at) VALUES (:u, :a, ${NOW})`, { ':u': uid, ':a': b.amount });
   return b;
 }
 

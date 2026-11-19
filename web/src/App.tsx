@@ -11,11 +11,14 @@ import { ShopPage, CatalogPage } from './screens/Shop';
 import { Player, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage, SkillPage } from './screens/Profile';
 import { BattlePass } from './screens/BattlePass';
 import { Admin } from './screens/Admin';
+import { SettingsPage } from './screens/Settings';
+import { t, setLang, getLang } from './i18n';
+import { setFx, select } from './sound';
 
 export type Tab = 'home' | 'race' | 'auction' | 'market' | 'profile';
 export type Route =
   | { name: 'player'; id: number } | { name: 'car'; id: number } | { name: 'catalog'; id: number } | { name: 'transfer'; to?: string }
-  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' };
+  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' | 'settings' };
 
 type Ctx = {
   me: any; reload: () => Promise<void>; tab: Tab; setTab: (t: Tab) => void;
@@ -25,6 +28,7 @@ const AppCtx = createContext<Ctx>(null as any);
 export const useApp = () => useContext(AppCtx);
 
 const TABS: [Tab, any, string][] = [['home', HomeIcon, 'Главная'], ['race', Flag, 'Гонки'], ['auction', Gavel, 'Аукцион'], ['market', Store, 'Рынок'], ['profile', UserRound, 'Профиль']];
+void select;
 
 function start() {
   const sp = String(tg?.initDataUnsafe?.start_param ?? '');
@@ -44,7 +48,11 @@ export function App() {
   const [err, setErr] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    try { setMe(await call('app_me', {})); } catch (e: any) { setErr(e?.code === 'NO_TELEGRAM' ? 'Открой игру внутри Telegram' : 'Не удалось загрузить игру'); }
+    try {
+      const r = await call('app_me', {});
+      if (r.settings) { if (r.settings.lang !== getLang()) setLang(r.settings.lang); setFx(r.settings); }
+      setMe({ ...r, _loaded: Date.now() / 1000 });
+    } catch (e: any) { setErr(e?.code === 'NO_TELEGRAM' ? t('Открой игру внутри Telegram') : t('Не удалось загрузить игру')); }
   }, []);
   useEffect(() => {
     tg?.ready?.(); tg?.expand?.();
@@ -52,7 +60,7 @@ export function App() {
     reload();
   }, [reload]);
 
-  const setTab = useCallback((t: Tab) => { setStack([]); setTabState(t); window.scrollTo({ top: 0 }); tg?.HapticFeedback?.selectionChanged?.(); }, []);
+  const setTab = useCallback((x: Tab) => { setStack([]); setTabState(x); window.scrollTo({ top: 0 }); select(); }, []);
   const push = useCallback((r: Route) => { setStack((s) => [...s, r]); window.scrollTo({ top: 0 }); }, []);
   const pop = useCallback(() => setStack((s) => s.slice(0, -1)), []);
   const open = useCallback((id: number) => push({ name: 'player', id }), [push]);
@@ -78,7 +86,7 @@ export function App() {
             {TABS.map(([k, I, label]) => (
               <button key={k} className={`${k === 'auction' ? 'mid ' : ''}${!top && tab === k ? 'on' : ''}`} onClick={() => setTab(k)}>
                 {k === 'auction' ? <span className="fab"><I size={26} strokeWidth={2.4} /></span> : <I size={22} strokeWidth={2.2} />}
-                <span>{label}</span>
+                <span>{t(label)}</span>
                 {k === 'home' && me.bonus.available && <span className="badge-dot" />}
               </button>
             ))}
@@ -105,5 +113,6 @@ function Page({ r }: { r: Route }) {
     case 'leaders': return <LeadersPage />;
     case 'history': return <HistoryPage />;
     case 'admin': return <Admin />;
+    case 'settings': return <SettingsPage />;
   }
 }

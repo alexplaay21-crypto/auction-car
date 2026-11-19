@@ -3,6 +3,7 @@ import { endpoint } from '../lib/endpoint.js';
 import { claimBonus, buyVip, transfer, redeemPromo, referralRewards, myRoom, GameError } from '../lib/engine.js';
 import { profileView } from '../lib/views.js';
 import { BOT_USERNAME } from '../lib/config.js';
+import { userSettings } from '../lib/engine3.js';
 
 export default endpoint(async (db, uid, input) => {
   const a = input.action ?? 'get';
@@ -21,5 +22,5 @@ export default endpoint(async (db, uid, input) => {
     return { list, link: `https://t.me/${BOT_USERNAME}?start=ref_${uid}`, app_link: `https://t.me/${BOT_USERNAME}?startapp=ref_${uid}` };
   } else if (a !== 'get') throw new GameError('BAD_INPUT');
   const room = await myRoom(db, uid);
-  return { ...(await profileView(db, uid)), room_id: room?.id ?? null, result };
+  return { ...(await profileView(db, uid)), room_id: room?.id ?? null, settings: await userSettings(db, uid), result };
 });

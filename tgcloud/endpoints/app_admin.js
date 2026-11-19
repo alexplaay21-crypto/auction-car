@@ -3,6 +3,8 @@
 import { endpoint } from '../lib/endpoint.js';
 import { settings, dropSettingsCache, adminAdjust, adminLog, findUser, getUser, GameError, now } from '../lib/engine.js';
 import { SETTINGS } from '../lib/ddl.js';
+import { SETTINGS_3 } from '../lib/ddl3.js';
+import { currentSeason, createSeason, setLevelReward } from '../lib/engine3.js';
 import { ADMIN_IDS } from '../lib/config.js';
 
 const RARITIES = ['common', 'rare', 'epic', 'mythic'];
@@ -37,10 +39,10 @@ export default endpoint(async (db, uid, input, { user }) => {
   }
 
   // ---------- настройки ----------
-  if (a === 'settings') return { values: await settings(db, { fresh: true }), keys: Object.keys(SETTINGS) };
+  if (a === 'settings') return { values: await settings(db, { fresh: true }), keys: [...Object.keys(SETTINGS), ...Object.keys(SETTINGS_3).filter((k) => !k.startsWith('bp_')), 'bonus_period_s', 'bonus_cap', 'bonus_cap_vip'] };
   if (a === 'set') {
     const k = String(input.k);
-    if (!(k in SETTINGS)) throw new GameError('BAD_SETTING');
+    if (!(k in SETTINGS) && !(k in SETTINGS_3) && !['bonus_period_s', 'bonus_cap', 'bonus_cap_vip'].includes(k)) throw new GameError('BAD_SETTING');
     const v = int(input.v, 0, 1e12);
     if (/^chance_/.test(k) && v > 100000) throw new GameError('BAD_INPUT');
     if (/_bps$/.test(k) && v > 10000) throw new GameError('BAD_INPUT');
@@ -223,6 +225,29 @@ export default endpoint(async (db, uid, input, { user }) => {
       VALUES (:t, :d, :p, :m, :ci, :cq, :car, :v, :av, :s, :lim)`, f)).lastInsertRowid;
     await log({ id, title: f[':t'] });
     return { id };
+  }
+
+  // ---------- Battle Pass ----------
+  if (a === 'bp_seasons') {
+    const seasons = await db.all('SELECT * FROM bp_seasons ORDER BY id DESC LIMIT 20');
+    const cur = await currentSeason(db);
+    const levels = cur ? await db.all('SELECT * FROM bp_levels WHERE season = :s ORDER BY level', { ':s': cur.id }) : [];
+    return { seasons, current: cur, levels, now: await now(db), containers: await db.all('SELECT id, name FROM containers ORDER BY id') };
+  }
+  if (a === 'bp_create') {
+    const id = await createSeason(db, uid, { name: input.name, days: input.days ?? 21, price: input.price, levels: input.levels, xpLevel: input.xp_level });
+    await log({ id, name: input.name });
+    return { id };
+  }
+  if (a === 'bp_reward') {
+    await setLevelReward(db, input);
+    await log({ season: input.season, level: input.level, track: input.track, kind: input.kind, value: input.value });
+    return { ok: true };
+  }
+  if (a === 'bp_end') {
+    await db.run('UPDATE bp_seasons SET ends_at = (SELECT now FROM v_now) WHERE id = :s AND ends_at > (SELECT now FROM v_now)', { ':s': int(input.season, 1) });
+    await log({ season: input.season });
+    return { ok: true };
   }
 
   // ---------- аукционы ----------

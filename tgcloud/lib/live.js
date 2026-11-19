@@ -190,7 +190,13 @@ export async function deliverOutbox(db, api, InputFile, { limit = 3 } = {}) {
   return n;
 }
 
+const NOTIFY = { won: 'n_auction', kicked: 'n_auction', offer: 'n_deals', offer_done: 'n_deals', transfer: 'n_deals', market_sold: 'n_deals', race: 'n_races' };
 async function sendOne(db, api, InputFile, o) {
+  const key = NOTIFY[o.kind];
+  if (key) {
+    const st = await db.get(`SELECT ${key} AS on_ FROM user_settings WHERE user_id = :u`, { ':u': o.chat_id }).catch(() => null);
+    if (st && st.on_ === 0) return; // игрок выключил такие уведомления
+  }
   if (o.kind === 'won') {
     const a = await db.get('SELECT * FROM auctions WHERE id = :a', { ':a': o.ref });
     const uc = await db.get(`SELECT * FROM user_cars WHERE source = 'auction' AND source_ref = :a`, { ':a': o.ref });

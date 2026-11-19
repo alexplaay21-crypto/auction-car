@@ -56,7 +56,8 @@ test('рынок: выставить, купить (деньги и машина
   await G.buyListing(db, 3, l.id);
   assert.equal((await db.get('SELECT user_id FROM user_cars WHERE id = :i', { ':i': uc })).user_id, 3);
   assert.equal(await bal(2), 15_000 + 37_500, 'комиссия 25%');
-  const uc2 = await give(2, 1);
+  await assert.rejects(G.listCar(db, 2, await give(2, 1), 2_000), { code: 'MARKET_RARITY' }, 'обычные машины на рынок нельзя');
+  const uc2 = await give(2, 6);
   const l2 = await G.listCar(db, 2, uc2, 9_999);
   await E.sellCar(db, 2, uc2);
   assert.equal((await db.get('SELECT status FROM market_listings WHERE id = :l', { ':l': l2.id })).status, 'cancelled', 'проданная государству снимается с рынка');

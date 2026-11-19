@@ -8,10 +8,10 @@ import { useApp } from '../App';
 const LABELS: Record<string, string> = {
   start_balance: 'Стартовый баланс', bet_step: 'Шаг ставки', auction_timer_s: 'Таймер контейнера, с', next_delay_s: 'Пауза между контейнерами, с',
   kick_after: 'Кик после N пропусков', max_players: 'Игроков в комнате', quick_sell_window_s: 'Окно быстрой продажи, с',
-  chance_common: 'Шанс ⚪ обычной', chance_rare: 'Шанс 🔵 редкой', chance_epic: 'Шанс 🟣 эпической', chance_mythic: 'Шанс 🟡 мифической',
+  chance_common: 'Шанс ⚪ обычной', chance_rare: 'Шанс 🔵 редкой', chance_epic: 'Шанс 🟣 эпической', chance_mythic: 'Шанс 🟡 легендарной',
   comm_quick_bps: 'Комиссия быстрой продажи, б.п.', comm_quick_vip_bps: '…для VIP', comm_state_bps: 'Комиссия продажи государству, б.п.', comm_state_vip_bps: '…для VIP',
   comm_player_bps: 'Комиссия продажи игроку, б.п.', comm_player_vip_bps: '…для VIP', comm_transfer_bps: 'Комиссия перевода, б.п.', comm_transfer_vip_bps: '…для VIP',
-  daily_bonus: 'Ежедневный бонус', daily_bonus_vip: 'Бонус VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',
+  daily_bonus: 'Бонус (раз в период)', daily_bonus_vip: 'Бонус VIP', bonus_period_s: 'Период бонуса, с', bonus_cap: 'Бонус только при балансе меньше', bonus_cap_vip: '…для VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',
   garage_vip_bonus: 'Мест за VIP', ref_inviter: 'Бонус пригласившему', ref_invited: 'Бонус приглашённому', ref_first_purchase: 'За первую покупку друга',
   ref_epic_every: 'Эпик за каждые N друзей',
   race_min_stake: 'Гонка: мин. ставка', race_max_stake: 'Гонка: макс. ставка', race_bot_win_bps: 'Гонка с ботом: выигрыш, б.п.', race_pvp_fee_bps: 'Гонка PvP: комиссия, б.п.',
@@ -34,7 +34,7 @@ async function resizeImage(file: File): Promise<{ mime: string; data: string }> 
 export function Admin() {
   const { pop: onBack } = useApp();
   const [tab, setTab] = useState('stats');
-  const tabs = [['stats', 'Обзор'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['rooms', 'Комнаты']];
+  const tabs = [['stats', 'Обзор'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['bp', 'Battle Pass'], ['rooms', 'Комнаты']];
   return (
     <>
     <AppBar title="Админ-панель" back={onBack} />
@@ -46,6 +46,7 @@ export function Admin() {
       {tab === 'users' && <Users />}
       {tab === 'promo' && <Promo />}
       {tab === 'lots' && <Lots />}
+      {tab === 'bp' && <BpSeasons />}
       {tab === 'rooms' && <Rooms />}
     </div>
     </>
@@ -336,5 +337,62 @@ function Rooms() {
         </div>
       ))}
     </div>
+  );
+}
+
+const KINDS: [string, string][] = [['money', 'Деньги'], ['container', 'Контейнер (ID)'], ['skill', 'Навык +N'], ['car', 'Машина (1 редк · 2 эпик · 3 легенд)']];
+function BpSeasons() {
+  const [d, setD] = useState<any>(null);
+  const [form, setForm] = useState<any>(null);
+  const [lv, setLv] = useState<any>(null);
+  const load = useCallback(() => adm({ action: 'bp_seasons' }).then(setD, (e) => toast(errorText(e))), []);
+  useEffect(() => { load(); }, [load]);
+  if (!d) return <div className="hint">Загрузка…</div>;
+  const cur = d.current;
+  const daysLeft = cur ? Math.max(0, Math.ceil((cur.ends_at - d.now) / 86400)) : 0;
+  const cname = (id: number) => d.containers.find((c: any) => c.id === id)?.name ?? `#${id}`;
+  const rw = (k: string, v: number) => k === 'money' ? money(v) : k === 'container' ? `📦 ${cname(v)}` : k === 'skill' ? `навык +${v}` : `🚗 ${['', 'редкая', 'эпик', 'легенд'][v]}`;
+  return (
+    <>
+      <div className="glass list">
+        {cur ? <div className="top-row"><span className="grow"><b>{cur.name}</b><div className="hint small">идёт · осталось {daysLeft} дн. · {cur.levels} ур. · премиум {money(cur.price)}</div></span>
+          <button className="btn small ghost" onClick={async () => { if (confirm('Завершить сезон сейчас?') && await doAdm({ action: 'bp_end', season: cur.id }, 'Сезон завершён')) load(); }}>Завершить</button></div>
+          : <div className="hint">Сезон сейчас не идёт</div>}
+      </div>
+      <button className="btn primary wide" onClick={() => setForm({ name: `Сезон ${(d.seasons[0]?.id ?? 0) + 1}`, days: 21, price: cur?.price ?? 150000, levels: 14, xp_level: cur?.xp_level ?? 1000 })}>+ Новый сезон (21 день)</button>
+      {cur && <div><h3>Награды текущего сезона</h3>
+        <div className="glass list">{d.levels.map((l: any) => (
+          <button key={l.level} className="top-row btn-reset small" onClick={() => setLv({ ...l, track: 'free', kind: l.free_kind, value: l.free_value })}>
+            <b style={{ width: 24 }}>{l.level}</b><span className="grow">{rw(l.free_kind, l.free_value)}</span><span className="c-gold">{rw(l.prem_kind, l.prem_value)}</span>
+          </button>))}</div></div>}
+      <div><h3>История</h3>
+        <div className="glass list">{d.seasons.map((x: any) => <div key={x.id} className="top-row small"><span className="grow">{x.name}</span><span className="hint">{new Date(x.starts_at * 1000).toLocaleDateString('ru-RU')} — {new Date(x.ends_at * 1000).toLocaleDateString('ru-RU')}</span></div>)}</div>
+      </div>
+      <Sheet open={!!form} onClose={() => setForm(null)} title="Новый сезон">
+        {form && (
+          <div className="form">
+            <div className="hint small">Текущий сезон завершится, награды скопируются из него — потом их можно поменять.</div>
+            <F label="Название" v={form.name} on={(v) => setForm({ ...form, name: v })} />
+            <F label="Длительность, дней" v={form.days} num on={(v) => setForm({ ...form, days: v })} />
+            <F label="Цена премиума" v={form.price} num on={(v) => setForm({ ...form, price: v })} />
+            <F label="Уровней" v={form.levels} num on={(v) => setForm({ ...form, levels: v })} />
+            <F label="Опыта на уровень" v={form.xp_level} num on={(v) => setForm({ ...form, xp_level: v })} />
+            <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'bp_create', ...form }, 'Сезон запущен')) { setForm(null); load(); } }}>Запустить сезон</button>
+          </div>
+        )}
+      </Sheet>
+      <Sheet open={!!lv} onClose={() => setLv(null)} title={lv ? `Уровень ${lv.level}` : ''}>
+        {lv && (
+          <div className="form">
+            <div className="chips">{[['free', 'Бесплатно'], ['premium', 'Премиум']].map(([k, l]) => <button key={k} className={`chip${lv.track === k ? ' on' : ''}`}
+              onClick={() => setLv({ ...lv, track: k, kind: k === 'free' ? lv.free_kind : lv.prem_kind, value: k === 'free' ? lv.free_value : lv.prem_value })}>{l}</button>)}</div>
+            <div className="chips">{KINDS.map(([k, l]) => <button key={k} className={`chip${lv.kind === k ? ' on' : ''}`} onClick={() => setLv({ ...lv, kind: k })}>{l}</button>)}</div>
+            <F label="Значение" v={lv.value} num on={(v) => setLv({ ...lv, value: v })} />
+            {lv.kind === 'container' && <div className="hint small">{d.containers.map((c: any) => `${c.id} — ${c.name}`).join(' · ')}</div>}
+            <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'bp_reward', season: cur.id, level: lv.level, track: lv.track, kind: lv.kind, value: lv.value })) { setLv(null); load(); } }}>Сохранить</button>
+          </div>
+        )}
+      </Sheet>
+    </>
   );
 }

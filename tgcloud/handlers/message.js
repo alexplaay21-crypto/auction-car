@@ -117,7 +117,7 @@ async function personal(m, uid, cmd, args) {
   if (cmd === 'top') return show(await topScreen(db));
   if (cmd === 'bonus') {
     const b = await claimBonus(db, uid);
-    return reply(m, `🎁 Бонус <b>${money(b.amount)}</b> зачислен! Следующий — завтра.`);
+    return reply(m, `🎁 Бонус <b>${money(b.amount)}</b> зачислен! Следующий — через 4 часа.`);
   }
   if (cmd === 'transfer') {
     const [to, amount] = args.split(/\s+/);

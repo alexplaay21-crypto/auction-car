@@ -26,7 +26,7 @@ export const skillPrice = (n) => PRICES[n - 1];
 export const skillLevel = (p) => Math.floor((p * SKILL_LEVELS) / SKILL_MAX);
 export const reaction = (p) => 0.20 + 0.78 * Math.max(1 - p / SKILL_MAX, 0) ** 1.6;
 
-// Награды Battle Pass: kind money | container | car (value: 1 редкая, 2 эпическая, 3 мифическая) | skill (покупки навыка)
+// Награды Battle Pass: kind money | container | car (value: 1 редкая, 2 эпическая, 3 легендарная) | skill (покупки навыка)
 export function bpRewards() {
   // 14 уровней. Бесплатно: деньги, контейнеры на 4/8/12, редкая машина на 14.
   // Премиум: больше денег, улучшения навыка на 3/6/9/13, контейнеры на 4/8/12, машины на 5/10/14.
@@ -46,7 +46,8 @@ export function bpRewards() {
 }
 const RARITY_OF = { 1: 'rare', 2: 'epic', 3: 'mythic' };
 
-const XP = (u, n) => `INSERT INTO bp_progress (user_id, season, xp) SELECT ${u}, ${S('bp_season')}, ${n} WHERE ${u} IS NOT NULL
+export const CUR_SEASON = `(SELECT id FROM bp_seasons WHERE starts_at <= ${NOW} AND ends_at > ${NOW} ORDER BY id DESC LIMIT 1)`;
+const XP = (u, n) => `INSERT INTO bp_progress (user_id, season, xp) SELECT ${u}, ${CUR_SEASON}, ${n} WHERE ${u} IS NOT NULL AND ${CUR_SEASON} IS NOT NULL
   ON CONFLICT (user_id, season) DO UPDATE SET xp = xp + excluded.xp;`;
 
 const q = (x) => (x == null ? 'NULL' : `'${String(x).replace(/'/g, "''")}'`);
@@ -82,6 +83,18 @@ function seed() {
 }
 
 const tables = [
+  `CREATE TABLE IF NOT EXISTS bp_seasons (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, starts_at INTEGER NOT NULL, ends_at INTEGER NOT NULL,
+     price INTEGER NOT NULL CHECK (price > 0), levels INTEGER NOT NULL CHECK (levels BETWEEN 1 AND 100),
+     xp_level INTEGER NOT NULL CHECK (xp_level > 0), created_by INTEGER, created_at INTEGER NOT NULL, CHECK (ends_at > starts_at)
+   )`,
+  `CREATE TABLE IF NOT EXISTS bonus4 (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, amount INTEGER NOT NULL, created_at INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS idx_bonus4_user ON bonus4 (user_id, created_at)`,
+  `CREATE TABLE IF NOT EXISTS user_settings (
+     user_id INTEGER PRIMARY KEY, lang TEXT NOT NULL DEFAULT 'ru' CHECK (lang IN ('ru', 'en')),
+     sound INTEGER NOT NULL DEFAULT 1, haptics INTEGER NOT NULL DEFAULT 1,
+     n_auction INTEGER NOT NULL DEFAULT 1, n_deals INTEGER NOT NULL DEFAULT 1, n_races INTEGER NOT NULL DEFAULT 1
+   )`,
   `CREATE TABLE IF NOT EXISTS container_meta (
      container_id INTEGER PRIMARY KEY, flag TEXT, base_price INTEGER NOT NULL CHECK (base_price > 0),
      market INTEGER NOT NULL, prev_price INTEGER NOT NULL, updated_at INTEGER NOT NULL
@@ -146,7 +159,7 @@ const tables = [
 const BOT_WIN = `(NEW.stake * ${S('race_bot_win_bps')} / 10000)`;
 const POT = `(NEW.stake * 2 * (10000 - ${S('race_pvp_fee_bps')}) / 10000)`;
 const OWNS = (u, uc) => `EXISTS (SELECT 1 FROM user_cars WHERE id = ${uc} AND user_id = ${u} AND status = 'owned')`;
-const BP_THRESHOLD = `(NEW.level * ${S('bp_xp_level')})`;
+const BP_THRESHOLD = `(NEW.level * (SELECT xp_level FROM bp_seasons WHERE id = NEW.season))`;
 
 const triggers = [
   // ---------- динамические цены: итог торгов двигает стартовую цену контейнера ----------
@@ -167,6 +180,7 @@ const triggers = [
   // ---------- рынок ----------
   `CREATE TRIGGER IF NOT EXISTS listings_bi BEFORE INSERT ON market_listings BEGIN
      SELECT RAISE(ABORT, 'CAR_NOT_FOUND') WHERE NOT ${OWNS('NEW.seller_id', 'NEW.user_car_id')};
+     SELECT RAISE(ABORT, 'MARKET_RARITY') WHERE (SELECT c.rarity FROM user_cars u JOIN cars c ON c.id = u.car_id WHERE u.id = NEW.user_car_id) NOT IN ('epic', 'mythic');
      SELECT RAISE(ABORT, 'USER_BANNED') WHERE (SELECT is_banned FROM users WHERE id = NEW.seller_id) = 1;
      SELECT RAISE(ABORT, 'BAD_LISTING') WHERE NEW.status <> 'open' OR NEW.created_at <> ${NOW} OR NEW.buyer_id IS NOT NULL
        OR NEW.rate_bps <> ${RATE('comm_player', 'NEW.seller_id')};
@@ -262,9 +276,20 @@ const triggers = [
   `CREATE TRIGGER IF NOT EXISTS bids_xp AFTER INSERT ON bids BEGIN ${XP('NEW.user_id', 10)} END`,
   `CREATE TRIGGER IF NOT EXISTS auctions_xp AFTER UPDATE OF status ON auctions WHEN OLD.status = 'active' AND NEW.status = 'won' BEGIN ${XP('NEW.leader_id', 150)} END`,
   `CREATE TRIGGER IF NOT EXISTS opens_xp AFTER INSERT ON container_opens BEGIN ${XP('NEW.user_id', 150)} END`,
-  `CREATE TRIGGER IF NOT EXISTS bonus_xp AFTER INSERT ON bonus_claims BEGIN ${XP('NEW.user_id', 100)} END`,
+  `CREATE TRIGGER IF NOT EXISTS bonus4_bi BEFORE INSERT ON bonus4 BEGIN
+     SELECT RAISE(ABORT, 'BONUS_TOO_EARLY') WHERE ${NOW} - COALESCE((SELECT max(created_at) FROM bonus4 WHERE user_id = NEW.user_id), 0) < ${S('bonus_period_s')};
+     SELECT RAISE(ABORT, 'BONUS_RICH') WHERE (SELECT balance FROM users WHERE id = NEW.user_id)
+       >= CASE WHEN (SELECT is_vip FROM users WHERE id = NEW.user_id) = 1 THEN ${S('bonus_cap_vip')} ELSE ${S('bonus_cap')} END;
+     SELECT RAISE(ABORT, 'BAD_BONUS') WHERE NEW.created_at <> ${NOW} OR NEW.amount <> CASE WHEN (SELECT is_vip FROM users WHERE id = NEW.user_id) = 1
+       THEN ${S('daily_bonus_vip')} ELSE ${S('daily_bonus')} END;
+   END`,
+  `CREATE TRIGGER IF NOT EXISTS bonus4_ai AFTER INSERT ON bonus4 BEGIN
+     ${post("'bonus4:' || NEW.id", 'NEW.user_id', 'daily_bonus', 'NEW.amount')}
+     ${XP('NEW.user_id', 100)}
+   END`,
   `CREATE TRIGGER IF NOT EXISTS bp_buy_bi BEFORE INSERT ON bp_purchases BEGIN
-     SELECT RAISE(ABORT, 'BAD_BP') WHERE NEW.season <> ${S('bp_season')} OR NEW.price <> ${S('bp_price')} OR NEW.created_at <> ${NOW};
+     SELECT RAISE(ABORT, 'BP_NO_SEASON') WHERE NEW.season IS NOT ${CUR_SEASON};
+     SELECT RAISE(ABORT, 'BAD_BP') WHERE NEW.price <> (SELECT price FROM bp_seasons WHERE id = NEW.season) OR NEW.created_at <> ${NOW};
    END`,
   `CREATE TRIGGER IF NOT EXISTS bp_buy_ai AFTER INSERT ON bp_purchases BEGIN
      ${post("'bp:' || NEW.season", 'NEW.user_id', 'bp', '-NEW.price')}
@@ -277,7 +302,7 @@ const triggers = [
      SELECT RAISE(ABORT, 'BP_LOCKED') WHERE COALESCE((SELECT xp FROM bp_progress WHERE user_id = NEW.user_id AND season = NEW.season), 0) < ${BP_THRESHOLD};
      SELECT RAISE(ABORT, 'BP_NOT_PREMIUM') WHERE NEW.track = 'premium'
        AND COALESCE((SELECT premium FROM bp_progress WHERE user_id = NEW.user_id AND season = NEW.season), 0) = 0;
-     SELECT RAISE(ABORT, 'BAD_CLAIM') WHERE NEW.season <> ${S('bp_season')} OR NEW.created_at <> ${NOW}
+     SELECT RAISE(ABORT, 'BAD_CLAIM') WHERE NEW.season IS NOT ${CUR_SEASON} OR NEW.created_at <> ${NOW}
        OR NOT EXISTS (SELECT 1 FROM bp_levels WHERE season = NEW.season AND level = NEW.level)
        OR (NEW.car_id IS NULL) <> ((SELECT CASE NEW.track WHEN 'free' THEN free_kind ELSE prem_kind END FROM bp_levels WHERE season = NEW.season AND level = NEW.level) <> 'car')
        OR (NEW.car_id IS NOT NULL AND (SELECT rarity FROM cars WHERE id = NEW.car_id) IS NOT
@@ -323,3 +348,20 @@ export const MIGRATION_4 = [
   ...seed().filter((x) => x.startsWith('INSERT INTO bp_levels')),
 ];
 void DAY; void giveCar; void RARITY_OF;
+
+// Миграция 5: бонус раз в 4 часа ($5 000 / VIP $10 000, не выдаётся при балансе от $50 000 / $100 000),
+// редкие эпические и легендарные машины, рынок только для них, сезоны Battle Pass по 21 дню,
+// настройки игрока. Триггеры с опытом и сезоном пересоздаются по новым определениям.
+const RECREATE = ['listings_bi', 'listings_sold', 'races_ai', 'races_done', 'bids_xp', 'auctions_xp', 'opens_xp', 'bp_buy_bi', 'bp_claim_bi', 'bonus4_bi', 'bonus4_ai'];
+const findT = (name) => { const x = triggers.find((t) => t.startsWith(`CREATE TRIGGER IF NOT EXISTS ${name} `)); if (!x) throw new Error('ddl3: ' + name); return x; };
+export const MIGRATION_5 = [
+  ...tables.slice(0, 4),
+  ...Object.entries({ daily_bonus: 5_000, daily_bonus_vip: 10_000, bonus_period_s: 14_400, bonus_cap: 50_000, bonus_cap_vip: 100_000,
+    chance_common: 740, chance_rare: 215, chance_epic: 40, chance_mythic: 5 })
+    .map(([k, v]) => `INSERT INTO settings (k, v) VALUES ('${k}', ${v}) ON CONFLICT (k) DO UPDATE SET v = excluded.v`),
+  'UPDATE containers SET chance_common = NULL, chance_rare = NULL, chance_epic = NULL, chance_mythic = NULL',
+  'DROP TRIGGER IF EXISTS bonus_xp',
+  ...RECREATE.flatMap((n) => [`DROP TRIGGER IF EXISTS ${n}`, findT(n)]),
+  `INSERT INTO bp_seasons (id, name, starts_at, ends_at, price, levels, xp_level, created_at)
+     VALUES (1, 'Сезон 1', ${NOW}, ${NOW} + 21 * 86400, ${SETTINGS_3.bp_price}, ${SETTINGS_3.bp_levels}, ${SETTINGS_3.bp_xp_level}, ${NOW}) ON CONFLICT (id) DO NOTHING`,
+];

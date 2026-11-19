@@ -285,3 +285,19 @@ label.frow > span { width: 44%; color: var(--muted); font-size: 13px; }
 .frow input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--orange); }
 .up { color: var(--green); } .down { color: var(--red); }
 h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
+
+/* компактность */
+.page { gap: 10px; }
+.card { padding: 12px; gap: 8px; }
+.hero-img .ct-art, .hero-img .ct-photo { aspect-ratio: 340 / 150; object-fit: cover; }
+.hero-img.short .ct-art, .hero-img.short .ct-photo { aspect-ratio: 340 / 120; }
+.hero-img .car-art, .hero-img .car-photo { aspect-ratio: 440 / 180; object-fit: cover; }
+.tile { min-height: 0; padding: 12px; gap: 6px; }
+.li { padding: 9px 0; }
+.switch { width: 46px; height: 28px; border-radius: 14px; background: var(--card-3); position: relative; flex: none; transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: transform .2s, background .2s; }
+.switch.on { background: var(--orange); } .switch.on::after { transform: translateX(18px); background: #fff; }
+.statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.statgrid > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px; text-align: center; }
+.statgrid b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.statgrid span { font-size: 10.5px; color: var(--muted); }
