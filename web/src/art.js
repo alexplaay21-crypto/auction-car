@@ -154,86 +154,126 @@ export function carSvg(car, { studio = false, w = 400, h = 180 } = {}) {
   return svg;
 }
 
-// ---------- морской контейнер ----------
-// Вид три четверти: длинный борт уходит влево, справа двери с запорами.
+// ---------- морской контейнер в цветах флага страны ----------
+// Аксонометрия: длинный борт уходит влево, справа двери. Каждая грань рисуется в своих
+// «настоящих» координатах (борт 600×260, двери 244×259) и переносится на грань матрицей,
+// поэтому флаг, гофра и надписи ложатся ровно, без перекосов.
+const FLAG_MAIN = { us: '#1f3a8a', ru: '#d52b1e', jp: '#efefef', cn: '#de2910', de: '#2a2a2a', fr: '#0055a4', it: '#009246', world: '#17324f' };
+const FLAG_BY_COUNTRY = { 'США': 'us', 'Россия': 'ru', 'Япония': 'jp', 'Китай': 'cn', 'Германия': 'de', 'Франция': 'fr', 'Италия': 'it' };
+
+function star(cx, cy, r, fill, rot = -90) {
+  let d = '';
+  for (let i = 0; i < 10; i++) {
+    const a = ((rot + i * 36) * Math.PI) / 180, rr = i % 2 ? r * 0.4 : r;
+    d += `${i ? 'L' : 'M'}${(cx + Math.cos(a) * rr).toFixed(1)} ${(cy + Math.sin(a) * rr).toFixed(1)} `;
+  }
+  return `<path d="${d}Z" fill="${fill}"/>`;
+}
+
+// флаг на весь борт 600×260
+function flagArt(f) {
+  const W = 600, H = 260;
+  const hb = (cols) => cols.map((c, i) => `<rect x="0" y="${(H / cols.length) * i}" width="${W}" height="${H / cols.length + 0.5}" fill="${c}"/>`).join('');
+  const vb = (cols) => cols.map((c, i) => `<rect x="${(W / cols.length) * i}" y="0" width="${W / cols.length + 0.5}" height="${H}" fill="${c}"/>`).join('');
+  switch (f) {
+    case 'us': {
+      let s = '';
+      for (let i = 0; i < 13; i++) s += `<rect x="0" y="${(H / 13) * i}" width="${W}" height="${H / 13 + 0.5}" fill="${i % 2 ? '#ffffff' : '#b22234'}"/>`;
+      s += `<rect x="0" y="0" width="240" height="${(H / 13) * 7}" fill="#3c3b6e"/>`;
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 6; c++) s += star(22 + c * 39 + (r % 2) * 18, 18 + r * 26, 7, '#fff');
+      return s;
+    }
+    case 'ru': return hb(['#ffffff', '#0039a6', '#d52b1e']);
+    case 'de': return hb(['#1b1b1b', '#dd0000', '#ffce00']);
+    case 'fr': return vb(['#0055a4', '#ffffff', '#ef4135']);
+    case 'it': return vb(['#009246', '#ffffff', '#ce2b37']);
+    case 'jp': return `<rect width="${W}" height="${H}" fill="#f4f4f4"/><circle cx="${W / 2}" cy="${H / 2}" r="78" fill="#bc002d"/>`;
+    case 'cn': return `<rect width="${W}" height="${H}" fill="#de2910"/>${star(95, 80, 46, '#ffde00')}
+      ${star(175, 30, 15, '#ffde00', -60)}${star(205, 62, 15, '#ffde00', -30)}${star(205, 105, 15, '#ffde00', 0)}${star(175, 135, 15, '#ffde00', 20)}`;
+    default: return `<rect width="${W}" height="${H}" fill="#17324f"/>
+      <g fill="none" stroke="#7fd1ff" stroke-opacity=".75" stroke-width="5">
+        <circle cx="300" cy="130" r="92"/><ellipse cx="300" cy="130" rx="40" ry="92"/><ellipse cx="300" cy="130" rx="74" ry="92"/>
+        <path d="M208 130 H392 M222 82 H378 M222 178 H378"/></g>`;
+  }
+}
+
+// текст и маркировка поверх флага: подложка, чтобы читалось на любом флаге
+function sideStencil() {
+  return `<rect x="22" y="196" width="230" height="44" rx="6" fill="#000" fill-opacity=".38"/>
+    <text x="36" y="226" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="26" fill="#fff" letter-spacing="2">CAR CARGO</text>`;
+}
+
 export function containerSvg(c, { studio = false, w = 300, h = 170 } = {}) {
   const id = String(c?.id ?? 'x');
-  const color = c?.color || ['#8a5a2b', '#b8322a', '#6b7480', '#1f4f9c', '#2f6b45'][(Number(c?.id) || 0) % 5];
-  const flag = c?.emoji ?? '';
-  const code = c?.code || `CARU ${String(100000 + ((Number(c?.id) || 1) * 48271) % 900000)} ${(Number(c?.id) || 1) % 10}`;
-  // борт: от (20,30)-(20,138) к (200,42)-(200,160)
-  const S = { tl: [20, 30], bl: [20, 138], tr: [200, 42], br: [200, 160] };
-  const F = { tl: [200, 42], tr: [284, 50], br: [284, 152], bl: [200, 160] };
-  const lerp = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+  const flag = c?.flag || FLAG_BY_COUNTRY[c?.country] || 'world';
+  const main = FLAG_MAIN[flag] ?? '#17324f';
+  const code = `CARU ${String(100000 + ((Number(c?.id) || 1) * 48271) % 900000)} ${(Number(c?.id) || 1) % 10}`;
+  // грани: борт (0..600 × 0..260), двери (0..244 × 0..259), крыша (0..600 × 0..244)
+  const SIDE = 'matrix(0.3067 0.0367 0 0.3846 16 30)';
+  const FRONT = 'matrix(0.3279 -0.041 0 0.3861 200 52)';
+  const TOP = 'matrix(0.3067 0.0367 0.3279 -0.041 16 30)';
   let ribs = '';
-  const N = 26;
-  for (let i = 0; i < N; i++) {
-    const k0 = (i + 0.15) / N, k1 = (i + 0.55) / N;
-    const p = [lerp(S.tl, S.tr, k0), lerp(S.tl, S.tr, k1), lerp(S.bl, S.br, k1), lerp(S.bl, S.br, k0)];
-    ribs += `<path d="M${p.map((q) => q.map((v) => v.toFixed(1)).join(' ')).join(' L')} Z" fill="#000" opacity=".16"/>`;
-    const e = lerp(S.tl, S.tr, k1), e2 = lerp(S.bl, S.br, k1);
-    ribs += `<path d="M${e[0].toFixed(1)} ${(e[1] + 6).toFixed(1)} L${e2[0].toFixed(1)} ${(e2[1] - 6).toFixed(1)}" stroke="#fff" stroke-opacity=".12" stroke-width="1"/>`;
-  }
+  for (let x = 12; x < 600; x += 24) ribs += `<rect x="${x}" y="0" width="10" height="260" fill="#000" opacity=".13"/><rect x="${x + 10}" y="0" width="2.5" height="260" fill="#fff" opacity=".16"/>`;
   let doorRibs = '';
-  for (let i = 1; i < 12; i++) {
-    const k = i / 12;
-    const a = lerp(F.tl, F.tr, k), b = lerp(F.bl, F.br, k);
-    doorRibs += `<path d="M${a[0].toFixed(1)} ${(a[1] + 8).toFixed(1)} L${b[0].toFixed(1)} ${(b[1] - 8).toFixed(1)}" stroke="#000" stroke-opacity=".18" stroke-width="2.2"/>`;
-  }
+  for (let x = 10; x < 244; x += 20) doorRibs += `<rect x="${x}" y="14" width="8" height="231" fill="#000" opacity=".14"/>`;
   let rods = '';
-  for (const k of [0.14, 0.36, 0.64, 0.86]) {
-    const a = lerp(F.tl, F.tr, k), b = lerp(F.bl, F.br, k);
-    rods += `<path d="M${a[0].toFixed(1)} ${(a[1] + 6).toFixed(1)} L${b[0].toFixed(1)} ${(b[1] - 6).toFixed(1)}" stroke="#c9ced6" stroke-width="2.4"/>
-      <path d="M${a[0].toFixed(1)} ${(a[1] + 6).toFixed(1)} L${b[0].toFixed(1)} ${(b[1] - 6).toFixed(1)}" stroke="#5b616b" stroke-width="1" transform="translate(1.2 0)"/>`;
-    const m = lerp(a, b, 0.62);
-    rods += `<rect x="${(m[0] - 2).toFixed(1)}" y="${(m[1] - 3).toFixed(1)}" width="9" height="5" rx="1.5" fill="#9aa1ab" stroke="#4a5059" stroke-width=".8"/>`;
-    for (const kk of [0.08, 0.92]) { const q = lerp(a, b, kk); rods += `<rect x="${(q[0] - 3).toFixed(1)}" y="${(q[1] - 2).toFixed(1)}" width="6" height="4" fill="#6c727c"/>`; }
+  for (const x of [34, 88, 156, 210]) {
+    rods += `<rect x="${x - 3}" y="10" width="6" height="239" rx="3" fill="#c9ced6"/><rect x="${x + 1}" y="10" width="2" height="239" fill="#6b717b"/>
+      <rect x="${x - 7}" y="22" width="14" height="8" rx="2" fill="#7d838d"/><rect x="${x - 7}" y="229" width="14" height="8" rx="2" fill="#7d838d"/>
+      <rect x="${x - 4}" y="150" width="22" height="9" rx="3" fill="#a9afb8" stroke="#4d535c" stroke-width="1.5"/>`;
   }
-  const mid = [lerp(F.tl, F.tr, 0.5), lerp(F.bl, F.br, 0.5)];
-  const corner = (x, y) => `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" rx="1" fill="#2a2d33"/><rect x="${x - 2}" y="${y - 1.5}" width="4" height="3" rx="1" fill="#0f1114"/>`;
+  const corner = (x, y) => `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" rx="1.5" fill="#24272c"/><rect x="${x - 2.5}" y="${y - 1.5}" width="5" height="3" rx="1" fill="#0d0f12"/>`;
   const bg = studio ? `
     <defs>
-      <radialGradient id="cspot${id}" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#2a3142"/><stop offset=".6" stop-color="#141925"/><stop offset="1" stop-color="#090b11"/></radialGradient>
-      <linearGradient id="cfloor${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232a38"/><stop offset="1" stop-color="#0c0f15"/></linearGradient>
+      <radialGradient id="cspot${id}" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#2d3446"/><stop offset=".6" stop-color="#151a26"/><stop offset="1" stop-color="#0a0c12"/></radialGradient>
+      <linearGradient id="cfloor${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20263a"/><stop offset="1" stop-color="#0c0f15"/></linearGradient>
     </defs>
     <rect x="-30" y="-20" width="360" height="220" fill="url(#cspot${id})"/>
-    <path d="M-30 150 L330 150 L330 200 L-30 200 Z" fill="url(#cfloor${id})"/>
-    ${[0, 1, 2, 3, 4, 5].map((i) => `<path d="M${-30 + i * 70} 200 L${20 + i * 50} 150" stroke="rgba(255,220,120,.05)" stroke-width="2"/>`).join('')}` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${studio ? '-20 -5 340 190' : '0 15 300 160'}" width="${w}" height="${h}">
+    <path d="M-30 152 L330 152 L330 200 L-30 200 Z" fill="url(#cfloor${id})"/>
+    <path d="M-30 152 L330 152" stroke="rgba(255,255,255,.07)"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${studio ? '-20 -2 340 190' : '6 12 284 152'}" width="${w}" height="${h}">
   ${bg}
   <defs>
-    <linearGradient id="side${id}" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="${shade(color, -0.45)}"/><stop offset="1" stop-color="${shade(color, -0.12)}"/>
-    </linearGradient>
-    <linearGradient id="front${id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${shade(color, 0.12)}"/><stop offset="1" stop-color="${shade(color, -0.2)}"/>
-    </linearGradient>
-    <linearGradient id="rust${id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#5a2f16" stop-opacity="0"/><stop offset="1" stop-color="#5a2f16" stop-opacity=".55"/>
-    </linearGradient>
-    <radialGradient id="csh${id}" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".75"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sideShade${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset="1" stop-color="#000" stop-opacity=".06"/></linearGradient>
+    <linearGradient id="dirt${id}" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#4a2a14" stop-opacity="0"/><stop offset="1" stop-color="#4a2a14" stop-opacity=".45"/></linearGradient>
+    <linearGradient id="frontShade${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
+    <radialGradient id="csh${id}" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".8"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
   </defs>
-  <ellipse cx="150" cy="158" rx="150" ry="9" fill="url(#csh${id})"/>
-  <path d="M20 30 L105 22 L284 50 L200 42 Z" fill="${shade(color, 0.22)}"/>
-  <path d="M20 30 L200 42 L200 160 L20 138 Z" fill="url(#side${id})"/>
-  ${ribs}
-  <path d="M20 112 L200 130 L200 160 L20 138 Z" fill="url(#rust${id})"/>
-  <path d="M20 30 L200 42 L200 50 L20 37 Z" fill="#000" opacity=".25"/>
-  <path d="M20 132 L200 152 L200 160 L20 138 Z" fill="#000" opacity=".35"/>
-  <text x="70" y="78" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="15" fill="#fff" fill-opacity=".82" transform="skewY(3.8)" letter-spacing="1">CAR CARGO</text>
-  <text x="71" y="94" font-family="Arial, sans-serif" font-size="8" fill="#fff" fill-opacity=".6" transform="skewY(3.8)" letter-spacing="2">AUCTION LINE</text>
-  <path d="M200 42 L284 50 L284 152 L200 160 Z" fill="url(#front${id})"/>
-  ${doorRibs}
-  <path d="M${mid[0][0]} ${mid[0][1]} L${mid[1][0]} ${mid[1][1]}" stroke="#000" stroke-opacity=".55" stroke-width="1.6"/>
-  <path d="M200 42 L284 50 L284 57 L200 50 Z" fill="#000" opacity=".22"/>
-  <path d="M200 151 L284 144 L284 152 L200 160 Z" fill="#000" opacity=".35"/>
-  <path d="M200 125 L284 120 L284 152 L200 160 Z" fill="url(#rust${id})" opacity=".8"/>
-  ${rods}
-  <text x="212" y="66" font-family="Arial, sans-serif" font-weight="700" font-size="6.5" fill="#fff" fill-opacity=".85" transform="skewY(5.4)">${code}</text>
-  <text x="212" y="74" font-family="Arial, sans-serif" font-size="5" fill="#fff" fill-opacity=".6" transform="skewY(5.4)">22G1 · MAX GR 30480 KG</text>
-  ${flag ? `<text x="256" y="100" font-size="16" transform="skewY(5.4)">${flag}</text>` : ''}
-  ${corner(21, 33)}${corner(21, 135)}${corner(200, 45)}${corner(200, 157)}${corner(283, 53)}${corner(283, 149)}
-  <path d="M20 30 L200 42 L284 50" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1"/>
+  <ellipse cx="150" cy="154" rx="148" ry="9" fill="url(#csh${id})"/>
+  <g transform="${TOP}">
+    <rect width="600" height="244" fill="${main}"/><rect width="600" height="244" fill="#fff" opacity=".28"/>
+    ${Array.from({ length: 24 }, (_, i) => `<rect x="${i * 25 + 6}" y="0" width="10" height="244" fill="#000" opacity=".07"/>`).join('')}
+    <rect width="600" height="244" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="8"/>
+  </g>
+  <g transform="${SIDE}">
+    ${flagArt(flag)}
+    ${ribs}
+    <rect width="600" height="260" fill="url(#sideShade${id})"/>
+    <rect width="600" height="260" fill="url(#dirt${id})"/>
+    ${sideStencil()}
+    <rect x="0" y="0" width="600" height="14" fill="#1d2026" opacity=".75"/>
+    <rect x="0" y="244" width="600" height="16" fill="#15171b" opacity=".85"/>
+    <rect x="0" y="0" width="14" height="260" fill="#1d2026" opacity=".8"/>
+    ${corner(7, 7)}${corner(7, 252)}
+  </g>
+  <g transform="${FRONT}">
+    <rect width="244" height="259" fill="${main}"/>
+    ${flag === 'jp' ? '<circle cx="190" cy="70" r="22" fill="#bc002d"/>' : ''}
+    ${doorRibs}
+    <rect width="244" height="259" fill="url(#frontShade${id})"/>
+    <rect width="244" height="259" fill="url(#dirt${id})" opacity=".8"/>
+    <rect x="120" y="10" width="4" height="239" fill="#000" opacity=".55"/>
+    ${rods}
+    <rect x="12" y="34" width="96" height="36" rx="4" fill="#000" fill-opacity=".32"/>
+    <text x="18" y="50" font-family="Arial, sans-serif" font-weight="700" font-size="12" fill="#fff">${code}</text>
+    <text x="18" y="64" font-family="Arial, sans-serif" font-size="9" fill="#fff" fill-opacity=".75">22G1 · MAX 30480 KG</text>
+    <rect x="0" y="0" width="244" height="12" fill="#1d2026" opacity=".8"/>
+    <rect x="0" y="245" width="244" height="14" fill="#15171b" opacity=".85"/>
+    <rect x="0" y="0" width="10" height="259" fill="#1d2026" opacity=".8"/><rect x="234" y="0" width="10" height="259" fill="#1d2026" opacity=".8"/>
+    ${corner(5, 6)}${corner(239, 6)}${corner(5, 253)}${corner(239, 253)}
+  </g>
+  <path d="M16 30 L200 52 L280 42" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1"/>
+  <path d="M200 52 L200 152" stroke="#000" stroke-opacity=".5" stroke-width="1"/>
 </svg>`;
 }
 

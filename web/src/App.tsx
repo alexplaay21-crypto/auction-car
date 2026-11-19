@@ -1,33 +1,38 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Home as HomeIcon, Gavel, CarFront, Store, UserRound, Loader2 } from 'lucide-react';
+import { Home as HomeIcon, Flag, Gavel, Store, UserRound, Loader2 } from 'lucide-react';
 import { call, tg } from './tg';
 import { Toasts } from './components';
-import { FloatingNav } from './ui';
 import { Home } from './screens/Home';
 import { Auction } from './screens/Auction';
+import { Race } from './screens/Race';
+import { Market } from './screens/Market';
 import { Garage, CarPage } from './screens/Garage';
-import { Shop, CatalogPage } from './screens/Shop';
-import { Profile, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage } from './screens/Profile';
+import { ShopPage, CatalogPage } from './screens/Shop';
+import { Player, LeadersPage, HistoryPage, FriendsPage, TransferPage, PromoPage, SkillPage } from './screens/Profile';
+import { BattlePass } from './screens/BattlePass';
 import { Admin } from './screens/Admin';
 
-export type Tab = 'home' | 'auction' | 'garage' | 'shop' | 'profile';
-export type Route = { name: 'car'; id: number } | { name: 'catalog'; id: number } | { name: 'leaders' | 'history' | 'friends' | 'transfer' | 'promo' | 'admin' };
+export type Tab = 'home' | 'race' | 'auction' | 'market' | 'profile';
+export type Route =
+  | { name: 'player'; id: number } | { name: 'car'; id: number } | { name: 'catalog'; id: number } | { name: 'transfer'; to?: string }
+  | { name: 'garage' | 'skill' | 'bp' | 'shop' | 'friends' | 'promo' | 'leaders' | 'history' | 'admin' };
 
-type Ctx = { me: any; reload: () => Promise<void>; tab: Tab; setTab: (t: Tab) => void; push: (r: Route) => void; pop: () => void; scope: string | null };
+type Ctx = {
+  me: any; reload: () => Promise<void>; tab: Tab; setTab: (t: Tab) => void;
+  push: (r: Route) => void; pop: () => void; open: (userId: number) => void; scope: string | null;
+};
 const AppCtx = createContext<Ctx>(null as any);
 export const useApp = () => useContext(AppCtx);
 
-const TABS: [Tab, any, string][] = [
-  ['home', HomeIcon, 'Главная'], ['auction', Gavel, 'Аукцион'], ['garage', CarFront, 'Гараж'], ['shop', Store, 'Магазин'], ['profile', UserRound, 'Профиль'],
-];
+const TABS: [Tab, any, string][] = [['home', HomeIcon, 'Главная'], ['race', Flag, 'Гонки'], ['auction', Gavel, 'Аукцион'], ['market', Store, 'Рынок'], ['profile', UserRound, 'Профиль']];
 
 function start() {
   const sp = String(tg?.initDataUnsafe?.start_param ?? '');
   const hash = location.hash.replace(/^#/, '');
   const car = /^car-(\d+)$/.exec(hash);
   const tab: Tab = /^g\d+$/.test(sp) || sp === 'play' ? 'auction'
-    : (['garage', 'shop', 'profile', 'auction'] as string[]).includes(hash) ? hash as Tab : car ? 'garage' : hash === 'top' ? 'profile' : 'home';
-  const routes: Route[] = car ? [{ name: 'car', id: Number(car[1]) }] : hash === 'top' ? [{ name: 'leaders' }] : [];
+    : (['race', 'market', 'profile', 'auction'] as string[]).includes(hash) ? hash as Tab : hash === 'top' || hash === 'garage' || car ? 'profile' : 'home';
+  const routes: Route[] = car ? [{ name: 'garage' }, { name: 'car', id: Number(car[1]) }] : hash === 'garage' ? [{ name: 'garage' }] : hash === 'top' ? [{ name: 'leaders' }] : hash === 'shop' ? [{ name: 'shop' }] : [];
   return { scope: /^g\d+$/.test(sp) ? sp : null, tab, routes };
 }
 
@@ -38,52 +43,67 @@ export function App() {
   const [me, setMe] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const reload = useCallback(() => call('app_me', {}).then(setMe, (e) => { if (!me) setErr(e?.code === 'NO_TELEGRAM' ? 'Открой игру внутри Telegram' : 'Не удалось загрузить игру'); }), [me]);
+  const reload = useCallback(async () => {
+    try { setMe(await call('app_me', {})); } catch (e: any) { setErr(e?.code === 'NO_TELEGRAM' ? 'Открой игру внутри Telegram' : 'Не удалось загрузить игру'); }
+  }, []);
   useEffect(() => {
     tg?.ready?.(); tg?.expand?.();
-    try { tg?.setHeaderColor?.('#0b0d24'); tg?.setBackgroundColor?.('#0b0d24'); tg?.setBottomBarColor?.('#0b0d24'); } catch { /* старый клиент */ }
+    try { tg?.setHeaderColor?.('#0d0f14'); tg?.setBackgroundColor?.('#0d0f14'); tg?.setBottomBarColor?.('#11141b'); } catch { /* старый клиент */ }
     reload();
-  }, []); // eslint-disable-line
+  }, [reload]);
 
-  const setTab = (t: Tab) => { setStack([]); setTabState(t); window.scrollTo({ top: 0 }); if (t !== 'auction') reload(); };
-  const push = (r: Route) => { setStack((s) => [...s, r]); window.scrollTo({ top: 0 }); };
+  const setTab = useCallback((t: Tab) => { setStack([]); setTabState(t); window.scrollTo({ top: 0 }); tg?.HapticFeedback?.selectionChanged?.(); }, []);
+  const push = useCallback((r: Route) => { setStack((s) => [...s, r]); window.scrollTo({ top: 0 }); }, []);
   const pop = useCallback(() => setStack((s) => s.slice(0, -1)), []);
+  const open = useCallback((id: number) => push({ name: 'player', id }), [push]);
 
-  if (err) return <div className="loader"><div className="card center-text" style={{ margin: 16 }}>{err}</div></div>;
-  if (!me) return <div className="loader"><Loader2 size={34} className="spin" /></div>;
+  if (err && !me) return <div className="loader"><div className="card center" style={{ margin: 16 }}>{err}</div></div>;
+  if (!me) return <div className="loader"><Loader2 size={36} className="spin" /></div>;
 
   const top = stack[stack.length - 1];
-  const ctx: Ctx = { me, reload, tab, setTab, push, pop, scope: s0.scope };
   return (
-    <AppCtx.Provider value={ctx}>
+    <AppCtx.Provider value={{ me, reload, tab, setTab, push, pop, open, scope: s0.scope }}>
       <div className="app">
-        {top ? (
-          <Page route={top} />
-        ) : (
+        {top ? <Page r={top} /> : (
           <>
             {tab === 'home' && <Home />}
+            {tab === 'race' && <Race />}
             {tab === 'auction' && <Auction />}
-            {tab === 'garage' && <Garage />}
-            {tab === 'shop' && <Shop />}
-            {tab === 'profile' && <Profile />}
+            {tab === 'market' && <Market />}
+            {tab === 'profile' && <Player id={me.user.id} root />}
           </>
         )}
-        {!top && <FloatingNav items={TABS} value={tab} onChange={setTab} />}
+        <nav className="tabbar">
+          <div className="in">
+            {TABS.map(([k, I, label]) => (
+              <button key={k} className={`${k === 'auction' ? 'mid ' : ''}${!top && tab === k ? 'on' : ''}`} onClick={() => setTab(k)}>
+                {k === 'auction' ? <span className="fab"><I size={26} strokeWidth={2.4} /></span> : <I size={22} strokeWidth={2.2} />}
+                <span>{label}</span>
+                {k === 'home' && me.bonus.available && <span className="badge-dot" />}
+              </button>
+            ))}
+          </div>
+        </nav>
         <Toasts />
       </div>
     </AppCtx.Provider>
   );
 }
 
-function Page({ route }: { route: Route }) {
-  switch (route.name) {
-    case 'car': return <CarPage id={route.id} />;
-    case 'catalog': return <CatalogPage id={route.id} />;
+function Page({ r }: { r: Route }) {
+  switch (r.name) {
+    case 'player': return <Player id={r.id} />;
+    case 'car': return <CarPage id={r.id} />;
+    case 'catalog': return <CatalogPage id={r.id} />;
+    case 'transfer': return <TransferPage to={r.to} />;
+    case 'garage': return <Garage />;
+    case 'skill': return <SkillPage />;
+    case 'bp': return <BattlePass />;
+    case 'shop': return <ShopPage />;
+    case 'friends': return <FriendsPage />;
+    case 'promo': return <PromoPage />;
     case 'leaders': return <LeadersPage />;
     case 'history': return <HistoryPage />;
-    case 'friends': return <FriendsPage />;
-    case 'transfer': return <TransferPage />;
-    case 'promo': return <PromoPage />;
     case 'admin': return <Admin />;
   }
 }

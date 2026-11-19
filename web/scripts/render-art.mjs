@@ -5,7 +5,8 @@ import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { carSvg, containerSvg } from '../src/art.js';
-import { CATALOG, CONTAINERS } from '../../tgcloud/lib/catalog.js';
+import { CATALOG as CATALOG1, CATALOG_V3, ALL_CONTAINERS as CONTAINERS } from '../../tgcloud/lib/catalog.js';
+const CATALOG = [...CATALOG1, ...CATALOG_V3];
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');

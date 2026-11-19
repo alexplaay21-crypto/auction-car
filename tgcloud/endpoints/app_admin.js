@@ -55,7 +55,7 @@ export default endpoint(async (db, uid, input, { user }) => {
   if (a === 'catalog') {
     return {
       cars: await db.all('SELECT * FROM cars ORDER BY rarity, price'),
-      containers: await db.all('SELECT * FROM containers ORDER BY id'),
+      containers: await db.all('SELECT c.*, m.flag, m.base_price FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id ORDER BY c.id'),
       pools: await db.all('SELECT * FROM container_cars'),
       images: await db.all('SELECT kind, ref_id, v FROM images'),
     };
@@ -96,6 +96,11 @@ export default endpoint(async (db, uid, input, { user }) => {
       id = (await db.run(`INSERT INTO containers (name, country, emoji, price, is_enabled, chance_common, chance_rare, chance_epic, chance_mythic)
         VALUES (:name, :country, :emoji, :price, :en, :cc, :cr, :ce, :cm)`, f)).lastInsertRowid;
     }
+    // цена из админки становится базовой для динамики
+    const flag = ['us', 'ru', 'jp', 'cn', 'de', 'fr', 'it', 'world'].includes(c.flag) ? c.flag : null;
+    await db.run(`INSERT INTO container_meta (container_id, flag, base_price, market, prev_price, updated_at) VALUES (:c, :f, :p, :m, :p, (SELECT now FROM v_now))
+      ON CONFLICT (container_id) DO UPDATE SET flag = COALESCE(excluded.flag, flag), base_price = excluded.base_price, market = excluded.market, prev_price = excluded.prev_price`,
+      { ':c': id, ':f': flag, ':p': f[':price'], ':m': Math.round((f[':price'] * 100) / 55) });
     if (Array.isArray(input.pool)) {
       await db.run('DELETE FROM container_cars WHERE container_id = :c', { ':c': id });
       for (const p of input.pool.slice(0, 200)) {

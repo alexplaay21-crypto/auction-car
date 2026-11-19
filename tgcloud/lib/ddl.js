@@ -4,6 +4,7 @@
 // всегда равен сумме его записей в журнале (проверяет audit()).
 import { NOW, DAY, S, RATE, OWNED, CAPACITY, post, giveCar } from './sql.js';
 import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
+import { MIGRATION_3 } from './ddl3.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -575,4 +576,5 @@ function migration2() {
 export const MIGRATIONS = [
   { id: 1, statements: [...schema, ...triggers, ...seed()] },
   { id: 2, statements: migration2() },
+  { id: 3, statements: MIGRATION_3 },
 ];

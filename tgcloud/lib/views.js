@@ -109,13 +109,14 @@ export async function topView(db, kind = 'balance') {
     balance: 'u.balance',
     garage: `(SELECT COALESCE(sum(c.price), 0) FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.user_id = u.id AND uc.status = 'owned')`,
     wins: 'u.wins',
+    racers: `(SELECT count(*) FROM races WHERE status = 'done' AND winner_id = u.id)`,
   }[kind] ?? 'u.balance';
   return db.all(`SELECT u.id, u.username, u.first_name, u.photo_url, u.is_vip, ${order} AS value FROM users u
     WHERE u.id > 0 AND u.is_banned = 0 ORDER BY value DESC, u.id LIMIT 30`);
 }
 
 export async function catalogView(db) {
-  const containers = await db.all('SELECT * FROM containers WHERE is_enabled = 1 ORDER BY price, id');
+  const containers = await db.all('SELECT c.*, m.flag FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1 ORDER BY c.price, c.id');
   const cars = await db.all(
     `SELECT c.*, cc.container_id, cc.weight FROM cars c JOIN container_cars cc ON cc.car_id = c.id WHERE c.is_active = 1 ORDER BY c.price`);
   for (const c of containers) c.chances = await chances(db, c.id);

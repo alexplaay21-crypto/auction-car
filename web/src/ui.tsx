@@ -1,139 +1,133 @@
-// ui.tsx — компоненты в духе sBoard: стеклянная карточка, строка списка с иконкой-плашкой,
-// заголовок раздела, плитки, сегменты, верхняя панель с «назад», плавающая нижняя панель.
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ChevronRight, ArrowLeft, type LucideIcon } from 'lucide-react';
-import { tg } from './tg';
+// ui.tsx — компоненты интерфейса Car Auction: шапка, нижняя панель, карточки, строки,
+// кликабельные ники, выбор друзей и машин, мини-график цены.
+import { useEffect, useState, type ReactNode } from 'react';
+import { ChevronRight, ArrowLeft, Plus, type LucideIcon } from 'lucide-react';
+import { call, tg } from './tg';
+import { money, who } from './format';
+import { Avatar, CarArt, Money } from './components';
+import { useApp } from './App';
 
-export function Card({ children, onClick, className = '', style }: { children: ReactNode; onClick?: () => void; className?: string; style?: any }) {
-  if (onClick) return <button className={`card tap ${className}`} style={{ textAlign: 'left', width: '100%', ...style }} onClick={onClick}>{children}</button>;
-  return <div className={`card ${className}`} style={style}>{children}</div>;
+export function Sect({ children, action, onAction }: { children: ReactNode; action?: string; onAction?: () => void }) {
+  return <div className="sect"><span className="t">{children}</span>{action && onAction && <button className="a" onClick={onAction}>{action}</button>}</div>;
 }
 
-export function Badge({ icon: Icon, tone = '', size = 40 }: { icon: LucideIcon; tone?: string; size?: number }) {
-  return <span className={`badge ${tone}`} style={{ width: size, height: size }}><Icon size={size * 0.5} strokeWidth={2.2} /></span>;
+export function Ic({ icon: I, tone = '', size = 40 }: { icon: LucideIcon; tone?: string; size?: number }) {
+  return <span className={`ic ${tone}`} style={{ width: size, height: size }}><I size={Math.round(size * 0.5)} strokeWidth={2.3} /></span>;
 }
 
-export function SectionTitle({ children, action, onAction }: { children: ReactNode; action?: string; onAction?: () => void }) {
-  return (
-    <div className="section">
-      <span className="section-t">{children}</span>
-      {action && onAction && <button className="section-a" onClick={onAction}>{action}</button>}
-    </div>
-  );
-}
-
-export function ListRow({ title, subtitle, icon, tone, leading, trailing, onClick, chevron = !!onClick }:
-  { title: ReactNode; subtitle?: ReactNode; icon?: LucideIcon; tone?: string; leading?: ReactNode; trailing?: ReactNode; onClick?: () => void; chevron?: boolean }) {
+export function Li({ icon, tone, lead, title, sub, right, onClick, chev = !!onClick }:
+  { icon?: LucideIcon; tone?: string; lead?: ReactNode; title: ReactNode; sub?: ReactNode; right?: ReactNode; onClick?: () => void; chev?: boolean }) {
   const body = (
     <>
-      {leading ?? (icon ? <Badge icon={icon} tone={tone} size={38} /> : null)}
+      {lead ?? (icon ? <Ic icon={icon} tone={tone} size={38} /> : null)}
       <div className="grow col" style={{ gap: 2 }}>
-        <div className="t-title-s ellipsis">{title}</div>
-        {subtitle != null && <div className="t-small muted">{subtitle}</div>}
+        <div className="sb ell">{title}</div>
+        {sub != null && <div className="sm muted">{sub}</div>}
       </div>
-      {trailing}
-      {chevron && <ChevronRight size={18} className="chev" />}
+      {right}
+      {chev && <ChevronRight size={18} className="chev" />}
     </>
   );
-  return onClick ? <button className="list-row tap" onClick={onClick}>{body}</button> : <div className="list-row">{body}</div>;
+  return onClick ? <button className="li press" onClick={onClick}>{body}</button> : <div className="li">{body}</div>;
 }
 
-export function StatusLine({ label, value, color }: { label: ReactNode; value: ReactNode; color?: string }) {
+export function Kv({ k, v, c }: { k: ReactNode; v: ReactNode; c?: string }) {
+  return <div className="kv"><span>{k}</span><b style={c ? { color: c } : undefined}>{v}</b></div>;
+}
+
+export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return <div className="seg">{options.map(([k, l]) => <button key={k} className={value === k ? 'on' : ''} onClick={() => { onChange(k); tg?.HapticFeedback?.selectionChanged?.(); }}>{l}</button>)}</div>;
+}
+
+export function Empty({ icon: I, title, text, action, onAction }: { icon: LucideIcon; title: string; text?: string; action?: string; onAction?: () => void }) {
   return (
-    <div className="status-line t-body">
-      <span className="dot" style={{ background: color ?? 'var(--accent)' }} />
-      <span className="grow muted">{label}</span>
-      <span style={{ color: color ?? 'var(--text)', fontWeight: 600 }}>{value}</span>
-    </div>
+    <div className="card"><div className="empty">
+      <Ic icon={I} size={52} /><div className="h3">{title}</div>
+      {text && <div className="sm muted">{text}</div>}
+      {action && onAction && <button className="btn go" onClick={onAction}>{action}</button>}
+    </div></div>
   );
 }
 
-export function ScreenHead({ brand, title, trailing }: { brand?: string; title: ReactNode; trailing?: ReactNode }) {
-  return (
-    <div className="screen-head">
-      <div className="grow">
-        {brand && <div className="t-brand">{brand}</div>}
-        <h1 className="t-headline ellipsis">{title}</h1>
-      </div>
-      {trailing}
-    </div>
-  );
-}
-
-// Верхняя панель вложенного экрана; системная кнопка «Назад» Telegram делает то же самое.
-export function TopBar({ title, onBack, actions }: { title: ReactNode; onBack: () => void; actions?: ReactNode }) {
+// Шапка: на главных экранах — аватар и баланс, на вложенных — «назад» и заголовок.
+export function AppBar({ title, back }: { title?: ReactNode; back?: () => void }) {
+  const { me, open, push } = useApp();
   useEffect(() => {
     const b = tg?.BackButton;
-    if (!b) return;
-    b.show(); b.onClick(onBack);
-    return () => { b.offClick(onBack); b.hide(); };
-  }, [onBack]);
+    if (!b || !back) return;
+    b.show(); b.onClick(back);
+    return () => { b.offClick(back); b.hide(); };
+  }, [back]);
   return (
-    <div className="topbar">
-      <button className="icon-btn" onClick={onBack} aria-label="Назад"><ArrowLeft size={22} /></button>
-      <div className="t-title-l grow ellipsis">{title}</div>
-      {actions}
+    <div className="appbar">
+      {back ? <button className="back" onClick={back} aria-label="Назад"><ArrowLeft size={20} /></button>
+        : <button onClick={() => open(me.user.id)} aria-label="Профиль"><Avatar u={me.user} size={34} /></button>}
+      <div className="title ell">{title}</div>
+      <button className="money-pill" onClick={() => push({ name: 'shop' })}>
+        <Money value={me.balance} /><span className="plus"><Plus size={16} strokeWidth={3} /></span>
+      </button>
     </div>
   );
 }
 
-export function Segmented<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+// Кликабельный ник — открывает профиль игрока.
+export function Nick({ u, size = 22, noAva = false }: { u: any; size?: number; noAva?: boolean }) {
+  const { me, open } = useApp();
+  if (!u?.id) return <span className="muted">—</span>;
   return (
-    <div className="segmented">
-      {options.map(([k, l]) => <button key={k} className={value === k ? 'on' : ''} onClick={() => { onChange(k); tg?.HapticFeedback?.selectionChanged?.(); }}>{l}</button>)}
-    </div>
+    <button className={`nick${u.id === me.user.id ? ' me' : ''}`} onClick={(e) => { e.stopPropagation(); open(u.id); }}>
+      {!noAva && <Avatar u={u} size={size} />}<span className="n">{u.id === me.user.id ? 'Ты' : who(u)}</span>
+    </button>
   );
 }
 
-export function Empty({ icon: Icon, title, text, action, onAction }: { icon: LucideIcon; title: string; text?: string; action?: string; onAction?: () => void }) {
-  return (
-    <Card>
-      <div className="empty">
-        <Badge icon={Icon} size={52} />
-        <div className="t-title">{title}</div>
-        {text && <div className="t-body muted">{text}</div>}
-        {action && onAction && <button className="btn primary" onClick={onAction}>{action}</button>}
-      </div>
-    </Card>
-  );
+export function Spark({ data, up }: { data: number[]; up?: boolean }) {
+  if (!data || data.length < 2) return <svg className="spark" />;
+  const lo = Math.min(...data), hi = Math.max(...data), sp = hi - lo || 1;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * 64},${22 - ((v - lo) / sp) * 20}`).join(' ');
+  return <svg className="spark" viewBox="0 0 64 24"><polyline points={pts} fill="none" stroke={up === false ? 'var(--red)' : 'var(--green)'} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>;
 }
 
-export function Switch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return <button className={`switch${on ? ' on' : ''}`} onClick={() => onChange(!on)} aria-pressed={on} />;
+export function Delta({ v }: { v: number }) {
+  return <span className={`delta ${v > 0 ? 'up' : v < 0 ? 'down' : 'flat'}`}>{v > 0 ? '▲' : v < 0 ? '▼' : '•'} {Math.abs(v).toLocaleString('ru-RU')}%</span>;
 }
 
-// Плавающая нижняя панель: подсветка скользит между вкладками, её можно тянуть пальцем —
-// при отпускании открывается вкладка под пальцем (как FloatingNavBar в sBoard).
-export function FloatingNav<T extends string>({ items, value, onChange }: { items: [T, LucideIcon, string][]; value: T; onChange: (v: T) => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [drag, setDrag] = useState<number | null>(null);
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const ro = new ResizeObserver(() => setW((el.clientWidth - 12) / items.length));
-    ro.observe(el); return () => ro.disconnect();
-  }, [items.length]);
-  const idx = Math.max(0, items.findIndex((x) => x[0] === value));
-  const hover = drag != null && w ? Math.min(items.length - 1, Math.max(0, Math.floor(drag / w))) : idx;
-  const x = drag != null ? Math.min(w * (items.length - 1), Math.max(0, drag - w / 2)) : idx * w;
-  const last = useRef(hover);
-  useEffect(() => { if (drag != null && last.current !== hover) tg?.HapticFeedback?.selectionChanged?.(); last.current = hover; }, [hover, drag]);
-  const pos = (e: React.PointerEvent) => e.clientX - (ref.current!.getBoundingClientRect().left + 6);
+// Быстрый выбор получателя: друзья, приглашённые и с кем недавно были сделки.
+export function FriendPicker({ value, onPick }: { value: string; onPick: (ref: string) => void }) {
+  const [list, setList] = useState<any[] | null>(null);
+  useEffect(() => { call('app_player', { action: 'friends' }).then((r) => setList(r.pick), () => setList([])); }, []);
+  if (!list?.length) return list ? <div className="xs faint">Добавь друзей в их профилях — они появятся здесь для быстрого выбора.</div> : null;
   return (
-    <div className="nav-wrap">
-      <div className="nav" ref={ref}
-        onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); setDrag(pos(e)); }}
-        onPointerMove={(e) => { if (drag != null) setDrag(pos(e)); }}
-        onPointerUp={() => { if (drag != null) { const t = items[hover][0]; setDrag(null); if (t !== value) onChange(t); else onChange(t); } }}
-        onPointerCancel={() => setDrag(null)}>
-        <div className={`nav-pill${drag != null ? ' drag' : ''}`} style={{ width: w, transform: `translateX(${x}px) scale(${drag != null ? 1.08 : 1}, ${drag != null ? 1.12 : 1})` }} />
-        {items.map(([k, Icon, label], i) => (
-          <button key={k} className={i === hover ? 'on' : ''} aria-label={label}>
-            <Icon size={22} strokeWidth={2.1} />
-            <span className="nl">{label}</span>
+    <div className="hs">
+      {list.map((f) => {
+        const ref = f.username ? '@' + f.username : String(f.id);
+        const on = value === ref;
+        return (
+          <button key={f.id} className={`chip${on ? ' on' : ''}`} style={{ height: 40, paddingLeft: 6 }} onClick={() => onPick(ref)}>
+            <Avatar u={f} size={28} /> {who(f)}
           </button>
-        ))}
-      </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Выбор своей машины (гонка, рынок).
+export function CarPicker({ value, onPick, exclude = [] as number[] }: { value: number | null; onPick: (c: any) => void; exclude?: number[] }) {
+  const [cars, setCars] = useState<any[] | null>(null);
+  useEffect(() => { call('app_garage', { action: 'list' }).then((g) => setCars(g.cars), () => setCars([])); }, []);
+  if (!cars) return <div className="sm muted">Загрузка гаража…</div>;
+  const list = cars.filter((c) => !exclude.includes(c.user_car_id));
+  if (!list.length) return <div className="sm muted">В гараже нет машин — выиграй контейнер на аукционе.</div>;
+  return (
+    <div className="hs">
+      {list.map((c) => (
+        <button key={c.user_car_id} className={`carcard mini press r-${c.rarity}`} style={value === c.user_car_id ? { outline: '2px solid var(--orange)', outlineOffset: 2 } : undefined} onClick={() => onPick(c)}>
+          <CarArt car={c} height={54} />
+          <div className="sm sb ell">{c.name}</div>
+          <div className="xs muted">{money(c.price)}</div>
+        </button>
+      ))}
     </div>
   );
 }

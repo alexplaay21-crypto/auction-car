@@ -226,6 +226,16 @@ async function sendOne(db, api, InputFile, o) {
       text: of.status === 'accepted' ? `✅ ${esc(of.name)} продана за ${money(of.price)}. Тебе зачислено <b>${money(net)}</b> (комиссия ${of.rate_bps / 100}%).`
         : `❌ Покупатель отказался от ${esc(of.name)}.`,
     });
+  } else if (o.kind === 'race') {
+    const r = await db.get('SELECT r.*, u.username, u.first_name FROM races r LEFT JOIN users u ON u.id = r.guest_id WHERE r.id = :i', { ':i': o.ref });
+    if (!r) return;
+    const won = r.winner_id === o.chat_id;
+    await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML',
+      text: `🏁 ${esc(who({ username: r.username, first_name: r.first_name }))} принял твой вызов!\n${won ? '🏆 Ты победил' : '😔 Ты проиграл'}: ${(r.host_ms / 1000).toFixed(2)} с против ${(r.guest_ms / 1000).toFixed(2)} с. Ставка ${money(r.stake)}.`,
+      reply_markup: { inline_keyboard: [[{ text: '🏁 Гонки', web_app: { url: MINI_APP_URL + '#race' } }]] } });
+  } else if (o.kind === 'market_sold') {
+    const l = await db.get('SELECT l.*, c.name FROM market_listings l JOIN user_cars uc ON uc.id = l.user_car_id JOIN cars c ON c.id = uc.car_id WHERE l.id = :i', { ':i': o.ref });
+    if (l) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML', text: `🛒 На рынке купили ${esc(l.name)} за ${money(l.price)}. Тебе зачислено <b>${money(Math.floor((l.price * (10000 - l.rate_bps)) / 10000))}</b>.` });
   } else if (o.kind === 'transfer') {
     const t = await db.get('SELECT t.*, u.username, u.first_name FROM transfers t LEFT JOIN users u ON u.id = t.from_id WHERE t.id = :i', { ':i': o.ref });
     if (t) await api.sendMessage({ chat_id: o.chat_id, parse_mode: 'HTML', text: `💸 ${esc(who({ username: t.username, first_name: t.first_name }))} перевёл тебе <b>${money(t.amount - t.commission)}</b>.` });

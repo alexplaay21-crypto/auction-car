@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Gavel, LogOut, Users, Pencil, Info, Package } from 'lucide-react';
+import { Gavel, LogOut, Users, Pencil, Package, RotateCcw } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
-import { money, who, RARITY } from '../format';
+import { money, RARITY } from '../format';
 import { Avatar, CarArt, ContainerArt, RarityTag, Sheet, Money } from '../components';
-import { Card, Badge, SectionTitle, ListRow, ScreenHead } from '../ui';
+import { AppBar, Sect, Li, Nick } from '../ui';
 import { useApp } from '../App';
 
 // Аукцион вживую: опрос раз в секунду. Те же данные видит бот — ставка здесь сразу
 // появляется в сообщении комнаты в Telegram, и наоборот.
 export function Auction() {
-  const { me, reload, setTab, push, scope } = useApp();
+  const { me, reload, push, scope } = useApp();
   const [room, setRoom] = useState<any>(undefined);
   const [busy, setBusy] = useState(false);
   const [custom, setCustom] = useState(false);
   const [amount, setAmount] = useState('');
   const [catalog, setCatalog] = useState<any>(null);
   const [reveal, setReveal] = useState<any>(null);
+  const [players, setPlayers] = useState(false);
   const offset = useRef(0);
-  const lastAuction = useRef<number | null>(null);
+  const last = useRef<number | null>(null);
   const [, force] = useState(0);
   const uid = me.user.id;
 
@@ -25,11 +26,11 @@ export function Auction() {
     if (r?.room) offset.current = r.room.now - Date.now() / 1000;
     setRoom(r?.room ?? null);
     const a = r?.room?.auction;
-    if (a && a.status !== 'active' && lastAuction.current === a.id) {
-      lastAuction.current = null; reload();
+    if (a && a.status !== 'active' && last.current === a.id) {
+      last.current = null; reload();
       if (a.status === 'won' && a.leader?.id === uid) { setReveal(a); haptic('success'); }
     }
-    if (a?.status === 'active') lastAuction.current = a.id;
+    if (a?.status === 'active') last.current = a.id;
   }, [uid, reload]);
 
   const load = useCallback(() => call('app_room', { action: 'state', scope, roomId: room?.id ?? undefined }).then(apply, () => {}), [scope, room?.id, apply]);
@@ -44,42 +45,41 @@ export function Auction() {
   const act = async (input: any, ok?: string) => {
     if (busy) return;
     setBusy(true);
-    try {
-      const r = await call('app_room', { scope, roomId: room?.id, clientId: clientId(), ...input });
-      apply(r); haptic('light'); reload();
-      if (ok) toast(ok);
-    } catch (e) { haptic('error'); toast(errorText(e)); }
+    try { const r = await call('app_room', { scope, roomId: room?.id, clientId: clientId(), ...input }); apply(r); haptic('light'); reload(); if (ok) toast(ok); }
+    catch (e) { haptic('error'); toast(errorText(e)); }
     setBusy(false);
   };
 
-  if (room === undefined) return <div className="screen"><ScreenHead brand="Аукцион" title="Загрузка…" /></div>;
+  if (room === undefined) return <><AppBar title="Аукцион" /><div className="page" /></>;
 
   if (!room || (!room.in_room && room.status === 'closed')) {
-    const c = catalog?.containers?.[0];
     return (
-      <div className="screen">
-        <ScreenHead brand="Аукцион" title="Контейнеры с машинами" />
-        <Card>
-          {c && <div className="lot-hero"><ContainerArt c={c} size={150} studio /></div>}
-          <div className="t-title-l">Как играть</div>
-          <ListRow icon={Gavel} title="Ставь выше других" subtitle="После каждой ставки таймер 30 секунд запускается заново" />
-          <ListRow icon={Package} tone="rose" title="Последняя ставка забирает контейнер" subtitle="Внутри — случайная машина одной из четырёх редкостей" />
-          <ListRow icon={Info} tone="teal" title="Перебили — деньги вернутся" subtitle="Ставка списывается сразу и возвращается, если тебя обошли" />
-          <button className="btn primary l block" disabled={busy} onClick={() => act({ action: 'join' }, 'Ты в комнате!')}>Войти в комнату</button>
-          {scope && <div className="t-small muted center-text">Комната этой группы</div>}
-        </Card>
-        {catalog && (
-          <>
-            <SectionTitle>Что может выпасть</SectionTitle>
-            <Card className="tight">
-              {catalog.containers.map((x: any) => (
-                <ListRow key={x.id} leading={<ContainerArt c={x} size={34} />} title={x.name}
-                  subtitle={<><span>старт {money(x.price)}</span><Chances ch={x.chances} compact /></>} onClick={() => push({ name: 'catalog', id: x.id })} />
-              ))}
-            </Card>
-          </>
-        )}
-      </div>
+      <>
+        <AppBar title="Аукцион" />
+        <div className="page">
+          <div className="card pad0">
+            <div className="hero-img"><ContainerArt c={catalog?.containers?.[0] ?? { id: 1, country: 'Япония' }} size={150} studio /></div>
+            <div className="col g12" style={{ padding: 14 }}>
+              <div className="h2">Торгуйся за контейнеры</div>
+              <Li icon={Gavel} title="Ставь выше других" sub="После каждой ставки 30 секунд таймера начинаются заново" />
+              <Li icon={Package} tone="gold" title="Последняя ставка — твой контейнер" sub="Внутри случайная машина одной из четырёх редкостей" />
+              <Li icon={RotateCcw} tone="blue" title="Перебили — деньги вернутся" sub="Ставка списывается сразу и возвращается, если тебя обошли" />
+              <button className="btn go xl w" disabled={busy} onClick={() => act({ action: 'join' }, 'Ты в комнате')}>Войти в комнату</button>
+              {scope && <div className="xs muted center">Комната этой группы</div>}
+            </div>
+          </div>
+          {catalog && (
+            <>
+              <Sect>Что может выпасть</Sect>
+              <div className="card list">
+                {catalog.containers.map((x: any) => (
+                  <Li key={x.id} lead={<ContainerArt c={x} size={30} />} title={x.name} sub={<><span>старт {money(x.price)}</span><Chances ch={x.chances} compact /></>} onClick={() => push({ name: 'catalog', id: x.id })} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </>
     );
   }
 
@@ -92,93 +92,91 @@ export function Auction() {
   const steps = [room.step, 1000, 5000].filter((x, i, arr) => arr.indexOf(x) === i);
 
   return (
-    <div className="screen">
-      <ScreenHead brand="Аукцион" title={`Комната №${room.number}`}
-        trailing={<div className="avas">{room.members.slice(0, 4).map((m: any) => <Avatar key={m.id} u={m} size={30} />)}</div>} />
-
-      {a?.status === 'active' ? (
-        <Card className={left < 6 ? 'hot' : ''}>
-          <div className="lot-hero">
-            <ContainerArt c={a.container} size={150} studio />
-            <span className="live"><i /> Идут торги · {room.count} игроков</span>
-          </div>
-          <div className="t-title-l">{a.container.name}</div>
-          <Chances ch={a.chances} />
-          <div className="row" style={{ gap: 16 }}>
-            <Ring pct={pct} left={left} hot={left < 6} />
-            <div className="grow">
-              <div className="t-small muted">{a.leader ? 'Текущая ставка' : 'Стартовая цена'}</div>
-              <Money value={a.current} className="bid-num" />
-              {a.leader
-                ? <div className={`leader${iLead ? ' me' : ''}`}><Avatar u={a.leader} size={22} /> {iLead ? 'Ты лидер' : who(a.leader)}</div>
-                : <div className="t-small muted">Ставок пока нет</div>}
+    <>
+      <AppBar title={`Комната №${room.number}`} />
+      <div className="page">
+        {a?.status === 'active' ? (
+          <div className={`card pad0${left < 6 ? ' hot' : ''}`}>
+            <div className="hero-img">
+              <ContainerArt c={a.container} size={150} studio />
+              <span className="tag"><span className="live-dot" /> Торги · {room.count} игроков</span>
+            </div>
+            <div className="col g12" style={{ padding: 14 }}>
+              <div className="col"><div className="h2">{a.container.name}</div><span className="sm muted">стартовая цена {money(a.initial)} · меняется от торгов</span></div>
+              <Chances ch={a.chances} />
+              <div className="row g12">
+                <Timer pct={pct} left={left} hot={left < 6} />
+                <div className="grow col">
+                  <span className="sm muted">{a.leader ? 'Текущая ставка' : 'Стартовая цена'}</span>
+                  <Money value={a.current} className="bid-num" />
+                  {a.leader ? <div className="row g6">{iLead ? <span className="b c-orange">Ты лидер</span> : <><span className="sm muted">лидер</span><Nick u={a.leader} /></>}</div>
+                    : <span className="sm muted">Ставок пока нет</span>}
+                </div>
+              </div>
+              {room.in_room ? (
+                <>
+                  <div className="grid3">{steps.map((x: number) => <button key={x} className="bid-btn" disabled={busy} onClick={() => act({ action: 'bid', raise: x })}>+{money(x)}</button>)}</div>
+                  <button className="btn w" onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> Своя сумма</button>
+                  <div className="xs muted center">Баланс {money(me.balance)} · минимум {money(a.min_bid)}{room.my_missed > 0 && <> · пропущено {room.my_missed} из {room.kick_after}</>}</div>
+                </>
+              ) : <button className="btn go xl w" onClick={() => act({ action: 'join' })}>Войти и торговаться</button>}
             </div>
           </div>
-          {room.in_room ? (
-            <>
-              <div className="bid-grid">
-                {steps.map((x: number) => <button key={x} className="bid-btn" disabled={busy} onClick={() => act({ action: 'bid', raise: x })}>+{money(x)}</button>)}
+        ) : (
+          <div className="card">
+            {a?.status === 'won' && a.car ? (
+              <div className={`reveal r-${a.car.rarity}`}>
+                <div className="reveal-art"><CarArt car={a.car} height={150} studio /></div>
+                <div className="row g6 sm muted">{a.leader?.id === uid ? 'Ты забрал' : <><Nick u={a.leader} /> забирает</>} за {money(a.current)}</div>
+                <div className="h2">{a.car.name}</div>
+                <div className="row g8"><RarityTag r={a.car.rarity} /><span className="sm muted">стоимость {money(a.car.price)}</span></div>
               </div>
-              <button className="btn tonal block" onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> Своя ставка</button>
-              <div className="t-small muted center-text">Баланс {money(me.balance)} · минимум {money(a.min_bid)}
-                {room.my_missed > 0 && <> · без ставок {room.my_missed} из {room.kick_after}</>}</div>
-            </>
-          ) : <button className="btn primary l block" onClick={() => act({ action: 'join' })}>Войти и торговаться</button>}
-        </Card>
-      ) : (
-        <Card>
-          {a?.status === 'won' && a.car ? (
-            <div className={`reveal r-${a.car.rarity}`}>
-              <div className="reveal-art"><CarArt car={a.car} height={150} studio /></div>
-              <div className="t-small muted">{a.leader?.id === uid ? 'Ты забрал' : `${who(a.leader)} забирает`} за {money(a.current)}</div>
-              <div className="t-title-l">{a.car.name}</div>
-              <div className="row gap-8"><RarityTag r={a.car.rarity} /><span className="t-small muted">стоимость {money(a.car.price)}</span></div>
+            ) : <Li icon={Package} title={a ? `${a.container.name} — без ставок` : 'Ждём игроков'} sub={a ? 'Цена такого контейнера немного снизится' : undefined} />}
+            <div className="sep" />
+            <div className="center">{room.status === 'open' ? <>Следующий контейнер через <b className="c-orange">{nextIn} с</b></> : 'Комната закрыта'}</div>
+          </div>
+        )}
+
+        {a?.bids?.length > 0 && (
+          <>
+            <Sect>Ставки</Sect>
+            <div className="card list feed">
+              {a.bids.map((b: any, i: number) => <div key={i} className="fr"><span className="grow"><Nick u={{ id: b.user_id, username: b.username, first_name: b.first_name }} /></span><b className="num">{money(b.amount)}</b></div>)}
             </div>
-          ) : <ListRow icon={Package} title={a ? `${a.container.name} — без ставок` : 'Ждём игроков'} subtitle="Контейнер ушёл без торгов" />}
-          <div className="divider" />
-          <div className="t-body muted center-text">{room.status === 'open' ? <>Следующий контейнер через <b className="accent">{nextIn} с</b></> : 'Комната закрыта'}</div>
-        </Card>
-      )}
+          </>
+        )}
 
-      {a?.bids?.length > 0 && (
-        <>
-          <SectionTitle>Ставки</SectionTitle>
-          <Card className="tight">
-            {a.bids.map((b: any, i: number) => (
-              <div key={i} className={`feed-row${i === 0 ? ' top' : ''}`}>
-                <span className="grow">{b.user_id === uid ? 'Ты' : who(b)}</span><b>{money(b.amount)}</b>
-              </div>
-            ))}
-          </Card>
-        </>
-      )}
+        <div className="card list">
+          <Li icon={Users} tone="blue" title={`Игроки: ${room.count} из ${room.max}`} sub="Играть можно и в чате с ботом — это та же комната" onClick={() => setPlayers(true)} />
+          {room.in_room && <Li icon={LogOut} tone="red" title="Выйти из комнаты" onClick={() => act({ action: 'leave' }, 'Ты вышел из комнаты')} />}
+        </div>
+      </div>
 
-      <Card className="tight">
-        <ListRow icon={Users} tone="teal" title={`Игроков в комнате: ${room.count} из ${room.max}`} subtitle="Играть можно и в чате с ботом — это та же комната" />
-        {room.in_room && <ListRow icon={LogOut} tone="rose" title="Выйти из комнаты" onClick={() => act({ action: 'leave' }, 'Ты вышел из комнаты')} />}
-      </Card>
+      <Sheet open={players} onClose={() => setPlayers(false)} title="Игроки в комнате">
+        <div className="card list">{room.members.map((m: any) => <Li key={m.id} lead={<Avatar u={m} size={34} />} title={<Nick u={m} noAva />} sub={m.missed ? `без ставок: ${m.missed}` : 'активен'} />)}</div>
+      </Sheet>
 
       <Sheet open={custom} onClose={() => setCustom(false)} title="Своя ставка">
-        <input className="field big" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} />
-        <div className="t-small muted center-text">Минимум {money(a?.min_bid)} · баланс {money(me.balance)}</div>
-        <button className="btn primary l block" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>Поставить {money(Number(amount) || 0)}</button>
+        <input className="inp big" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} />
+        <div className="sm muted center">Минимум {money(a?.min_bid)} · баланс {money(me.balance)}</div>
+        <button className="btn go xl w" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>Поставить {money(Number(amount) || 0)}</button>
       </Sheet>
 
       <Sheet open={!!reveal} onClose={() => setReveal(null)}>
         {reveal?.car && (
           <div className={`reveal r-${reveal.car.rarity}`}>
-            <div className="t-small muted">Контейнер твой за {money(reveal.current)}</div>
+            <div className="sm muted">Контейнер твой за {money(reveal.current)}</div>
             <div className="reveal-art"><CarArt car={reveal.car} height={170} studio /></div>
-            <div className="t-headline-s">{reveal.car.name}</div>
+            <div className="h2">{reveal.car.name}</div>
             <RarityTag r={reveal.car.rarity} />
-            <div className="t-title">Стоимость {money(reveal.car.price)}</div>
+            <div className="h3">Стоимость {money(reveal.car.price)}</div>
             {reveal.car.auto_sold != null
-              ? <div className="t-body muted">Гараж полон — машина сразу продана за {money(reveal.car.auto_sold)}</div>
-              : <button className="btn primary l block" onClick={() => { setReveal(null); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); else setTab('garage'); }}>Открыть машину</button>}
+              ? <div className="sm muted">Гараж полон — машина сразу продана за {money(reveal.car.auto_sold)}</div>
+              : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>Открыть машину</button>}
           </div>
         )}
       </Sheet>
-    </div>
+    </>
   );
 }
 
@@ -186,22 +184,20 @@ export function Chances({ ch, compact = false }: { ch: any; compact?: boolean })
   const R = ['common', 'rare', 'epic', 'mythic'];
   const total = R.reduce((s, r) => s + (ch?.[r] ?? 0), 0) || 1;
   return (
-    <div className="col" style={{ gap: 6, marginTop: compact ? 4 : 0 }}>
+    <div className="col g6" style={{ marginTop: compact ? 4 : 0 }}>
       <div className="chance-bar">{R.map((r) => <i key={r} className={`r-${r}`} style={{ width: `${((ch?.[r] ?? 0) / total) * 100}%` }} />)}</div>
-      {!compact && <div className="chance-legend">{R.map((r) => <span key={r} className={`r-${r}`}><b />{RARITY[r].name} {Math.round(((ch?.[r] ?? 0) / total) * 1000) / 10}%</span>)}</div>}
+      {!compact && <div className="legend">{R.map((r) => <span key={r} className={`r-${r}`}><b />{RARITY[r].name} {Math.round(((ch?.[r] ?? 0) / total) * 1000) / 10}%</span>)}</div>}
     </div>
   );
 }
 
-function Ring({ pct, left, hot }: { pct: number; left: number; hot: boolean }) {
-  const R = 34, C = 2 * Math.PI * R;
+function Timer({ pct, left, hot }: { pct: number; left: number; hot: boolean }) {
+  const R = 35, C = 2 * Math.PI * R;
   return (
-    <svg className={`ring${hot ? ' hot' : ''}`} viewBox="0 0 80 80">
-      <circle cx="40" cy="40" r={R} className="ring-bg" />
-      <circle cx="40" cy="40" r={R} className="ring-fg" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
-      <text x="40" y="47" textAnchor="middle">{Math.ceil(left)}</text>
+    <svg className={`timer${hot ? ' hot' : ''}`} viewBox="0 0 86 86">
+      <circle cx="43" cy="43" r={R} className="bg" />
+      <circle cx="43" cy="43" r={R} className="fg" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
+      <text x="43" y="51" textAnchor="middle">{Math.ceil(left)}</text>
     </svg>
   );
 }
-
-void Badge;

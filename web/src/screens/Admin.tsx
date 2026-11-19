@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money, who, RARITY, RARITIES, LEDGER, ago } from '../format';
 import { CarArt, ContainerArt, Sheet, dropImageVersions } from '../components';
-import { TopBar } from '../ui';
+import { AppBar } from '../ui';
 import { useApp } from '../App';
 
 const LABELS: Record<string, string> = {
@@ -13,7 +13,10 @@ const LABELS: Record<string, string> = {
   comm_player_bps: 'Комиссия продажи игроку, б.п.', comm_player_vip_bps: '…для VIP', comm_transfer_bps: 'Комиссия перевода, б.п.', comm_transfer_vip_bps: '…для VIP',
   daily_bonus: 'Ежедневный бонус', daily_bonus_vip: 'Бонус VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',
   garage_vip_bonus: 'Мест за VIP', ref_inviter: 'Бонус пригласившему', ref_invited: 'Бонус приглашённому', ref_first_purchase: 'За первую покупку друга',
-  ref_epic_every: 'Эпик за каждые N друзей', sale_offer_ttl_s: 'Срок предложения игроку, с', min_transfer: 'Минимальный перевод', shop_enabled: 'Магазин включён (1/0)',
+  ref_epic_every: 'Эпик за каждые N друзей',
+  race_min_stake: 'Гонка: мин. ставка', race_max_stake: 'Гонка: макс. ставка', race_bot_win_bps: 'Гонка с ботом: выигрыш, б.п.', race_pvp_fee_bps: 'Гонка PvP: комиссия, б.п.',
+  bp_price: 'Battle Pass: цена премиума', bp_xp_level: 'Battle Pass: опыта на уровень', bp_levels: 'Battle Pass: уровней', bp_season: 'Battle Pass: сезон',
+  price_floor_pct: 'Цена контейнера: минимум, % базы', price_cap_pct: 'Цена контейнера: максимум, % базы', price_step_pct: 'Цена контейнера: шаг за раз, %', sale_offer_ttl_s: 'Срок предложения игроку, с', min_transfer: 'Минимальный перевод', shop_enabled: 'Магазин включён (1/0)',
 };
 
 async function resizeImage(file: File): Promise<{ mime: string; data: string }> {
@@ -33,8 +36,9 @@ export function Admin() {
   const [tab, setTab] = useState('stats');
   const tabs = [['stats', 'Обзор'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['rooms', 'Комнаты']];
   return (
-    <div className="screen">
-      <TopBar title="Админ-панель" onBack={onBack} />
+    <>
+    <AppBar title="Админ-панель" back={onBack} />
+    <div className="page">
       <div className="chips">{tabs.map(([k, l]) => <button key={k} className={`chip${tab === k ? ' on' : ''}`} onClick={() => setTab(k)}>{l}</button>)}</div>
       {tab === 'stats' && <Stats />}
       {tab === 'settings' && <Settings />}
@@ -44,6 +48,7 @@ export function Admin() {
       {tab === 'lots' && <Lots />}
       {tab === 'rooms' && <Rooms />}
     </div>
+    </>
   );
 }
 
@@ -162,6 +167,8 @@ function Catalog({ mode }: { mode: string }) {
             <F label="Название" v={ct.name} on={(v) => setCt({ ...ct, name: v })} />
             <F label="Страна" v={ct.country ?? ''} on={(v) => setCt({ ...ct, country: v })} />
             <F label="Эмодзи" v={ct.emoji ?? ''} on={(v) => setCt({ ...ct, emoji: v })} />
+            <div className="chips">{[['us', 'США'], ['ru', 'Россия'], ['jp', 'Япония'], ['cn', 'Китай'], ['de', 'Германия'], ['fr', 'Франция'], ['it', 'Италия'], ['world', 'Мир']].map(([f, l]) => (
+              <button key={f} className={`chip${ct.flag === f ? ' on' : ''}`} onClick={() => setCt({ ...ct, flag: f })}>{l}</button>))}</div>
             <F label="Стартовая цена" v={ct.price} num on={(v) => setCt({ ...ct, price: v })} />
             <div className="hint small">Свои шансы (пусто — общие из настроек):</div>
             {RARITIES.map((r) => <F key={r} label={`${RARITY[r].icon} ${RARITY[r].name}`} v={ct['chance_' + r] ?? ''} num on={(v) => setCt({ ...ct, ['chance_' + r]: v === '' ? null : v })} />)}
