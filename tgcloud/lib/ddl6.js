@@ -3,16 +3,16 @@
 import { NOW, post } from './sql.js';
 
 // Пакеты валюты: маленький нарочно невыгодный, каждый следующий заметно выгоднее —
-// курс растёт с $500 до $1 200 за звезду (+140 %). «Популярный» стоит посередине.
+// курс растёт с $1 000 до $2 400 за звезду (+140 %). «Популярный» стоит посередине.
 export const STAR_PRODUCTS = [
   // id, kind, stars, money, badge
-  ['m50', 'money', 50, 25_000, null],
-  ['m100', 'money', 100, 60_000, null],
-  ['m250', 'money', 250, 175_000, 'popular'],
-  ['m500', 'money', 500, 400_000, null],
-  ['m1000', 'money', 1000, 1_000_000, 'best'],
-  ['m2500', 'money', 2500, 3_000_000, 'max'],
-  ['vip', 'vip', 299, 0, null],
+  ['m50', 'money', 50, 50_000, null],
+  ['m100', 'money', 100, 120_000, null],
+  ['m250', 'money', 250, 350_000, 'popular'],
+  ['m500', 'money', 500, 800_000, null],
+  ['m1000', 'money', 1000, 2_000_000, 'best'],
+  ['m2500', 'money', 2500, 6_000_000, 'max'],
+  ['vip', 'vip', 199, 0, null],
   ['bp', 'bp', 149, 0, null],
 ];
 
@@ -65,6 +65,13 @@ const triggers = [
      INSERT INTO outbox (chat_id, kind, ref, created_at) VALUES (NEW.user_id, 'feedback_reply', NEW.id, ${NOW});
    END`,
 ];
+
+const upsertProducts = () => STAR_PRODUCTS.map(([id, kind, stars, money, badge], i) =>
+  `INSERT INTO star_products (id, kind, stars, money, badge, sort) VALUES ('${id}', '${kind}', ${stars}, ${money}, ${badge ? `'${badge}'` : 'NULL'}, ${i})
+   ON CONFLICT (id) DO UPDATE SET kind = excluded.kind, stars = excluded.stars, money = excluded.money, badge = excluded.badge, sort = excluded.sort`);
+
+// 8: новые цены — $50 000 за 50 звёзд (вся лестница ×2), VIP за 199 звёзд.
+export const MIGRATION_8 = upsertProducts();
 
 export const MIGRATION_7 = [
   ...tables,

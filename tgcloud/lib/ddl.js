@@ -5,7 +5,7 @@
 import { NOW, DAY, S, RATE, OWNED, CAPACITY, post, giveCar } from './sql.js';
 import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
-import { MIGRATION_7 } from './ddl6.js';
+import { MIGRATION_7, MIGRATION_8 } from './ddl6.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -584,4 +584,5 @@ export const MIGRATIONS = [
   { id: 6, statements: GARAGE_TIERS.map(([c, p]) => `INSERT INTO garage_tiers (capacity, price) VALUES (${c}, ${p}) ON CONFLICT (capacity) DO UPDATE SET price = excluded.price`) },
   // 7: покупки за Stars, сообщения о проблемах и идеях, кик после 2 пропусков.
   { id: 7, statements: MIGRATION_7 },
+  { id: 8, statements: MIGRATION_8 },
 ];

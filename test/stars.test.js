@@ -29,20 +29,20 @@ test('оплата валюты зачисляется один раз', async (
   await pay(2, 'm250', 250, 'c1');
   const again = await pay(2, 'm250', 250, 'c1');
   assert.equal(again.duplicate, true);
-  assert.equal(await bal(2), b0 + 175_000);
+  assert.equal(await bal(2), b0 + 350_000);
   await ok();
 });
 
 test('VIP за звёзды; повторная покупка не проходит проверку, а оплаченная превращается в деньги', async () => {
   const inv = await S.invoiceParams(db, 2, 'vip');
-  assert.equal(inv.currency, 'XTR'); assert.equal(inv.prices[0].amount, 299);
-  assert.deepEqual(await S.precheck(db, { invoice_payload: inv.payload, total_amount: 299, currency: 'XTR', from: { id: 2 } }), { ok: true });
-  await pay(2, 'vip', 299, 'v1');
+  assert.equal(inv.currency, 'XTR'); assert.equal(inv.prices[0].amount, 199);
+  assert.deepEqual(await S.precheck(db, { invoice_payload: inv.payload, total_amount: 199, currency: 'XTR', from: { id: 2 } }), { ok: true });
+  await pay(2, 'vip', 199, 'v1');
   assert.equal((await E.getUser(db, 2)).is_vip, 1);
-  const pc = await S.precheck(db, { invoice_payload: inv.payload, total_amount: 299, currency: 'XTR', from: { id: 2 } });
+  const pc = await S.precheck(db, { invoice_payload: inv.payload, total_amount: 199, currency: 'XTR', from: { id: 2 } });
   assert.equal(pc.ok, false);
   const b0 = await bal(2);
-  const r = await pay(2, 'vip', 299, 'v2');
+  const r = await pay(2, 'vip', 199, 'v2');
   assert.equal(r.replaced, true);
   assert.equal(await bal(2), b0 + (await E.settings(db)).vip_price);
   await ok();
