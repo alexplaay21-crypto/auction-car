@@ -33,7 +33,7 @@ test('оплата валюты зачисляется один раз', async (
   await ok();
 });
 
-test('VIP за звёзды; повторная покупка не проходит проверку, а оплаченная превращается в деньги', async () => {
+test('VIP за звёзды; повторная покупка не проходит проверку, а оплаченная возвращается', async () => {
   const inv = await S.invoiceParams(db, 2, 'vip');
   assert.equal(inv.currency, 'XTR'); assert.equal(inv.prices[0].amount, 199);
   assert.deepEqual(await S.precheck(db, { invoice_payload: inv.payload, total_amount: 199, currency: 'XTR', from: { id: 2 } }), { ok: true });
@@ -43,8 +43,8 @@ test('VIP за звёзды; повторная покупка не проход
   assert.equal(pc.ok, false);
   const b0 = await bal(2);
   const r = await pay(2, 'vip', 199, 'v2');
-  assert.equal(r.replaced, true);
-  assert.equal(await bal(2), b0 + (await E.settings(db)).vip_price);
+  assert.equal(r.refund, true);
+  assert.equal(await bal(2), b0);
   await ok();
 });
 
@@ -53,10 +53,33 @@ test('премиум Battle Pass за звёзды', async () => {
   const inv = await S.invoiceParams(db, 2, 'bp');
   assert.ok(inv.payload.endsWith(':' + se.id));
   assert.equal((await S.precheck(db, { invoice_payload: inv.payload, total_amount: 1, currency: 'XTR', from: { id: 2 } })).ok, false); // не та цена
-  await pay(2, 'bp', 149, 'b1', se.id);
+  await assert.rejects(S.invoiceParams(db, 2, 'bpdx'), { code: 'BP_NEED_PREMIUM' }, 'делюкс без премиума нельзя');
+  await pay(2, 'bp', 99, 'b1', se.id);
   assert.equal((await G.bpView(db, 2)).premium, true);
   await assert.rejects(S.invoiceParams(db, 2, 'bp'), (e) => e.code === 'BP_ALREADY');
+  await pay(2, 'bpdx', 49, 'd1', se.id);
+  let v = await G.bpView(db, 2);
+  assert.equal(v.deluxe, true); assert.equal(v.level, 5, 'делюкс: +5 уровней');
+  await pay(2, 'bplvl', 5, 'l1', se.id);
+  v = await G.bpView(db, 2);
+  assert.equal(v.level, 6, 'уровень за 5 звёзд');
+  await assert.rejects(S.invoiceParams(db, 2, 'bpdx'), { code: 'BP_DELUXE_ALREADY' });
+  await db.run('UPDATE bp_progress SET xp = 15000 WHERE user_id = 2');
+  await assert.rejects(S.invoiceParams(db, 2, 'bplvl'), { code: 'BP_MAX_LEVEL' });
+  await db.run('UPDATE bp_progress SET xp = 14500 WHERE user_id = 2');
+  await pay(2, 'bplvl', 5, 'l2', se.id);
+  assert.equal((await G.bpView(db, 2)).xp, 15000, 'не выше последнего уровня');
+  const car = await G.bpClaim(db, 2, 15, 'premium');
+  assert.equal(car.car.rarity, 'mythic');
   await ok();
+});
+
+test('порядок в магазине: VIP, Battle Pass, деньги', async () => {
+  const ids = (await S.starProducts(db, 2)).map((p) => p.id);
+  assert.deepEqual(ids.slice(0, 4), ['vip', 'bp', 'bpdx', 'bplvl']);
+  assert.equal(ids[4], 'm50');
+  const vip = (await S.starProducts(db, 2)).find((p) => p.id === 'vip');
+  assert.equal(vip.stars, 199);
 });
 
 test('сообщение о проблеме уходит админу, ответ — игроку', async () => {

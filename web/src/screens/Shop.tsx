@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Crown, Sparkles, Coins, Trophy } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast, tg } from '../tg';
 import { money, RARITY } from '../format';
-import { CarCard, ContainerArt } from '../components';
+import { CarCard, ContainerArt, CarArt, RarityTag } from '../components';
 import { AppBar, Sect, Li, Ic, Kv } from '../ui';
 import { Chances } from './Auction';
 import { useApp } from '../App';
@@ -48,10 +48,33 @@ export function ShopPage() {
   const packs = s?.stars?.filter((p: any) => p.kind === 'money') ?? [];
   const vip = s?.stars?.find((p: any) => p.kind === 'vip');
   const bp = s?.stars?.find((p: any) => p.kind === 'bp');
+  const dx = s?.stars?.find((p: any) => p.kind === 'bpdx');
+  const lv = s?.stars?.find((p: any) => p.kind === 'bplvl');
   return (
     <>
       <AppBar title={t('Магазин')} back={pop} />
       <div className="page">
+        {s && (!s.vip.owned ? (
+          <div className="card gold">
+            <div className="row"><Ic icon={Crown} tone="gold" size={46} /><div className="grow"><div className="h3">{t('VIP навсегда')}</div><div className="sm muted">{t('+{n} мест в гараже · комиссии ниже · бонус ×2', { n: s.vip.bonus_slots })}</div></div></div>
+            {vip && <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('vip')}>{t('Купить за ⭐ {n}', { n: vip.stars })}</button>}
+          </div>
+        ) : <div className="card gold"><Li icon={Crown} tone="gold" title={t('У тебя VIP')} sub={t('Бонусы и сниженные комиссии уже действуют')} /></div>)}
+
+        {bp && bp.season && (
+          <div className="card" style={{ borderColor: 'rgba(180,107,255,.45)', background: 'linear-gradient(160deg, rgba(180,107,255,.18), var(--card) 60%)' }}>
+            <div className="row"><Ic icon={Trophy} tone="gold" size={46} /><div className="grow"><div className="h3">Battle Pass · {bp.season}</div><div className="sm muted">{t('машины, контейнеры и навык на каждом уровне')}</div></div></div>
+            {!bp.owned && bp.car && (
+              <div className={`bp-car r-${bp.car.rarity}`}><CarArt car={bp.car} height={96} studio /><div className="col"><span className="xs muted">{t('Сразу в гараж с премиумом')}</span><b>{bp.car.name}</b><RarityTag r={bp.car.rarity} /></div></div>
+            )}
+            {!bp.owned ? <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}>{t('Премиум за ⭐ {n}', { n: bp.stars })}</button>
+              : <div className="sm c-gold b">{t('Премиум уже открыт')}</div>}
+            {dx && bp.owned && !dx.owned && !dx.blocked && <button className="btn go w" disabled={stars.busy} onClick={() => stars.buy('bpdx')}>{t('Делюкс: +{n} уровней · ⭐ {s}', { n: 5, s: dx.stars })}</button>}
+            {dx && !bp.owned && <div className="xs faint">{t('Делюкс (+5 уровней за ⭐ {s}) откроется после покупки премиума', { s: dx.stars })}</div>}
+            {lv && !lv.blocked && <button className="btn ghost w" disabled={stars.busy} onClick={() => stars.buy('bplvl')}>{t('Открыть следующий уровень · ⭐ {s}', { s: lv.stars })}</button>}
+          </div>
+        )}
+
         <Sect>{t('Игровая валюта')}</Sect>
         <div className="xs muted" style={{ marginTop: -6 }}>{t('Чем больше пакет — тем больше денег за каждую звезду')}</div>
         <div className="grid2">
@@ -65,22 +88,6 @@ export function ShopPage() {
             </button>
           ))}
         </div>
-
-        {bp && bp.season && (
-          <div className="card" style={{ borderColor: 'rgba(180,107,255,.45)', background: 'linear-gradient(160deg, rgba(180,107,255,.18), var(--card) 60%)' }}>
-            <div className="row"><Ic icon={Trophy} tone="gold" size={46} /><div className="grow"><div className="h3">{t('Премиум Battle Pass')}</div><div className="sm muted">{bp.season} · {t('машины, контейнеры и навык на каждом уровне')}</div></div></div>
-            {bp.owned ? <div className="sm c-gold b">{t('Премиум уже открыт')}</div>
-              : <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}>{t('Открыть за ⭐ {n}', { n: bp.stars })}</button>}
-          </div>
-        )}
-
-        {s && (!s.vip.owned ? (
-          <div className="card gold">
-            <div className="row"><Ic icon={Crown} tone="gold" size={46} /><div className="grow"><div className="h3">{t('VIP навсегда')}</div><div className="sm muted">{t('+{n} мест в гараже · комиссии ниже · бонус ×2', { n: s.vip.bonus_slots })}</div></div></div>
-            {vip && <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('vip')}>{t('Купить за ⭐ {n}', { n: vip.stars })}</button>}
-            <button className="btn ghost w" disabled={busy} onClick={() => run('app_me', { action: 'vip' }, t('VIP активирован'))}>{t('или за {m} игровых', { m: money(s.vip.price) })}</button>
-          </div>
-        ) : <div className="card gold"><Li icon={Crown} tone="gold" title={t('У тебя VIP')} sub={t('Бонусы и сниженные комиссии уже действуют')} /></div>)}
 
         {s?.lots?.length > 0 && (
           <>

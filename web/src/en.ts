@@ -162,4 +162,13 @@ export const EN: Record<string, string> = {
   'Напиши хотя бы пару слов': 'Write at least a few words',
   'Слишком длинно — до 1000 символов': 'Too long — up to 1000 characters',
   'Оплата звёздами здесь недоступна — открой игру в Telegram': 'Stars payments aren’t available here — open the game in Telegram',
+  'Сразу в гараж с премиумом': 'Straight to your garage with premium',
+  'Премиум за ⭐ {n}': 'Premium for ⭐ {n}',
+  'Делюкс: +{n} уровней · ⭐ {s}': 'Deluxe: +{n} levels · ⭐ {s}',
+  'Делюкс (+5 уровней за ⭐ {s}) откроется после покупки премиума': 'Deluxe (+5 levels for ⭐ {s}) unlocks after you buy premium',
+  'Открыть следующий уровень · ⭐ {s}': 'Unlock next level · ⭐ {s}',
+  'Покупается только за Telegram Stars — в магазине': 'Only for Telegram Stars — in the shop',
+  'Сначала купи премиум Battle Pass': 'Buy Battle Pass premium first',
+  'Делюкс уже куплен': 'Deluxe already bought',
+  'Все уровни Battle Pass уже открыты': 'All Battle Pass levels are already unlocked',
 };

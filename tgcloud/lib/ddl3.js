@@ -8,7 +8,7 @@ export const SETTINGS_3 = {
   race_min_stake: 100, race_max_stake: 100_000,
   race_bot_win_bps: 9000,     // победа над ботом: +90% ставки
   race_pvp_fee_bps: 500,      // PvP: победитель забирает банк минус 5%
-  bp_price: 150_000, bp_xp_level: 1000, bp_levels: 14, bp_season: 1,
+  bp_price: 150_000, bp_xp_level: 1000, bp_levels: 15, bp_season: 1,
   price_floor_pct: 60, price_cap_pct: 160, price_step_pct: 10, // динамика цен контейнеров
 };
 
@@ -28,18 +28,20 @@ export const reaction = (p) => 0.20 + 0.78 * Math.max(1 - p / SKILL_MAX, 0) ** 1
 
 // Награды Battle Pass: kind money | container | car (value: 1 редкая, 2 эпическая, 3 легендарная) | skill (покупки навыка)
 export function bpRewards() {
-  // 14 уровней. Бесплатно: деньги, контейнеры на 4/8/12, редкая машина на 14.
-  // Премиум: больше денег, улучшения навыка на 3/6/9/13, контейнеры на 4/8/12, машины на 5/10/14.
+  // 15 уровней. Бесплатно: деньги, контейнеры на 4/8/12, редкая машина на 15.
+  // Премиум: больше денег, навык на 3/6/9/13, контейнеры на 4/8/12/14, машины на 5/10, легендарная на 15.
   const out = [];
   for (let l = 1; l <= SETTINGS_3.bp_levels; l++) {
     let free = ['money', 1_000 + l * 400], prem = ['money', 4_000 + l * 1_500];
     if (l % 4 === 0) free = ['container', [3, 2, 4][l / 4 - 1]];
-    if (l === 14) free = ['car', 1];
+    if (l === 14) free = ['money', 7_000];
+    if (l === 15) free = ['car', 1];
     if ([3, 6, 9, 13].includes(l)) prem = ['skill', 5];
     if (l % 4 === 0) prem = ['container', [8, 7, 4][l / 4 - 1]];
     if (l === 5) prem = ['car', 1];
     if (l === 10) prem = ['car', 2];
-    if (l === 14) prem = ['car', 3];
+    if (l === 14) prem = ['container', 8];
+    if (l === 15) prem = ['car', 3];
     out.push([l, ...free, ...prem]);
   }
   return out;

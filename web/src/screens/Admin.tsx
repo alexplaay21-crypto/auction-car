@@ -342,7 +342,7 @@ function Rooms() {
   );
 }
 
-const KINDS: [string, string][] = [['money', 'Деньги'], ['container', 'Контейнер (ID)'], ['skill', 'Навык +N'], ['car', 'Машина (1 редк · 2 эпик · 3 легенд)']];
+const KINDS: [string, string][] = [['money', 'Деньги'], ['container', 'Контейнер (ID)'], ['skill', 'Навык +N'], ['car', 'Случайная (1 редк · 2 эпик · 3 легенд)'], ['model', 'Конкретная машина (ID)']];
 function BpSeasons() {
   const [d, setD] = useState<any>(null);
   const [form, setForm] = useState<any>(null);
@@ -353,7 +353,9 @@ function BpSeasons() {
   const cur = d.current;
   const daysLeft = cur ? Math.max(0, Math.ceil((cur.ends_at - d.now) / 86400)) : 0;
   const cname = (id: number) => d.containers.find((c: any) => c.id === id)?.name ?? `#${id}`;
-  const rw = (k: string, v: number) => k === 'money' ? money(v) : k === 'container' ? `📦 ${cname(v)}` : k === 'skill' ? `навык +${v}` : `🚗 ${['', 'редкая', 'эпик', 'легенд'][v]}`;
+  const carName = (id: number) => d.cars.find((c: any) => c.id === id)?.name ?? `#${id}`;
+  const rw = (k: string, v: number) => k === 'money' ? money(v) : k === 'container' ? `📦 ${cname(v)}` : k === 'skill' ? `навык +${v}` : k === 'model' ? `🚗 ${carName(v)}` : `🚗 ${['', 'редкая', 'эпик', 'легенд'][v]}`;
+
   return (
     <>
       <div className="glass list">
@@ -361,6 +363,15 @@ function BpSeasons() {
           <button className="btn small ghost" onClick={async () => { if (confirm('Завершить сезон сейчас?') && await doAdm({ action: 'bp_end', season: cur.id }, 'Сезон завершён')) load(); }}>Завершить</button></div>
           : <div className="hint">Сезон сейчас не идёт</div>}
       </div>
+      {cur && (
+        <div><h3>Машина за покупку премиума</h3>
+          <div className="hint small">Покупатель премиума сразу получает эту машину в гараж.</div>
+          <select className="field" value={cur.prem_car_id ?? ''} onChange={async (e) => { if (await doAdm({ action: 'bp_car', season: cur.id, car_id: e.target.value ? Number(e.target.value) : null }, 'Машина сезона сохранена')) load(); }}>
+            <option value="">— без машины —</option>
+            {d.cars.map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
+          </select>
+        </div>
+      )}
       <button className="btn primary wide" onClick={() => setForm({ name: `Сезон ${(d.seasons[0]?.id ?? 0) + 1}`, days: 21, price: cur?.price ?? 150000, levels: 14, xp_level: cur?.xp_level ?? 1000 })}>+ Новый сезон (21 день)</button>
       {cur && <div><h3>Награды текущего сезона</h3>
         <div className="glass list">{d.levels.map((l: any) => (
@@ -391,6 +402,12 @@ function BpSeasons() {
             <div className="chips">{KINDS.map(([k, l]) => <button key={k} className={`chip${lv.kind === k ? ' on' : ''}`} onClick={() => setLv({ ...lv, kind: k })}>{l}</button>)}</div>
             <F label="Значение" v={lv.value} num on={(v) => setLv({ ...lv, value: v })} />
             {lv.kind === 'container' && <div className="hint small">{d.containers.map((c: any) => `${c.id} — ${c.name}`).join(' · ')}</div>}
+            {lv.kind === 'model' && (
+              <select className="field" value={lv.value ?? ''} onChange={(e) => setLv({ ...lv, value: Number(e.target.value) })}>
+                <option value="">— выбери машину —</option>
+                {d.cars.map((c: any) => <option key={c.id} value={c.id}>{RARITY[c.rarity]?.icon} {c.name}</option>)}
+              </select>
+            )}
             <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'bp_reward', season: cur.id, level: lv.level, track: lv.track, kind: lv.kind, value: lv.value })) { setLv(null); load(); } }}>Сохранить</button>
           </div>
         )}
@@ -433,7 +450,7 @@ function Feedback() {
   );
 }
 
-const STAR_KIND: Record<string, string> = { money: 'Валюта', vip: 'VIP', bp: 'Премиум Battle Pass' };
+const STAR_KIND: Record<string, string> = { money: 'Валюта', vip: 'VIP', bp: 'Премиум Battle Pass', bpdx: 'Battle Pass Делюкс', bplvl: 'Уровень Battle Pass', refund: 'Возврат' };
 function Stars() {
   const [d, setD] = useState<any>(null);
   const [p, setP] = useState<any>(null);

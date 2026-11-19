@@ -2,6 +2,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeDb, setClock } from './db-shim.js';
 import * as E from '../tgcloud/lib/engine.js';
+import * as S from '../tgcloud/lib/stars.js';
 
 let db, clock = 0, seq = 0;
 const op = () => `t${++seq}`;
@@ -104,13 +105,12 @@ test('полный гараж: машина продаётся сразу; пр�
 });
 
 test('VIP: +10 мест, меньше комиссии, двойной бонус; переводы и бонус раз в 4 часа', async () => {
-  await assert.rejects(E.buyVip(db, 2), { code: 'INSUFFICIENT_FUNDS' });
-  await E.adminAdjust(db, 1, 2, 500_000, 'vip', op());
-  await E.buyVip(db, 2);
+  await assert.rejects(E.buyVip(db, 2), { code: 'STARS_ONLY' }, 'VIP только за звёзды');
+  await S.deliver(db, 2, { invoice_payload: 'st:vip:2:0', total_amount: 199, telegram_payment_charge_id: 'vip1' });
   const u = await E.getUser(db, 2);
   assert.equal(u.is_vip, 1);
   assert.equal(u.garage_capacity, 25);
-  await assert.rejects(E.buyVip(db, 2), { code: 'ALREADY_VIP' });
+  await assert.rejects(S.invoiceParams(db, 2, 'vip'), { code: 'ALREADY_VIP' });
   const b = await E.claimBonus(db, 2);
   assert.equal(b.amount, 10_000, 'VIP: $10 000 раз в 4 часа');
   await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_TOO_EARLY' });

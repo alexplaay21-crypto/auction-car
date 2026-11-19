@@ -61,7 +61,7 @@ export async function profileScreen(db, uid) {
     `Комиссии: быстрая продажа ${p.fees.quick / 100}% · государству ${p.fees.state / 100}% · игроку ${p.fees.player / 100}% · перевод ${p.fees.transfer / 100}%`;
   const rows = [];
   if (p.bonus.available) rows.push([{ text: `🎁 Забрать бонус ${money(p.bonus.amount)}`, callback_data: 'bonus' }]);
-  if (!p.user.is_vip) rows.push([{ text: `👑 VIP за ${money(p.vip_price)}`, callback_data: 'vip' }]);
+  if (!p.user.is_vip) rows.push([{ text: '👑 VIP навсегда за ⭐ Stars', callback_data: 'st:vip' }]);
   rows.push([app('profile')]);
   return { text, reply_markup: { inline_keyboard: rows } };
 }
@@ -99,21 +99,29 @@ export async function shopScreen(db, uid) {
   const u = await getUser(db, uid);
   const items = await starProducts(db, uid);
   const lots = await db.all('SELECT * FROM shop_lots WHERE is_available = 1 ORDER BY sort, id LIMIT 6');
-  let text = `🛒 <b>Магазин</b> · баланс ${money(u.balance)}\n\n💰 <b>Игровая валюта за звёзды</b> — чем больше пакет, тем выгоднее:`;
+  let text = `🛒 <b>Магазин</b> · баланс ${money(u.balance)}`;
   const rows = [];
+  const vip = items.find((p) => p.kind === 'vip');
+  if (vip && !u.is_vip) {
+    text += `\n\n👑 <b>VIP навсегда</b> — ⭐ ${vip.stars}: +${st.garage_vip_bonus} мест в гараже, ниже комиссии, бонус ${money(st.daily_bonus_vip)} раз в 4 часа.`;
+    rows.push([{ text: `👑 VIP навсегда · ⭐ ${vip.stars}`, callback_data: `st:${vip.id}` }]);
+  }
+  const bp = items.find((p) => p.kind === 'bp'), dx = items.find((p) => p.kind === 'bpdx'), lv = items.find((p) => p.kind === 'bplvl');
+  if (bp && bp.season) {
+    text += `\n\n🏆 <b>Battle Pass · ${esc(bp.season)}</b>`;
+    if (!bp.owned) {
+      text += `\nПремиум — ⭐ ${bp.stars}: ${bp.car ? `машина <b>${esc(bp.car.name)}</b> сразу в гараж + ` : ''}премиум-награды всех уровней.`;
+      rows.push([{ text: `🏆 Премиум · ⭐ ${bp.stars}`, callback_data: 'st:bp' }]);
+    } else if (dx && !dx.blocked) {
+      text += `\nДелюкс — ⭐ ${dx.stars}: +5 уровней сразу.`;
+      rows.push([{ text: `💎 Делюкс +5 уровней · ⭐ ${dx.stars}`, callback_data: 'st:bpdx' }]);
+    }
+    if (lv && !lv.blocked) { text += `\nУровень — ⭐ ${lv.stars}.`; rows.push([{ text: `⬆️ Открыть уровень · ⭐ ${lv.stars}`, callback_data: 'st:bplvl' }]); }
+  }
+  text += '\n\n💰 <b>Игровая валюта</b> — чем больше пакет, тем выгоднее:';
   const packs = items.filter((p) => p.kind === 'money');
   for (const p of packs) text += `\n⭐ ${p.stars} → <b>${money(p.money)}</b>${p.bonus_pct ? ` <i>(+${p.bonus_pct}% выгоды)</i>` : ''}${p.badge === 'popular' ? ' 🔥' : p.badge === 'best' ? ' 💎' : ''}`;
   for (let i = 0; i < packs.length; i += 2) rows.push(packs.slice(i, i + 2).map((p) => ({ text: `⭐ ${p.stars} → ${money(p.money)}`, callback_data: `st:${p.id}` })));
-  const vip = items.find((p) => p.kind === 'vip');
-  if (vip && !u.is_vip) {
-    text += `\n\n👑 <b>VIP навсегда</b> — ⭐ ${vip.stars} или ${money(st.vip_price)}: +${st.garage_vip_bonus} мест в гараже, ниже комиссии, бонус ${money(st.daily_bonus_vip)} раз в 4 часа.`;
-    rows.push([{ text: `👑 VIP за ⭐ ${vip.stars}`, callback_data: `st:${vip.id}` }, { text: `за ${money(st.vip_price)}`, callback_data: 'vip' }]);
-  }
-  const bp = items.find((p) => p.kind === 'bp');
-  if (bp && bp.available) {
-    text += `\n\n🏆 <b>Премиум Battle Pass</b>${bp.season ? ` · ${esc(bp.season)}` : ''} — ⭐ ${bp.stars}: премиум-награды всех уровней сезона.`;
-    rows.push([{ text: `🏆 Премиум Battle Pass за ⭐ ${bp.stars}`, callback_data: `st:${bp.id}` }]);
-  }
   for (const l of lots) {
     text += `\n\n🎁 <b>${esc(l.title)}</b> — ${money(l.price)}${l.description ? '\n' + esc(l.description) : ''}`;
     rows.push([{ text: `Купить «${l.title}» за ${money(l.price)}`, callback_data: `buy:${l.id}` }]);

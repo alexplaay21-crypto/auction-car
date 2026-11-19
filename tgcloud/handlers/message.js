@@ -37,6 +37,7 @@ export default async function (m) {
   if (m.successful_payment) {
     const uid = await ensureUser(db, m.from, { admin: ADMIN_IDS.includes(Number(m.from.id)) });
     const r = await deliver(db, uid, m.successful_payment);
+    if (r.refund) await api.refundStarPayment({ user_id: m.from.id, telegram_payment_charge_id: r.charge }).catch((e) => console.warn('refund', String(e?.message ?? e)));
     await reply(m, deliveredText(r), { reply_markup: { inline_keyboard: [[{ text: '🎮 Открыть игру', web_app: { url: MINI_APP_URL } }]] } });
     await sync(db, api, InputFile, { limit: 3 });
     return;

@@ -369,7 +369,9 @@ export async function claimBonus(db, uid) {
   return b;
 }
 
+// VIP продаётся только за звёзды (lib/stars.js).
 export async function buyVip(db, uid) {
+  if (uid) throw new GameError('STARS_ONLY');
   const st = await settings(db);
   await exec(db, `INSERT INTO vip_grants (user_id, source, price, created_at) VALUES (:u, 'purchase', :p, ${NOW})`, { ':u': uid, ':p': st.vip_price });
   return st.vip_price;

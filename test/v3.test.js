@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { makeDb, setClock } from './db-shim.js';
 import * as E from '../tgcloud/lib/engine.js';
 import * as G from '../tgcloud/lib/engine3.js';
+import * as S from '../tgcloud/lib/stars.js';
 import { skillPrice, reaction } from '../tgcloud/lib/ddl3.js';
 
 let db, clock = 0, seq = 0;
@@ -103,15 +104,20 @@ test('Battle Pass: опыт за действия, бесплатная нагр
   await assert.rejects(G.bpClaim(db, 2, 1, 'free'), /UNIQUE|PRIMARY/i);
   await assert.rejects(G.bpClaim(db, 2, 6, 'free'), { code: 'BP_LOCKED' });
   await assert.rejects(G.bpClaim(db, 2, 1, 'premium'), { code: 'BP_NOT_PREMIUM' });
-  await db.run('UPDATE users SET is_admin = 1 WHERE id = 4');
-  await E.adminAdjust(db, 4, 2, 200_000, 'x', op());
-  await G.bpBuy(db, 2);
+  await assert.rejects(G.bpBuy(db, 2), { code: 'STARS_ONLY' });
+  const se = await G.currentSeason(db);
+  const garage0 = (await db.get("SELECT count(*) AS n FROM user_cars WHERE user_id = 2 AND status = 'owned'")).n;
+  await S.deliver(db, 2, { invoice_payload: `st:bp:2:${se.id}`, total_amount: 99, telegram_payment_charge_id: 'bp1' });
+  assert.equal((await db.get("SELECT count(*) AS n FROM user_cars WHERE user_id = 2 AND status = 'owned'")).n, garage0 + 1, 'премиум сразу даёт машину сезона');
   const p = await G.bpClaim(db, 2, 4, 'premium');
   assert.equal(p.kind, 'container');
   const c = await G.bpClaim(db, 2, 5, 'premium');
   assert.equal(c.kind, 'car');
   assert.equal(c.car.rarity, 'rare');
-  assert.equal((await G.bpView(db, 2)).levels.length, 14);
+  const v = await G.bpView(db, 2);
+  assert.equal(v.levels.length, 15);
+  assert.equal(v.levels[14].premium.kind, 'car');
+  assert.equal(v.levels[14].premium.value, 3, 'на 15-м уровне — легендарная машина');
   await ok();
 });
 

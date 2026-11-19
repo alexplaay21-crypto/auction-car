@@ -4,7 +4,7 @@ import { endpoint } from '../lib/endpoint.js';
 import { settings, dropSettingsCache, adminAdjust, adminLog, findUser, getUser, GameError, now } from '../lib/engine.js';
 import { SETTINGS } from '../lib/ddl.js';
 import { SETTINGS_3 } from '../lib/ddl3.js';
-import { currentSeason, createSeason, setLevelReward } from '../lib/engine3.js';
+import { currentSeason, createSeason, setLevelReward, setSeasonCar } from '../lib/engine3.js';
 import { ADMIN_IDS } from '../lib/config.js';
 import { feedbackList, answerFeedback } from '../lib/stars.js';
 
@@ -257,12 +257,17 @@ export default endpoint(async (db, uid, input, { user }) => {
     const seasons = await db.all('SELECT * FROM bp_seasons ORDER BY id DESC LIMIT 20');
     const cur = await currentSeason(db);
     const levels = cur ? await db.all('SELECT * FROM bp_levels WHERE season = :s ORDER BY level', { ':s': cur.id }) : [];
-    return { seasons, current: cur, levels, now: await now(db), containers: await db.all('SELECT id, name FROM containers ORDER BY id') };
+    return { seasons, current: cur, levels, now: await now(db), containers: await db.all('SELECT id, name FROM containers ORDER BY id'), cars: await db.all('SELECT id, name, rarity FROM cars WHERE is_active = 1 ORDER BY price DESC') };
   }
   if (a === 'bp_create') {
-    const id = await createSeason(db, uid, { name: input.name, days: input.days ?? 21, price: input.price, levels: input.levels, xpLevel: input.xp_level });
+    const id = await createSeason(db, uid, { name: input.name, days: input.days ?? 21, price: input.price, levels: input.levels, xpLevel: input.xp_level, carId: input.car_id });
     await log({ id, name: input.name });
     return { id };
+  }
+  if (a === 'bp_car') {
+    await setSeasonCar(db, input.season, input.car_id);
+    await log({ season: input.season, car: input.car_id });
+    return { ok: true };
   }
   if (a === 'bp_reward') {
     await setLevelReward(db, input);
