@@ -579,4 +579,6 @@ export const MIGRATIONS = [
   { id: 3, statements: MIGRATION_3 },
   { id: 4, statements: MIGRATION_4 },
   { id: 5, statements: MIGRATION_5 },
+  // 6: цены расширения гаража — шаг $25 000.
+  { id: 6, statements: GARAGE_TIERS.map(([c, p]) => `INSERT INTO garage_tiers (capacity, price) VALUES (${c}, ${p}) ON CONFLICT (capacity) DO UPDATE SET price = excluded.price`) },
 ];
