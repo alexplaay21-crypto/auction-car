@@ -1,5 +1,5 @@
 // Создано сборкой фото-графики — машины с игровой графикой по фото (id → версия файла).
-export const PHOTOS: Record<number, string> = {"9":"ccc08746","10":"f7f7f237","11":"215f30eb","12":"afd3f172","13":"434bba95","14":"f17c49c6","15":"1e030aee","16":"1eb2587c","101":"3c1aa339","102":"dc140ac9","103":"f76febdd","104":"74af73ae","105":"7927d788","106":"83ca4770","107":"b4adc88d","108":"f81201cc","109":"d4b8ef93","110":"de417d85","111":"e0bb4b76","112":"e232e219","113":"a7bdbc95","114":"863e5e6f","115":"31965b97","116":"2bb82fd6","117":"09815ad5","118":"e263ebba","119":"b1a6cf23","120":"16d55f22","121":"d799912f","122":"814534c2","123":"56cda863","124":"bb28b20c","125":"a378bea3","126":"0e9c22f5","127":"3e7c4d27","128":"48a5528c","129":"34b9ce83","130":"15b9079f","131":"4947ba5f","132":"2bb91192","133":"055194e8","134":"0927929f","135":"354c30f4","136":"12673ce4","137":"3d102162","138":"74c7528f","139":"b89bcbbe","140":"8c401cb2","141":"19f34a79","142":"2761d287"};
+export const PHOTOS: Record<number, string> = {"9":"c35ca22d","10":"f7f7f237","11":"7c874829","12":"5a0d84ec","13":"2f8f3659","14":"57ecc371","15":"1e030aee","16":"847b0606","101":"48bacdff","102":"dc140ac9","103":"13b28daa","104":"74af73ae","105":"7927d788","106":"3d038ed1","107":"b4adc88d","108":"ae95b91d","109":"d4b8ef93","110":"de417d85","111":"e0bb4b76","112":"7eba03f5","113":"cc0f75c0","114":"863e5e6f","115":"31965b97","116":"2bb82fd6","117":"09815ad5","118":"8c9408cd","119":"b1a6cf23","120":"ef7db23d","121":"d799912f","122":"c9bf187a","123":"56cda863","124":"a22dbcb6","125":"f932f6d9","126":"cabc2a31","127":"68bdde8d","128":"ad8bdfb5","129":"b87462cb","130":"15b9079f","131":"4947ba5f","132":"2bb91192","133":"055194e8","134":"0927929f","135":"354c30f4","136":"12673ce4","137":"c396812b","138":"74c7528f","139":"b89bcbbe","140":"8c401cb2","141":"19f34a79","142":"2761d287"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -23,7 +23,7 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "Folkswagen T-Rok",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VW_T-Roc_(front_view)_%E2%80%93_IAA_2017_%E2%80%93_by_Nicolas_V%C3%B6lcker.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_T-Roc_(2021)_1X7A0330.jpg"
  },
  {
   "car": "Folkswagen T-Kross",
@@ -41,7 +41,7 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "Folkswagen Passant B8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2020_Volkswagen_Passat_Business_140TSI_front.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_Passat_(B8)_%E2%80%93_front_view_(2017).jpg"
  },
  {
   "car": "Folkswagen Turan II",
@@ -53,7 +53,7 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "Folkswagen AiDi.3",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VW_ID._2all%2C_IAA_Open_Space_2023%2C_Munich_(P1110993).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_ID.3_(2023)_IMG_7973.jpg"
  },
  {
   "car": "Folkswagen AiDi.4",
@@ -119,7 +119,7 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "Audy A-4 B9",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi_A4_B9_sedans_(FL)_1X7A6817.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2023_Audi_A4_B9_Avant_Allroad_-_right_front_exterior_view.jpg"
  },
  {
   "car": "Audy Q-3",
@@ -185,13 +185,13 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "Folkswagen Golph GTi 8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_GTI_(Mk8_CD1)_China.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_Golf_VIII_GTI_Clubsport_45_IMG_4884.jpg"
  },
  {
   "car": "Folkswagen Golph R 8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_R-LINE_(Mk8_CD1)_China_(17).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_GOLF_eTSI_R-Line_(3AA-CDDFY)_front.jpg"
  },
  {
   "car": "Folkswagen Arteonn",
@@ -269,7 +269,7 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "car": "BMV M-5 F90",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2018_BMW_M5_front.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:BMW_M5_Competition_(F90)_front.jpg"
  },
  {
   "car": "Mersedes-AMX GT",
