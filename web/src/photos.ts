@@ -1,251 +1,251 @@
 // Создано сборкой фото-графики — машины с игровой графикой по фото (id → версия файла).
-export const PHOTOS: Record<number, string> = {"9":"20380cee","10":"eb4cc5b1","11":"3686e107","12":"f204159a","13":"fe681c52","14":"d305a510","15":"e5c1feb5","16":"d584619a","101":"dfb1d4ad","102":"02b4ee5d","103":"0c9982b5","104":"a782ba3c","105":"399c0d65","106":"93235d33","107":"f7a26de4","108":"2d04a8c7","109":"d4eb389d","110":"bed61d31","111":"8447b14b","112":"c281cfb2","113":"550802b2","114":"2dfb1699","115":"84ba40ad","116":"0f05a4dd","117":"2b6aadef","118":"1ce2169a","119":"23a71dab","120":"69565bf5","121":"7a6d3141","122":"ff4375c6","123":"7808edc8","124":"dd425a14","125":"7ce59f26","126":"e42f1d06","127":"70e2b78b","128":"dba373a6","129":"d0df035b","130":"61ece47b","131":"962f7f65","132":"fd5b989b","133":"fca8fecd","134":"26ba9c54","135":"b671a705","136":"fec8e7da","137":"b9659659","138":"69945d29","139":"134a2eb1","140":"fb5c1966","141":"9c74b38f","142":"bab8bff9"};
+export const PHOTOS: Record<number, string> = {"9":"ccc08746","10":"f7f7f237","11":"215f30eb","12":"afd3f172","13":"434bba95","14":"f17c49c6","15":"1e030aee","16":"1eb2587c","101":"3c1aa339","102":"dc140ac9","103":"f76febdd","104":"74af73ae","105":"7927d788","106":"83ca4770","107":"b4adc88d","108":"f81201cc","109":"d4b8ef93","110":"de417d85","111":"e0bb4b76","112":"e232e219","113":"a7bdbc95","114":"863e5e6f","115":"31965b97","116":"2bb82fd6","117":"09815ad5","118":"e263ebba","119":"b1a6cf23","120":"16d55f22","121":"d799912f","122":"814534c2","123":"56cda863","124":"bb28b20c","125":"a378bea3","126":"0e9c22f5","127":"3e7c4d27","128":"48a5528c","129":"34b9ce83","130":"15b9079f","131":"4947ba5f","132":"2bb91192","133":"055194e8","134":"0927929f","135":"354c30f4","136":"12673ce4","137":"3d102162","138":"74c7528f","139":"b89bcbbe","140":"8c401cb2","141":"19f34a79","142":"2761d287"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
-  "car": "Folkswagen Kefer",
+  "car": "Folkswagen Pollo VI",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Blue_Volkswagen_Beetle_side_view.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Polo_SE_1.0_Front.jpg"
  },
  {
-  "car": "Trabbant 601",
+  "car": "Folkswagen Golph 7",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Cream_Trabant_601_S_side_view.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_(Mk7%2C_Typ_5G)_China_(38).jpg"
  },
  {
-  "car": "Wartbug 353",
+  "car": "Folkswagen Golph 8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Wartburg353inireland.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_Volkswagen_Golf_Style_1.5_Front.jpg"
  },
  {
-  "car": "Folkswagen Bulley T2",
+  "car": "Folkswagen T-Rok",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1976_Volkswagen_Type_2_T2_Mini_Bus_(30831257785).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VW_T-Roc_(front_view)_%E2%80%93_IAA_2017_%E2%80%93_by_Nicolas_V%C3%B6lcker.jpg"
  },
  {
-  "car": "Folkswagen Lupa",
+  "car": "Folkswagen T-Kross",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2001_Volkswagen_Lupo_S_-_1390cc_1.4_16V_(75PS)_Petrol_-_Taffeta_Green_-_30-04-2024%2C_Side.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_T-Cross_TSI_R-Line_(3BA-C1DKR)_front.jpg"
  },
  {
-  "car": "Folkswagen Pollo",
+  "car": "Folkswagen Tiguann",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_POLO_JINQU_China.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VW_Tiguan_Mk2.jpg"
  },
  {
-  "car": "Opal Korsa B",
+  "car": "Folkswagen Passant B8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1993-1995_Opel_Corsa_B_GSi_16V_02_Front_Left.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_Volkswagen_Passat_Business_140TSI_front.jpg"
  },
  {
-  "car": "Opal Kadet E",
+  "car": "Folkswagen Turan II",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Opel_Kadett_E_sedan_(FL)_IMG_8038.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Touran_1.6.jpg"
  },
  {
-  "car": "Mersedes-Bens A W168",
+  "car": "Folkswagen AiDi.3",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1999_Mercedes-Benz_A160_CDI_Avantgarde_in_Mondsilver_Met%2C_front_right.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VW_ID._2all%2C_IAA_Open_Space_2023%2C_Munich_(P1110993).jpg"
  },
  {
-  "car": "Folkswagen Golph II",
+  "car": "Folkswagen AiDi.4",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1987_Volkswagen_Golf_GTi_(31488973161).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_ID.4_GTX_1X7A0301.jpg"
  },
  {
-  "car": "Folkswagen Golph IV",
+  "car": "Opal Korsa F",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_5_DOOR_Mk4_China_(2).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2023_Opel_Corsa-e_IAA_2023_1X7A0385.jpg"
  },
  {
-  "car": "Folkswagen Jeta V",
+  "car": "Opal Astro K",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2007_Volkswagen_Jetta_SE_TDi_140_2.0.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Opel_Astra_K_IAA_cropped.jpg"
  },
  {
-  "car": "Folkswagen Turan",
+  "car": "Opal Astro L",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:DSC07723_Volkswagen_Touran%2C_Wiener_Stadtg%C3%A4rten%2C_Front_Left%2C_2025-07.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Opel_Astra_L_GSe_1X7A7243.jpg"
  },
  {
-  "car": "Folkswagen Passant B5",
+  "car": "Opal Insygnia B",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Passat_B5.png"
+  "page": "https://commons.wikimedia.org/wiki/File:Opel_Insignia_Grand_Sport_1.6_Diesel_Business_Innovation_(B)_%E2%80%93_Frontansicht%2C_5._Mai_2017%2C_D%C3%BCsseldorf.jpg"
  },
  {
-  "car": "Opal Astro G",
+  "car": "Opal Mokko",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Opel_Astra_G_coup%C3%A9_Bertone_-_profil.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_Vauxhall_Mokka_GS_Turbo_1.2_Front.jpg"
  },
  {
-  "car": "Opal Vektra B",
+  "car": "Opal Grendland",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Opel_vectra_B.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_Vauxhall_Grandland_GS_EV_-_73kWh_(213PS)_Electric_-_Impact_Copper_-_02-2025%2C_Front.jpg"
  },
  {
-  "car": "Opal Zafiro B",
+  "car": "Audy A-1",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Zafira_2006-2014_Side_View.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2019_Audi_A1_TFSi_30_Front.jpg"
  },
  {
-  "car": "Opal Omegga B",
+  "car": "Audy A-3 8Y",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Opel_Omega_B.JPG"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_Audi_A3_8Y_front.jpg"
  },
  {
-  "car": "Opal Insygnia",
+  "car": "Audy Q-2",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Opelinsignia17.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2022_Audi_Q2_S_Line_35TFSI_-_1498cc_1.5_(150PS)_Petrol_-_Grey_-_07-2024%2C_Front.jpg"
  },
  {
-  "car": "Audy 80 B4",
+  "car": "Audy A-4 B9",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi_80_B4_01.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Audi_A4_B9_sedans_(FL)_1X7A6817.jpg"
  },
  {
-  "car": "Audy 100 C3",
+  "car": "Audy Q-3",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi100-Typ44.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2019_Audi_Q3_Quattro_S-Line%2C_front_11.22.19.jpg"
  },
  {
-  "car": "Audy A3 8L",
+  "car": "BMV 1 F40",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Passenger_Side_View_of_an_Audi_A3_With_Headlights_On.JPG"
+  "page": "https://commons.wikimedia.org/wiki/File:2019_BMW_118i_1.5_Front.jpg"
  },
  {
-  "car": "Audy A4 B5",
+  "car": "BMV 2 Gran Kupe",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi-A4-B5-2.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_BMW_M235i_xDrive_Gran_Coupe_Front.jpg"
  },
  {
-  "car": "BMV 3 E30",
+  "car": "BMV 3 G20",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:BMW_M3_E30_(5698107755).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:BMW_3-Series_(G20)_330_e_(2020)_(53334255255).jpg"
  },
  {
-  "car": "BMV 5 E34",
+  "car": "BMV X-1",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:E34M5Seite.JPG"
+  "page": "https://commons.wikimedia.org/wiki/File:2023_BMW_X1_U11_front_view_02.png"
  },
  {
-  "car": "BMV 1 E87",
+  "car": "Mersedes-Bens A W177",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:BMW_1_SERIES_(E87)_China_(5).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:MERCEDES-BENZ_A-CLASS_(W177)_China.jpg"
  },
  {
-  "car": "BMV 3 E46",
+  "car": "Mersedes-Bens B W247",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:BMW_E46_ZHP_Coupe_TiAg_Side.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_B_200_Genf_2019_1Y7A5105.jpg"
  },
  {
-  "car": "Mersedes-Bens 190 W201",
+  "car": "Mersedes-Bens CLA",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_W201_2.3_AMG_1X7A0220.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_Mercedes-Benz_CLA_35_AMG_front.jpg"
  },
  {
-  "car": "Mersedes-Bens E W124",
+  "car": "Mersedes-Bens GLA",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_W124_(1989)_IMG_0021.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_Mercedes-Benz_GLA_200_front.jpg"
  },
  {
-  "car": "Mersedes-Bens C W202",
+  "car": "Mersedes-Bens C W206",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_W202_DSC_8982.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_Mercedes-Benz_W206_C180_Avantgarde_in_Mojave_Silver%2C_front_right%2C_07-10-2024.jpg"
  },
  {
-  "car": "Folkswagen Golph GTi I",
+  "car": "Folkswagen Golph GTi 8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Gti_Rabbit_MK1.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_GTI_(Mk8_CD1)_China.jpg"
  },
  {
-  "car": "Folkswagen Korrado",
+  "car": "Folkswagen Golph R 8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1993_Volkswagen_Corrado_SLC_in_Black%2C_front_left.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:VOLKSWAGEN_GOLF_R-LINE_(Mk8_CD1)_China_(17).jpg"
  },
  {
-  "car": "Folkswagen Tuareg",
+  "car": "Folkswagen Arteonn",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Volkswagen_Touareg_III_IMG_1991.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2017_Volkswagen_Arteon_Front.jpg"
  },
  {
-  "car": "Audy TT 8N",
+  "car": "Folkswagen Tuareg III",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2008-07-05_Audi_TT_1.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Touareg_Front_(1).jpg"
  },
  {
-  "car": "Porshe 356",
+  "car": "Audy RS-3",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Porsche_356_Speedster_white_(side_view).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Audi_RS3%2C_Frankfurt_am_Main_(P1032666).jpg"
  },
  {
-  "car": "Audy RS-4 Avant",
+  "car": "Audy Q-8",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi_RS4_B7.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Audi_Q8_e-tron_IAA_2023_1X7A0616.jpg"
  },
  {
-  "car": "BMV M-3 E30",
+  "car": "BMV M-2",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:BMW_M3_E30_(5698107755).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2024_BMW_M2_G87%2C_front_left%2C_05-31-2024.jpg"
  },
  {
-  "car": "BMV M-5 E39",
+  "car": "BMV X-5",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2002_BMW_M5_E39_BS_O24.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_BMW_X5_xDrive_40i%2C_front_left.jpg"
  },
  {
-  "car": "BMV Z-3",
+  "car": "BMV i-4",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Z3mroadster.png"
+  "page": "https://commons.wikimedia.org/wiki/File:BMW_i4_IAA_2021_1X7A0308.jpg"
  },
  {
-  "car": "Mersedes-Bens 190E Evo 2",
+  "car": "Mersedes-AMX A45 S",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_190E_2.5-16_Evo_II_front_-_Stuttgart_Museum.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2020_Mercedes-AMG_A_45_S_4MATIC%2B_Automatic_2.0_Front.jpg"
  },
  {
-  "car": "Mersedes-Bens SL R-129",
+  "car": "Mersedes-Bens E W214",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_R129_500_SL_(1998-2001)_1X7A0337.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:MERCEDES-BENZ_E_CLASS_(W214)_China_(5).jpg"
  },
  {
   "car": "Mersedes-Bens G-Wagen",
@@ -254,51 +254,51 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "page": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_G_350d_Genf_2019_1Y7A5114.jpg"
  },
  {
-  "car": "Mersedes-Bens C63 AMX",
+  "car": "Porshe Makan",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2008_Mercedes_Benz_C63_AMG_-_Flickr_-_The_Car_Spy_(6).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Porsche_Macan%2C_IAA_2017%2C_Frankfurt_am_Main_(1Y7A2781).jpg"
  },
  {
-  "car": "Porshe 944",
+  "car": "Porshe Kayenn",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:1991_Porsche_944_S2_LES.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Porsche_Cayenne_Turbo_%E2%80%93_IAA_2017_%E2%80%93_by_Nicolas_V%C3%B6lcker.jpg"
  },
  {
   "car": "BMV M-5 F90",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:BMW_M5_(F90)_-_side_view_-_Netherlands.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:2018_BMW_M5_front.jpg"
  },
  {
   "car": "Mersedes-AMX GT",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-AMG_GT_S_in_Sochi%2C_left_side.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-AMG_R190_GT_R_Roadster_Speedlegend_IAA_2021_1X7A0124.jpg"
  },
  {
   "car": "Audy R-8 V10",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Audi_R8_GT_China_2012-04-04.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Audi_R8_GT_Spyder_(type_42)_front.jpg"
  },
  {
   "car": "Porshe 911 Turbo S",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Porsche_911_Turbo%2C_Meerbusch_(P1045191).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Porsche_911_Turbo%2C_IAA_Summit_2025%2C_Munich_(20250908-P1050113).jpg"
  },
  {
-  "car": "Mersedes-Bens 300 SL Fluegeltuer",
+  "car": "Mersedes-AMX Wan",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:Mille_Miglia%2C_GIMS_2019%2C_Le_Grand-Saconnex_(GIMS9902).jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Mercedes-AMG_Project_One%2C_Frankfurt_(1Y7A3473).jpg"
  },
  {
   "car": "Porshe 918 Spaider",
   "author": "",
   "license": "CC BY-SA",
-  "page": "https://commons.wikimedia.org/wiki/File:2015_Porsche_918_Spyder_4.6.jpg"
+  "page": "https://commons.wikimedia.org/wiki/File:Porsche_918_Spyder_IAA_2013_(Zuschnitt).jpg"
  }
 ];

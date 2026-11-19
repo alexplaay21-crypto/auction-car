@@ -27,33 +27,55 @@ def cutout(rgb):
     return rgba[:, :, :3], a
 
 
-def cartoon(rgb, alpha):
-    img = rgb.copy()
-    for _ in range(2):
-        img = cv2.bilateralFilter(img, 9, 50, 50)
-    # меньше цветов — фото превращается в игровую «покраску»
-    inside = alpha > 0
-    lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB).reshape(-1, 3).astype(np.float32)
-    pts = lab[inside.reshape(-1)]
-    k = 18
-    if len(pts) > k * 10:
-        sample = pts[np.random.default_rng(1).choice(len(pts), min(len(pts), 60000), replace=False)]
-        _, _, centers = cv2.kmeans(sample, k, None, (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.5), 3, cv2.KMEANS_PP_CENTERS)
-        d = ((lab[:, None, :] - centers[None, :, :]) ** 2).sum(-1)
-        q = centers[d.argmin(1)].reshape(img.shape).astype(np.uint8)
-        img = cv2.cvtColor(q, cv2.COLOR_LAB2RGB)
-    # контуры
-    g = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-    g = cv2.medianBlur(g, 5)
-    e = cv2.Canny(g, 50, 130)
-    e = cv2.dilate(e, np.ones((2, 2), np.uint8))
-    e = cv2.GaussianBlur(e, (3, 3), 0).astype(np.float32) / 255 * 0.55
-    img = (img.astype(np.float32) * (1 - e[:, :, None]) + 18 * e[:, :, None])
-    # сочнее
-    hsv = cv2.cvtColor(np.clip(img, 0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
-    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.25, 0, 255)
-    hsv[:, :, 2] = np.clip((hsv[:, :, 2] - 128) * 1.12 + 132, 0, 255)
+def render(rgb, alpha):
+    """Реалистичная «игровая» подача: чистый лак, ровный свет, сочный цвет, резкость."""
+    img = cv2.bilateralFilter(rgb, 7, 28, 28)
+    lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+    l = cv2.createCLAHE(clipLimit=1.6, tileGridSize=(8, 8)).apply(lab[:, :, 0])
+    lab[:, :, 0] = l
+    img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+    blur = cv2.GaussianBlur(img, (0, 0), 2.2)
+    img = cv2.addWeighted(img, 1.45, blur, -0.45, 0)
+    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV).astype(np.float32)
+    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.14, 0, 255)
+    hsv[:, :, 2] = np.clip((hsv[:, :, 2] - 128) * 1.06 + 130, 0, 255)
     return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2RGB)
+
+
+def find_plates(rgb, alpha):
+    """Номерные знаки: светлые (белые/жёлтые) вытянутые прямоугольники в нижней части машины."""
+    h, w = alpha.shape
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    light = ((hsv[:, :, 2] > 170) & ((hsv[:, :, 1] < 60) | ((hsv[:, :, 0] > 15) & (hsv[:, :, 0] < 35) & (hsv[:, :, 1] > 90)))).astype(np.uint8) * 255
+    light[: int(h * 0.38)] = 0
+    light[alpha < 128] = 0
+    light = cv2.morphologyEx(light, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    cs, _ = cv2.findContours(light, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    out = []
+    for c in cs:
+        (cx, cy), (rw, rh), ang = cv2.minAreaRect(c)
+        if rw < rh:
+            rw, rh = rh, rw; ang += 90
+        area = rw * rh
+        if not (0.0012 * w * h < area < 0.03 * w * h): continue
+        if not (2.3 < rw / max(rh, 1) < 6.0): continue
+        if abs(((ang + 90) % 180) - 90) > 35: continue
+        fill = cv2.contourArea(c) / max(area, 1)
+        if fill < 0.6: continue
+        # внутри номера есть тёмные буквы
+        box = cv2.boxPoints(((cx, cy), (rw, rh), ang)).astype(np.int32)
+        m = cv2.fillPoly(np.zeros((h, w), np.uint8), [box], 255)
+        dark = (cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY) < 90) & (m > 0)
+        if dark.sum() < 0.04 * m.sum() / 255: continue
+        out.append(((cx, cy), (rw * 1.12, rh * 1.25), ang))
+    return out
+
+
+def cover_plates(img, plates):
+    for (cx, cy), (rw, rh), ang in plates:
+        box = cv2.boxPoints(((cx, cy), (rw, rh), ang)).astype(np.int32)
+        cv2.fillPoly(img, [box], (222, 225, 230), cv2.LINE_AA)
+        cv2.polylines(img, [box], True, (45, 48, 55), max(1, int(rh * 0.08)), cv2.LINE_AA)
 
 
 def hide_hubs(img, alpha, orig):
@@ -169,7 +191,7 @@ def compose(car, alpha, rarity):
     return np.clip(bg * v[:, :, None], 0, 255).astype(np.uint8)
 
 
-def run(src, rarity, out, flip=False, spots=(), boxes=()):
+def run(src, rarity, out, flip=False, spots=(), boxes=(), auto=True):
     rgb = np.array(Image.open(src).convert('RGB'))
     if max(rgb.shape[:2]) > 1400:
         k = 1400 / max(rgb.shape[:2])
@@ -180,7 +202,8 @@ def run(src, rarity, out, flip=False, spots=(), boxes=()):
     ys, xs = np.where(a > 10)
     car, a = car[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy(), a[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy()
     hide_spots(car, spots)
-    st = cartoon(car, a)
+    st = render(car, a)
+    if auto: cover_plates(st, find_plates(car, a))
     hubs = []  # автопоиск колёс ошибался — значки и номера закрываются ручными метками (boxes)
     img = compose(st, a, rarity)
     hide_boxes(img, boxes)
@@ -192,4 +215,4 @@ if __name__ == '__main__':
     import json
     spots = json.loads(sys.argv[5]) if len(sys.argv) > 5 else []
     boxes = json.loads(sys.argv[6]) if len(sys.argv) > 6 else []
-    print('ok', run(sys.argv[1], sys.argv[2], sys.argv[3], len(sys.argv) > 4 and sys.argv[4] == 'flip', spots, boxes))
+    print('ok', run(sys.argv[1], sys.argv[2], sys.argv[3], len(sys.argv) > 4 and sys.argv[4] == 'flip', spots, boxes, not (len(sys.argv) > 7 and sys.argv[7] == 'noauto')))

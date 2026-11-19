@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { GERMAN } from '/home/user/auction-car/tgcloud/lib/catalog_de.js';
 import { germanIds } from '/home/user/auction-car/tgcloud/lib/ddl8.js';
 const here = (p) => new URL(p, import.meta.url).pathname;
-const d = JSON.parse(readFileSync(here('cands2.json')));
+const d = JSON.parse(readFileSync(here('cands.json')));
 const picks = JSON.parse(readFileSync(here('picks.json')));
 const UA = { 'User-Agent': 'CarAuctionGame/1.0 (asset research; low volume)' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -39,7 +39,7 @@ for (const [k, p] of Object.entries(picks)) {
   }
   const id = ids[Number(k)];
   const out = `${ART}/car-${id}.jpg`;
-  const args = [here('stylize.py'), raw, GERMAN[k][2], out, p.flip ? 'flip' : 'noflip', JSON.stringify(p.spots ?? []), JSON.stringify(p.boxes ?? [])];
+  const args = [here('stylize.py'), raw, GERMAN[k][2], out, p.flip ? 'flip' : 'noflip', JSON.stringify(p.spots ?? []), JSON.stringify(p.boxes ?? []), p.auto === false ? 'noauto' : 'auto'];
   execFileSync(here('../imgenv/bin/python'), args, { stdio: 'inherit' });
   const v = createHash('md5').update(readFileSync(out)).digest('hex').slice(0, 8);
   man[k] = { id, v, car: GERMAN[k][0], author: c.author, license: c.license, page: c.page };

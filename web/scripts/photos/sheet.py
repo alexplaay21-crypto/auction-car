@@ -2,7 +2,7 @@
 import json, sys, os
 from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, '/home/user/auction-car')
-d = json.load(open('cands2.json'))
+d = json.load(open('cands.json'))
 names = json.load(open('names.json'))
 a, b, out = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
 TW, TH = 220, 140

@@ -1,6 +1,6 @@
 // Маленькие превью кандидатов (330px) для листов выбора — медленно, по одному.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-const d = JSON.parse(readFileSync(new URL('./cands2.json', import.meta.url)));
+const d = JSON.parse(readFileSync(new URL('./cands.json', import.meta.url)));
 const UA = { 'User-Agent': 'CarAuctionGame/1.0 (asset research; low volume)' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 mkdirSync('th', { recursive: true });
