@@ -1,0 +1,8 @@
+{
+  // Mini App: сборка фронтенда из web/ (npm run build:web), отдаётся как SPA.
+  "static": {
+    "source": "web/dist",
+    "spa": true
+  },
+  "$schema": "./node_modules/@tgcloud/cli/schema/tgcloud.json"
+}

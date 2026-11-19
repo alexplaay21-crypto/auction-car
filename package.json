@@ -1,0 +1,14 @@
+{
+  "name": "car-auction",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@tgcloud/cli": "^0.2.0"
+  },
+  "scripts": {
+    "deploy": "npm run build:web && tgcloud push",
+    "status": "tgcloud status",
+    "test": "node --test --no-warnings test/*.test.js",
+    "build:web": "npm --prefix web run build"
+  }
+}
