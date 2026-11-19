@@ -33,6 +33,12 @@ async function exec(db, q, p) {
 }
 
 const NOW = '(SELECT now FROM v_now)';
+// Номер из запроса: платформа не принимает NaN в параметрах SQL, поэтому проверяем заранее.
+export function idOf(v) {
+  const n = Number(v);
+  if (!Number.isSafeInteger(n) || n <= 0) throw new GameError('BAD_INPUT');
+  return n;
+}
 export const now = async (db) => (await db.get('SELECT now FROM v_now')).now;
 const rnd = () => Math.random();
 

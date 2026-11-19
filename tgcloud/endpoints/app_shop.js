@@ -1,13 +1,13 @@
 // Магазин и каталог: лоты, VIP, расширение гаража, шансы и состав контейнеров, лидеры.
 import { endpoint } from '../lib/endpoint.js';
-import { buyLot, settings, getUser, nextTier, GameError } from '../lib/engine.js';
+import { buyLot, settings, getUser, nextTier, GameError, idOf } from '../lib/engine.js';
 import { catalogView, topView } from '../lib/views.js';
 
 export default endpoint(async (db, uid, input) => {
   const a = input.action ?? 'list';
   if (a === 'catalog') return catalogView(db);
   if (a === 'top') return { kind: input.kind ?? 'balance', list: await topView(db, input.kind) };
-  if (a === 'buy') return { bought: await buyLot(db, uid, Number(input.id), String(input.clientId ?? '')) };
+  if (a === 'buy') return { bought: await buyLot(db, uid, idOf(input.id), String(input.clientId ?? '')) };
   if (a === 'list') {
     const st = await settings(db);
     const u = await getUser(db, uid);
