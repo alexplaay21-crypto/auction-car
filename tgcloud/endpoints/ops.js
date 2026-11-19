@@ -43,6 +43,16 @@ export default async function (input, ctx) {
       for (const o of objs.filter((x) => x.type === 'table')) { await db.run(`DROP TABLE IF EXISTS "${o.name}"`); dropped.push(o.name); }
       return { dropped };
     }
+    // Полный сброс игры: удаляются все таблицы, затем база создаётся заново миграциями.
+    case 'dump_users':
+      return { users: await db.all('SELECT id, username, first_name, balance, is_vip, created_at FROM users ORDER BY id') };
+    case 'reset_all': {
+      if (input.confirm !== 'RESET_ALL') throw new EndpointError('Confirm required', { code: 'CONFIRM' });
+      const objs = await db.all(`SELECT type, name FROM sqlite_master WHERE type IN ('view', 'table') AND name NOT LIKE 'sqlite_%'`);
+      for (const o of objs.filter((x) => x.type === 'view')) await db.run(`DROP VIEW IF EXISTS "${o.name}"`);
+      for (const o of objs.filter((x) => x.type === 'table')) await db.run(`DROP TABLE IF EXISTS "${o.name}"`);
+      return { dropped: objs.length, applied: await migrate(db) };
+    }
     case 'stats':
       return {
         users: (await db.get('SELECT count(*) AS n FROM users WHERE id > 0')).n,
