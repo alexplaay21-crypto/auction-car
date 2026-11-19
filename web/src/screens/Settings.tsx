@@ -43,7 +43,7 @@ export function SettingsPage() {
           <>
             <Sect>{t('Авторы фото')}</Sect>
             <div className="card">
-              <div className="xs muted">{t('Графика машин сделана по фото с Wikimedia Commons. Марки и модели принадлежат их владельцам; игра с ними не связана.')}</div>
+              <div className="xs muted">{t('Графика машин отрисована по 3D-моделям с Sketchfab (лицензии CC BY / CC0, модели изменены: свет, ракурс, значки убраны). Марки и модели принадлежат их владельцам; игра с ними не связана.')}</div>
               <button className="btn ghost w" onClick={() => setCred(!cred)}>{cred ? t('Скрыть список') : t('Показать список ({n})', { n: CREDITS.length })}</button>
               {cred && <div className="col g6">{CREDITS.map((c) => (
                 <a key={c.page} className="xs" href={c.page} target="_blank" rel="noreferrer" style={{ color: 'var(--muted)' }}><b style={{ color: 'var(--text)' }}>{c.car}</b> — {c.author || t('автор не указан')}, {c.license}</a>

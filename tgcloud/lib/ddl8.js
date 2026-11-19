@@ -42,3 +42,5 @@ export const upsertGerman = () => {
 export const MIGRATION_13 = upsertGerman();
 // 14: цены обычных — 60 % дешевле контейнера ($5 000), 40 % немного дороже.
 export const MIGRATION_14 = upsertGerman();
+// 15: модели под 3D-рендер (часть машин заменена на те, для которых есть хорошие 3D-модели).
+export const MIGRATION_15 = upsertGerman();

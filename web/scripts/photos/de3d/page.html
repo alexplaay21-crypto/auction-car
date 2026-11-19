@@ -1,0 +1,108 @@
+<!doctype html><html><body style="margin:0;background:transparent">
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const W = 1600, H = 900;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer);
+scene.environment = pm.fromScene(new RoomEnvironment(), 0.03).texture;
+const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(4, 8, -5); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 });
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xbfd4ff, 1.4); rim.position.set(-6, 3, -2); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xffffff, 0.8); fill.position.set(2, 2, 6); scene.add(fill);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x223344, 0.5));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.0 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const camera = new THREE.PerspectiveCamera(28, W / H, 0.1, 200);
+window.renderCar = async (url, yawDeg, opt = {}) => {
+  const loader = new GLTFLoader();
+  const draco = new DRACOLoader(); draco.setDecoderPath('/three/examples/jsm/libs/draco/'); loader.setDRACOLoader(draco);
+  const g = await loader.loadAsync(url);
+  const car = g.scene;
+  // убрать лишнее: плоскости-подложки и тени из модели
+  car.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true;
+    const BADGE = /logo|emblem|badge|insignia_logo|plate|licen|kennz|number_?plate|nummer|marque|brand|lettering|script|propeller/i;
+    if (BADGE.test(o.name || '') || [].concat(o.material).some((m) => m && BADGE.test(m.name || ''))) { o.visible = false; return; }
+    for (const m of [].concat(o.material)) { if (!m) continue;
+      if (opt.paint && /paint|body|lack|carpaint|exterior|ext_?col|color|colour|main/i.test(m.name || '') && !/glass|black|plastic|chrome|rubber|tire|tyre|rim|interior|int_/i.test(m.name || '')) {
+        m.color && m.color.set(opt.paint); if (m.map) m.map = null; m.metalness = 0.6; m.roughness = 0.28; m.needsUpdate = true; o.userData.painted = true; }
+      if (m.transparent && m.opacity < 0.05) o.visible = false;
+      // кузов не должен быть прозрачным — прозрачными остаются только стёкла и фары
+      if ((m.transparent || m.opacity < 1) && !/glass|window|wind|lamp|light|lens|head|tail|fog|scheib|glas/i.test(m.name || '')) { m.transparent = false; m.opacity = 1; m.alphaMode = 'OPAQUE'; }
+    } } });
+  // убрать посторонние объекты: огромные/плоские подложки и всё далёкое от машины
+  car.updateMatrixWorld(true);
+  const meshes = []; car.traverse((o) => { if (o.isMesh && o.visible) meshes.push(o); });
+  const mb = (o) => new THREE.Box3().setFromObject(o);
+  for (const o of meshes) { const b = mb(o), z = b.getSize(new THREE.Vector3());
+    const big = Math.max(z.x, z.z); if (z.y < big * 0.08 && big > 0) o.userData.flat = true; }
+  for (let it = 0; it < (opt.nofilter ? 0 : 8); it++) {
+    const vis = meshes.filter((o) => o.visible);
+    let worst = null, wd = 0;
+    for (const o of vis) { const d = mb(o).getSize(new THREE.Vector3()).length(); if (d > wd) { wd = d; worst = o; } }
+    const rest = new THREE.Box3(); for (const o of vis) if (o !== worst) rest.union(mb(o));
+    const rd = rest.getSize(new THREE.Vector3()).length();
+    if (worst && (wd > rd * 1.5 || (worst.userData.flat && wd > rd * 0.9))) worst.visible = false; else break;
+  }
+  if (opt.cluster) { // оставить только то, что внутри самой большой детали (кузова)
+    const vis = meshes.filter((o) => o.visible); let body = null, bv = 0;
+    for (const o of vis) { const z = mb(o).getSize(new THREE.Vector3()); const v = z.x * z.y * z.z; if (v > bv) { bv = v; body = o; } }
+    const bb = mb(body); bb.expandByVector(bb.getSize(new THREE.Vector3()).multiplyScalar(0.12));
+    for (const o of vis) if (!bb.containsPoint(mb(o).getCenter(new THREE.Vector3()))) o.visible = false;
+  }
+  if (!opt.nofilter) for (let pass = 0; pass < 3; pass++) {
+    const vis = meshes.filter((o) => o.visible);
+    // центр и размер машины — по самым крупным деталям (по объёму рамки), мелкий мусор не сдвигает
+    const big = vis.map((o) => [o, mb(o)]).sort((a, b) => b[1].getSize(new THREE.Vector3()).length() - a[1].getSize(new THREE.Vector3()).length()).slice(0, Math.max(3, Math.ceil(vis.length * 0.3)));
+    const all = new THREE.Box3(); big.forEach(([, b]) => all.union(b));
+    const ex = all.clone().expandByScalar(all.getSize(new THREE.Vector3()).length() * 0.08);
+    for (const o of vis) if (!ex.containsPoint(mb(o).getCenter(new THREE.Vector3()))) o.visible = false;
+    // плоские куски у самого пола (подложки, тени) — убрать
+    const hy = all.max.y - all.min.y;
+    for (const o of vis) { const b = mb(o); if (o.userData.flat && b.max.y < all.min.y + hy * 0.06) o.visible = false; }
+  }
+  if (opt.paintAuto) { // кузов = материал с наибольшей площадью (кроме стёкол, шин, салона)
+    const area = new Map();
+    car.traverse((o) => { if (!o.isMesh || !o.visible) return; const z = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3());
+      const a = z.x * z.y + z.y * z.z + z.x * z.z;
+      for (const m of [].concat(o.material)) if (m && !/glass|window|tire|tyre|rubber|interior|int_|seat|light|lamp|chrome|rim|wheel/i.test(m.name || '')) area.set(m, (area.get(m) || 0) + a); });
+    const top = [...area.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (top) { top.color.set(opt.paintAuto); top.map = null; top.metalness = 0.6; top.roughness = 0.28; top.needsUpdate = true; }
+  }
+  const wrap = new THREE.Group(); wrap.add(car); scene.add(wrap);
+  const vb = () => { const b = new THREE.Box3(); scene.updateMatrixWorld(true); car.traverse((o) => { if (o.isMesh && o.visible) b.union(new THREE.Box3().setFromObject(o)); }); return b; };
+  let box = vb();
+  const size = box.getSize(new THREE.Vector3());
+  // длинная горизонтальная ось — вдоль X
+  // модель «стоит» (вверх по Z) — положить
+  if (opt.rx) car.rotation.x += opt.rx * Math.PI / 180;
+  if (opt.rz) car.rotation.z += opt.rz * Math.PI / 180;
+  if (!opt.rx && size.y > size.x && size.y > size.z) { car.rotation.x -= Math.PI / 2; car.updateMatrixWorld(true); }
+  { const s0 = vb().getSize(new THREE.Vector3()); if (s0.z > s0.x) car.rotation.y += Math.PI / 2; }
+  car.rotation.y += (yawDeg || 0) * Math.PI / 180;
+  box = vb(); const c = box.getCenter(new THREE.Vector3()); const s = box.getSize(new THREE.Vector3());
+  const k = 4.4 / s.x; wrap.scale.setScalar(k);
+  car.position.sub(new THREE.Vector3(c.x, box.min.y, c.z));
+  box = vb(); const s2 = box.getSize(new THREE.Vector3());
+  // перед машины смотрит в +X; камера — спереди слева (видны перед и левый бок)
+  const target = new THREE.Vector3(0, s2.y * 0.45, 0);
+  const dir = new THREE.Vector3(0.70, 0.20, -0.68).normalize();
+  const rad = box.getBoundingSphere(new THREE.Sphere()).radius;
+  camera.position.copy(target).addScaledVector(dir, rad / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.92); camera.lookAt(target);
+  renderer.render(scene, camera);
+  await new Promise((r) => setTimeout(r, 50)); renderer.render(scene, camera);
+  let painted = 0; car.traverse((o) => { if (o.userData.painted) painted++; });
+  return { size: s2.toArray(), painted };
+};
+window.ready = true;
+</script></body></html>

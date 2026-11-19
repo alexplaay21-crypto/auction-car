@@ -7,7 +7,7 @@ import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
 import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
-import { MIGRATION_12, MIGRATION_13, MIGRATION_14 } from './ddl8.js';
+import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15 } from './ddl8.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -599,4 +599,6 @@ export const MIGRATIONS = [
   { id: 13, statements: MIGRATION_13 },
   // 14: цены обычных немецких машин вокруг цены контейнера.
   { id: 14, statements: MIGRATION_14 },
+  // 15: немецкий контейнер под 3D-рендер.
+  { id: 15, statements: MIGRATION_15 },
 ];
