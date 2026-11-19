@@ -48,7 +48,11 @@ export async function migrate(db) {
   const applied = [];
   for (const m of MIGRATIONS) {
     if (done.has(m.id)) continue;
-    for (const s of m.statements) await db.run(s);
+    // Платформа отклоняет запрос, который ничего не изменил (DROP несуществующего триггера и т. п.) —
+    // для миграций это не ошибка: все их запросы идемпотентны.
+    for (const s of m.statements) {
+      try { await db.run(s); } catch (e) { if (!/looks like a read one/i.test(String(e?.message))) throw e; }
+    }
     await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (:id, unixepoch())', { ':id': m.id });
     applied.push(m.id);
   }
