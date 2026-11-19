@@ -28,3 +28,14 @@ export const MIGRATION_12 = (() => {
   });
   return out;
 })();
+
+// Миграция 13: немецкий контейнер — современные модели вместо старых (те же id, все поля обновляются).
+export const MIGRATION_13 = (() => {
+  const ids = germanIds();
+  return GERMAN.map(([name, , rarity, speed, accel, power, handling, reliability, price, body, color], i) =>
+    `INSERT INTO cars (id, name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body)
+     VALUES (${ids[i]}, ${q(name)}, 'Германия', '${rarity}', ${speed}, ${Math.round(accel * 100)}, ${power}, ${handling}, ${reliability}, ${price}, ${q(color)}, ${q(body)})
+     ON CONFLICT (id) DO UPDATE SET name = excluded.name, country = excluded.country, rarity = excluded.rarity, max_speed = excluded.max_speed,
+       accel_x100 = excluded.accel_x100, power = excluded.power, handling = excluded.handling, reliability = excluded.reliability,
+       price = excluded.price, color = excluded.color, body = excluded.body`);
+})();
