@@ -65,7 +65,7 @@ export default async function (m) {
         if (!isPrivate && !isGroup) break;
         const roomId = await joinRoom(db, uid, { ...scope, via: 'bot' });
         await sync(db, api, InputFile, { roomId });
-        await postRoom(db, api, roomId, m.chat.id, { userId: isPrivate ? uid : null, threadId: m.message_thread_id ?? null });
+        await postRoom(db, api, InputFile, roomId, m.chat.id, { userId: isPrivate ? uid : null, threadId: m.message_thread_id ?? null });
         roomTouched = roomId;
         break;
       }

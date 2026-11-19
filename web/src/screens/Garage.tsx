@@ -101,7 +101,7 @@ export function Garage({ focus, onBalance }: { focus?: number | null; onBalance:
       <Sheet open={!!car} onClose={() => { setCar(null); setOffer(null); }}>
         {car && (
           <div className={`car-detail r-${car.rarity}`}>
-            <CarArt car={car} height={120} />
+            <div className="reveal-art"><CarArt car={car} height={170} studio /></div>
             <h2>{car.name}</h2>
             <div className="row-gap"><RarityTag r={car.rarity} /><span className="hint small">{car.country}</span></div>
             <div className="price-line">Стоимость <b>{money(car.price)}</b></div>
@@ -136,7 +136,7 @@ export function Garage({ focus, onBalance }: { focus?: number | null; onBalance:
           <div className={`reveal r-${opened.car.rarity}`}>
             <div className="reveal-glow" />
             <div className="hint">Контейнер открыт!</div>
-            <CarArt car={opened.car} height={110} />
+            <div className="reveal-art"><CarArt car={opened.car} height={170} studio /></div>
             <h2>{opened.car.name}</h2>
             <RarityTag r={opened.car.rarity} />
             <div className="reveal-price">Стоимость {money(opened.car.price)}</div>

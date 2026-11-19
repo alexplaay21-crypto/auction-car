@@ -132,10 +132,12 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: v
 .rtag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: var(--rc); background: color-mix(in srgb, var(--rc) 16%, transparent); }
 
 /* контейнер и машина */
-.ct-art { position: relative; border-radius: 8px; flex: none; overflow: hidden;
-  background: linear-gradient(180deg, #c8562e, #8d361b); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .2); }
-.ct-ribs { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .18) 0 3px, transparent 3px 11px); }
-.ct-flag { position: absolute; right: 6px; bottom: 4px; font-size: 18px; }
+.ct-art { flex: none; object-fit: contain; display: block; }
+.lot-hero { margin: -14px -14px 10px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+.lot-hero .ct-art, .lot-hero .ct-photo { width: 100% !important; height: auto !important; aspect-ratio: 340 / 190; border-radius: 0; }
+.reveal-art { margin: 0 -16px; overflow: hidden; }
+.reveal-art .car-art { width: 100%; height: auto !important; aspect-ratio: 440 / 200; }
+.reveal-art .car-photo { height: 200px !important; border-radius: 0; }
 .ct-photo, .car-photo { background-size: cover; background-position: center; border-radius: 10px; flex: none; }
 .car-photo { width: 100%; }
 .car-art { width: 100%; display: block; }

@@ -563,6 +563,16 @@ function seed() {
   return out;
 }
 
+// Миграция 2: вымышленные марки вместо реальных (если админ не переименовал машину)
+// и картинки в живых сообщениях комнат.
+function migration2() {
+  const q = (x) => `'${String(x).replace(/'/g, "''")}'`;
+  const out = CATALOG.map((c, i) => `UPDATE cars SET name = ${q(c.name)}, body = ${q(c.body)} WHERE id = ${i + 1} AND name = ${q(c.legacy)}`);
+  out.push('ALTER TABLE room_msgs ADD COLUMN media TEXT'); // последним: ALTER не идемпотентен
+  return out;
+}
+
 export const MIGRATIONS = [
   { id: 1, statements: [...schema, ...triggers, ...seed()] },
+  { id: 2, statements: migration2() },
 ];

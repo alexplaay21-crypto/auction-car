@@ -8,6 +8,7 @@
 import { tick, sellRate } from './engine.js';
 import { roomView, roomText, roomKeyboard, carCardText, money, who, esc, RARITY } from './views.js';
 import { MINI_APP_URL, appLink } from './config.js';
+import { ART } from './art_manifest.js';
 
 const COUNTDOWN_EVERY_S = 4;
 
@@ -23,13 +24,13 @@ export function b64(s) {
   return out.subarray(0, o);
 }
 
-export async function registerRoomMsg(db, { chatId, messageId, roomId, userId = null, rev = 0 }) {
+export async function registerRoomMsg(db, { chatId, messageId, roomId, userId = null, rev = 0, media = null }) {
   // в одном чате живёт одно сообщение комнаты — старые больше не обновляются
   await db.run('UPDATE room_msgs SET active = 0 WHERE chat_id = :c AND room_id = :r AND active = 1', { ':c': chatId, ':r': roomId });
   await db.run(
-    `INSERT INTO room_msgs (chat_id, message_id, room_id, user_id, shown_rev, shown_at) VALUES (:c, :m, :r, :u, :rev, (SELECT now FROM v_now))
-     ON CONFLICT (chat_id, message_id) DO UPDATE SET room_id = excluded.room_id, active = 1, shown_rev = excluded.shown_rev, shown_at = excluded.shown_at`,
-    { ':c': chatId, ':m': messageId, ':r': roomId, ':u': userId, ':rev': rev });
+    `INSERT INTO room_msgs (chat_id, message_id, room_id, user_id, shown_rev, shown_at, media) VALUES (:c, :m, :r, :u, :rev, (SELECT now FROM v_now), :md)
+     ON CONFLICT (chat_id, message_id) DO UPDATE SET room_id = excluded.room_id, active = 1, shown_rev = excluded.shown_rev, shown_at = excluded.shown_at, media = excluded.media`,
+    { ':c': chatId, ':m': messageId, ':r': roomId, ':u': userId, ':rev': rev, ':md': media });
 }
 
 const isGroupChat = (chatId) => Number(chatId) < 0;
@@ -42,21 +43,85 @@ export function renderRoom(v, chatId) {
   };
 }
 
-// Отправить новое живое сообщение комнаты в чат.
-export async function postRoom(db, api, roomId, chatId, { userId = null, threadId = null } = {}) {
+// ---------- картинки для бота ----------
+// 1) фото, загруженное в админке (file_id после первой отправки);
+// 2) готовый рисунок стартового каталога (JPEG рядом с Mini App);
+// иначе — без картинки.
+const artUrl = (kind, id) => {
+  const max = kind === 'car' ? ART.cars : ART.containers;
+  return Number(id) >= 1 && Number(id) <= max ? `${MINI_APP_URL}art/${kind}-${id}.jpg?v=${ART.v}` : null;
+};
+
+export async function imageFor(db, InputFile, kind, id) {
+  const img = await db.get('SELECT * FROM images WHERE kind = :k AND ref_id = :i', { ':k': kind, ':i': id });
+  if (img) {
+    if (img.file_id) return { media: img.file_id, key: `${kind}:${id}:u${img.v}` };
+    return { media: new InputFile(b64(img.data), `${kind}-${id}.jpg`, { type: img.mime }), key: `${kind}:${id}:u${img.v}`, kind, id, v: img.v };
+  }
+  const url = artUrl(kind, id);
+  return url ? { media: url, key: `${kind}:${id}:a${ART.v}` } : null;
+}
+
+// после первой загрузки запоминаем file_id, чтобы не загружать картинку снова
+async function rememberFileId(db, img, msg) {
+  if (!img?.v || !msg?.photo?.length) return;
+  await db.run('UPDATE images SET file_id = :f WHERE kind = :k AND ref_id = :i AND v = :v',
+    { ':f': msg.photo[msg.photo.length - 1].file_id, ':k': img.kind, ':i': img.id, ':v': img.v });
+}
+
+export async function carPhoto(db, api, InputFile, carId) {
+  const img = await imageFor(db, InputFile, 'car', carId);
+  if (!img) return null;
+  return typeof img.media === 'string' ? img.media : { upload: img.media, v: img.v, img };
+}
+
+// какая картинка у сообщения комнаты сейчас: разыгранная машина или текущий контейнер
+async function roomImage(db, InputFile, v) {
+  const a = v.auction;
+  if (!a) return null;
+  if (a.status === 'won' && a.car) return imageFor(db, InputFile, 'car', a.car.id);
+  return imageFor(db, InputFile, 'container', a.container.id);
+}
+
+// Отправить новое живое сообщение комнаты в чат (с картинкой, если она есть).
+export async function postRoom(db, api, InputFile, roomId, chatId, { userId = null, threadId = null } = {}) {
   const v = await roomView(db, roomId, userId);
-  const m = await api.sendMessage({ chat_id: chatId, parse_mode: 'HTML', ...renderRoom(v, chatId), ...(threadId ? { message_thread_id: threadId } : {}) });
-  await registerRoomMsg(db, { chatId, messageId: m.message_id, roomId, userId, rev: v.rev });
+  const r = renderRoom(v, chatId);
+  const thread = threadId ? { message_thread_id: threadId } : {};
+  const img = await roomImage(db, InputFile, v).catch(() => null);
+  let m;
+  if (img) {
+    try {
+      m = await api.sendPhoto({ chat_id: chatId, photo: img.media, caption: r.text, parse_mode: 'HTML', reply_markup: r.reply_markup, ...thread });
+      await rememberFileId(db, img, m);
+    } catch (e) { console.warn('room photo', String(e?.description ?? e)); m = null; }
+  }
+  if (!m) m = await api.sendMessage({ chat_id: chatId, parse_mode: 'HTML', ...r, ...thread });
+  await registerRoomMsg(db, { chatId, messageId: m.message_id, roomId, userId, rev: v.rev, media: m.photo ? (img?.key ?? 'photo') : null });
   return m;
 }
 
-async function editRow(db, api, row, v) {
+async function editRow(db, api, InputFile, row, v) {
   const claim = await db.run(
     'UPDATE room_msgs SET shown_rev = :rev, shown_at = (SELECT now FROM v_now) WHERE chat_id = :c AND message_id = :m AND shown_at = :at',
     { ':rev': v.rev, ':c': row.chat_id, ':m': row.message_id, ':at': row.shown_at });
   if (!claim.rowsAffected) return false; // уже обновляет другой запрос
+  const r = renderRoom(v, row.chat_id);
+  const target = { chat_id: row.chat_id, message_id: row.message_id };
   try {
-    await api.editMessageText({ chat_id: row.chat_id, message_id: row.message_id, parse_mode: 'HTML', ...renderRoom(v, row.chat_id) });
+    if (!row.media) {
+      await api.editMessageText({ ...target, parse_mode: 'HTML', ...r });
+    } else {
+      const img = await roomImage(db, InputFile, v).catch(() => null);
+      if (img && img.key !== row.media) {
+        // сменился контейнер или разыграна машина — меняем картинку вместе с подписью
+        const m = await api.editMessageMedia({ ...target, media: { type: 'photo', media: img.media, caption: r.text, parse_mode: 'HTML' }, reply_markup: r.reply_markup });
+        await rememberFileId(db, img, m);
+        await db.run('UPDATE room_msgs SET media = :md WHERE chat_id = :c AND message_id = :m', { ':md': img.key, ':c': row.chat_id, ':m': row.message_id });
+      } else {
+        await api.editMessageCaption({ ...target, caption: r.text, parse_mode: 'HTML', reply_markup: r.reply_markup });
+      }
+    }
     return true;
   } catch (e) {
     const d = String(e?.description ?? e?.message ?? e);
@@ -72,10 +137,9 @@ async function editRow(db, api, row, v) {
 }
 
 // Перерисовать устаревшие сообщения: сначала указанной комнаты, затем любые.
-export async function refreshMessages(db, api, { roomId = null, limit = 4 } = {}) {
+export async function refreshMessages(db, api, InputFile, { roomId = null, limit = 4 } = {}) {
   const rows = await db.all(
-    `SELECT m.*, r.rev, r.status AS room_status,
-            EXISTS (SELECT 1 FROM auctions WHERE room_id = r.id AND status = 'active') AS running
+    `SELECT m.*, r.rev, r.status AS room_status
      FROM room_msgs m JOIN rooms r ON r.id = m.room_id
      WHERE m.active = 1 AND (:r IS NULL OR m.room_id = :r)
        AND m.shown_at <= (SELECT now FROM v_now) - CASE WHEN m.shown_rev < r.rev THEN 0 ELSE 1 END
@@ -86,30 +150,26 @@ export async function refreshMessages(db, api, { roomId = null, limit = 4 } = {}
   let n = 0;
   for (const row of rows) {
     if (!views.has(row.room_id)) views.set(row.room_id, await roomView(db, row.room_id));
-    if (await editRow(db, api, row, views.get(row.room_id))) n++;
+    if (await editRow(db, api, InputFile, row, views.get(row.room_id))) n++;
     // закрытую комнату после последнего обновления больше не трогаем
     if (row.room_status === 'closed') await db.run('UPDATE room_msgs SET active = 0 WHERE chat_id = :c AND message_id = :m', { ':c': row.chat_id, ':m': row.message_id });
   }
   return n;
 }
 
-// Фото машины для бота: file_id из кэша или загрузка картинки, сохранённой в Mini App.
-export async function carPhoto(db, api, InputFile, carId) {
-  const img = await db.get(`SELECT * FROM images WHERE kind = 'car' AND ref_id = :c`, { ':c': carId });
-  if (!img) return null;
-  if (img.file_id) return img.file_id;
-  return { upload: new InputFile(b64(img.data), `car-${carId}.jpg`, { type: img.mime }), v: img.v };
+async function sendCar(db, api, InputFile, chatId, carId, caption, markup) {
+  const img = await imageFor(db, InputFile, 'car', carId).catch(() => null);
+  if (img) {
+    try {
+      const m = await api.sendPhoto({ chat_id: chatId, photo: img.media, caption, parse_mode: 'HTML', reply_markup: markup });
+      await rememberFileId(db, img, m);
+      return m;
+    } catch (e) { console.warn('car photo', String(e?.description ?? e)); }
+  }
+  return api.sendMessage({ chat_id: chatId, text: caption, parse_mode: 'HTML', reply_markup: markup });
 }
 
-async function sendCar(db, api, InputFile, chatId, carId, caption, markup) {
-  const ph = await carPhoto(db, api, InputFile, carId).catch(() => null);
-  if (!ph) return api.sendMessage({ chat_id: chatId, text: caption, parse_mode: 'HTML', reply_markup: markup });
-  const m = await api.sendPhoto({ chat_id: chatId, photo: typeof ph === 'string' ? ph : ph.upload, caption, parse_mode: 'HTML', reply_markup: markup });
-  if (typeof ph !== 'string' && m.photo?.length) {
-    await db.run(`UPDATE images SET file_id = :f WHERE kind = 'car' AND ref_id = :c AND v = :v`, { ':f': m.photo[m.photo.length - 1].file_id, ':c': carId, ':v': ph.v });
-  }
-  return m;
-}
+export { sendCar };
 
 // Уведомления (победа, кик, предложения о продаже) — по одному, без повторов.
 export async function deliverOutbox(db, api, InputFile, { limit = 3 } = {}) {
@@ -176,8 +236,8 @@ async function sendOne(db, api, InputFile, o) {
 export async function sync(db, api, InputFile, { roomId = null, limit = 4 } = {}) {
   try { await tick(db); } catch (e) { console.warn('tick', String(e?.message ?? e)); }
   try {
-    if (roomId) await refreshMessages(db, api, { roomId, limit: 8 });
-    await refreshMessages(db, api, { limit });
+    if (roomId) await refreshMessages(db, api, InputFile, { roomId, limit: 8 });
+    await refreshMessages(db, api, InputFile, { limit });
   } catch (e) { console.warn('refresh', String(e?.message ?? e)); }
   try { await deliverOutbox(db, api, InputFile); } catch (e) { console.warn('outbox', String(e?.message ?? e)); }
 }

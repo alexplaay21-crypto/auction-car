@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { call } from './tg';
 import { RARITY, money, who } from './format';
+import { carSvg, containerSvg, svgUrl } from './art.js';
 
 // ---------- картинки из админки (с кэшем по версиям) ----------
 let versions: Record<string, number> | null = null;
@@ -57,48 +58,25 @@ export function useImage(key: string | null) {
   return src;
 }
 
-// ---------- силуэт машины (если фото не загружено) ----------
-const BODIES: Record<string, string> = {
-  sedan: 'M8 44 L14 34 Q18 30 26 29 L44 20 Q50 17 60 17 L86 17 Q96 17 104 24 L114 30 Q126 31 132 34 Q138 37 138 44 L138 50 L8 50 Z',
-  hatch: 'M8 44 L12 34 Q16 30 24 29 L42 18 Q48 15 58 15 L94 15 Q104 15 110 24 L120 34 Q132 35 136 40 L138 50 L8 50 Z',
-  coupe: 'M6 46 L12 37 Q16 33 26 31 L50 21 Q58 18 70 18 L84 18 Q96 19 106 27 L118 33 Q132 34 138 40 L140 50 L6 50 Z',
-  super: 'M4 46 L10 40 Q16 36 30 34 L58 23 Q66 21 78 21 L88 22 Q98 24 110 31 L126 35 Q138 37 142 42 L142 50 L4 50 Z',
-  wagon: 'M8 44 L14 34 Q18 30 26 29 L42 18 Q46 16 56 16 L120 16 Q126 16 128 22 L132 32 Q138 35 138 42 L138 50 L8 50 Z',
-  suv: 'M8 44 L10 30 Q12 26 20 25 L36 13 Q40 11 50 11 L112 11 Q120 11 124 18 L130 28 Q138 30 138 38 L138 50 L8 50 Z',
-};
-
-export function CarArt({ car, height = 90 }: { car: any; height?: number }) {
-  const photo = useImage(car?.id ? `car:${car.id}` : null);
-  const r = RARITY[car?.rarity] ?? RARITY.common;
-  if (photo) return <div className="car-photo" style={{ height, backgroundImage: `url(${photo})` }} />;
-  const color = car?.color || r.color;
-  return (
-    <svg className="car-art" viewBox="0 0 146 64" style={{ height }} aria-hidden>
-      <defs>
-        <linearGradient id={`g${car?.id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={color} stopOpacity="1" />
-          <stop offset="1" stopColor={color} stopOpacity="0.72" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="73" cy="56" rx="64" ry="4" fill="rgba(0,0,0,.25)" />
-      <path d={BODIES[car?.body] ?? BODIES.sedan} fill={`url(#g${car?.id})`} stroke="rgba(0,0,0,.35)" strokeWidth="1" />
-      <path d="M48 21 L60 19 L84 19 Q94 19 101 26 L104 29 L44 29 Z" fill="rgba(180,220,255,.55)" />
-      <circle cx="36" cy="50" r="9" fill="#15171c" /><circle cx="36" cy="50" r="4" fill="#9aa0a8" />
-      <circle cx="112" cy="50" r="9" fill="#15171c" /><circle cx="112" cy="50" r="4" fill="#9aa0a8" />
-      <rect x="130" y="36" width="7" height="3" rx="1.5" fill="#ffe7a3" />
-    </svg>
-  );
+// ---------- рисунки машин и контейнеров (свои, без чужих фото) ----------
+const svgCache = new Map<string, string>();
+function art(key: string, make: () => string) {
+  let u = svgCache.get(key);
+  if (!u) { u = svgUrl(make()); svgCache.set(key, u); }
+  return u;
 }
 
-export function ContainerArt({ c, size = 72 }: { c: any; size?: number }) {
+export function CarArt({ car, height = 90, studio = false }: { car: any; height?: number; studio?: boolean }) {
+  const photo = useImage(car?.id ? `car:${car.id}` : null);
+  if (photo) return <div className="car-photo" style={{ height, backgroundImage: `url(${photo})` }} />;
+  const key = `c${car?.id}:${car?.body}:${car?.color}:${car?.rarity}:${studio}`;
+  return <img className="car-art" style={{ height }} alt="" src={art(key, () => carSvg(car, { studio }))} />;
+}
+
+export function ContainerArt({ c, size = 72, studio = false }: { c: any; size?: number; studio?: boolean }) {
   const photo = useImage(c?.id ? `container:${c.id}` : null);
-  if (photo) return <div className="ct-photo" style={{ width: size * 1.5, height: size, backgroundImage: `url(${photo})` }} />;
-  return (
-    <div className="ct-art" style={{ width: size * 1.5, height: size }}>
-      <div className="ct-ribs" />
-      <span className="ct-flag">{c?.emoji ?? '📦'}</span>
-    </div>
-  );
+  if (photo) return <div className="ct-photo" style={{ width: size * 1.6, height: size, backgroundImage: `url(${photo})` }} />;
+  return <img className="ct-art" style={{ width: size * 1.76, height: size }} alt="" src={art(`k${c?.id}:${c?.emoji}:${studio}`, () => containerSvg(c, { studio }))} />;
 }
 
 export function RarityTag({ r }: { r: string }) {

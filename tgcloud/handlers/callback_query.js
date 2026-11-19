@@ -8,7 +8,7 @@
 //   bonus, vip, buy:<лот>, top:<вид>
 import { api, db, InputFile } from 'sdk';
 import { ensureUser, joinRoom, leaveRoom, bid, sellCar, openContainer, upgradeGarage, answerOffer, claimBonus, buyVip, buyLot, toGameError, getUser } from '../lib/engine.js';
-import { sync, carPhoto } from '../lib/live.js';
+import { sync, sendCar } from '../lib/live.js';
 import { money, carCardText, RARITY } from '../lib/views.js';
 import { errText } from '../lib/texts.js';
 import { garageScreen, carScreen, topScreen, shopScreen, profileScreen } from '../lib/botui.js';
@@ -81,9 +81,7 @@ export default async function (q) {
       await answer(q, `${RARITY[car.rarity]?.icon ?? ''} ${car.name}!`);
       const caption = '📦 <b>Контейнер открыт!</b>\n\n' + carCardText(car, { autoSold: uc.status === 'sold' ? uc.sold_amount : null });
       const kb = uc.status === 'owned' ? { inline_keyboard: [[{ text: '💰 Продать', callback_data: `s:${uc.id}` }, { text: '🚗 Гараж', callback_data: 'gp:1' }]] } : undefined;
-      const ph = await carPhoto(db, api, InputFile, car.id).catch(() => null);
-      if (ph) await api.sendPhoto({ chat_id: chat.id, photo: typeof ph === 'string' ? ph : ph.upload, caption, parse_mode: 'HTML', reply_markup: kb });
-      else await api.sendMessage({ chat_id: chat.id, text: caption, parse_mode: 'HTML', reply_markup: kb });
+      await sendCar(db, api, InputFile, chat.id, car.id, caption, kb);
     } else if (kind === 'gup') {
       const t = await upgradeGarage(db, uid);
       await answer(q, `🅿️ Гараж расширен до ${(await getUser(db, uid)).garage_capacity} мест за ${money(t.price)}`, true);

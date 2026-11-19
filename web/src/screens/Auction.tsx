@@ -101,13 +101,9 @@ export function Auction({ me, scope, balance, onBalance, onOpenGarage }: { me: a
 
       {a?.status === 'active' ? (
         <div className={`lot glass${left < 6 ? ' hot' : ''}`}>
-          <div className="lot-top">
-            <ContainerArt c={a.container} size={56} />
-            <div className="grow">
-              <div className="lot-name">{a.container.name}</div>
-              <Chances ch={a.chances} />
-            </div>
-          </div>
+          <div className="lot-hero"><ContainerArt c={a.container} size={150} studio /></div>
+          <div className="lot-name">{a.container.name}</div>
+          <Chances ch={a.chances} />
           <div className="lot-mid">
             <Ring pct={pct} left={left} hot={left < 6} />
             <div className="lot-bid">
@@ -167,7 +163,7 @@ export function Auction({ me, scope, balance, onBalance, onOpenGarage }: { me: a
           <div className={`reveal r-${reveal.car.rarity}`}>
             <div className="reveal-glow" />
             <div className="hint">Контейнер твой за {money(reveal.current)}!</div>
-            <CarArt car={reveal.car} height={110} />
+            <div className="reveal-art"><CarArt car={reveal.car} height={170} studio /></div>
             <h2>{reveal.car.name}</h2>
             <RarityTag r={reveal.car.rarity} />
             <div className="reveal-price">Стоимость {money(reveal.car.price)}</div>

@@ -9,6 +9,7 @@
     "deploy": "npm run build:web && tgcloud push",
     "status": "tgcloud status",
     "test": "node --test --no-warnings test/*.test.js",
-    "build:web": "npm --prefix web run build"
+    "build:web": "npm --prefix web run build",
+    "art": "node web/scripts/render-art.mjs"
   }
 }
