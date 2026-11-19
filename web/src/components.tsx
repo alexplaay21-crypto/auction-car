@@ -100,7 +100,7 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
     <div className="sheet-bg" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-grip" />
-        {title && <div className="sheet-title">{title}</div>}
+        {title && <div className="t-title-l">{title}</div>}
         {children}
       </div>
     </div>
@@ -142,7 +142,7 @@ export function Money({ value, className }: { value: number; className?: string 
 
 export function Stat({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
   return (
-    <div className="statbar">
+    <div className="stat">
       <span>{label}</span>
       <div className="bar"><i style={{ width: `${Math.min(100, (value / max) * 100)}%` }} /></div>
       <b>{value}</b>
@@ -152,10 +152,10 @@ export function Stat({ label, value, max = 100 }: { label: string; value: number
 
 export function CarCard({ car, onClick, badge }: { car: any; onClick?: () => void; badge?: ReactNode }) {
   return (
-    <button className={`carcard r-${car.rarity}`} onClick={onClick}>
-      <CarArt car={car} height={64} />
-      <div className="carcard-name">{car.name}</div>
-      <div className="carcard-foot"><RarityTag r={car.rarity} /><b>{money(car.price)}</b></div>
+    <button className={`carcard tap r-${car.rarity}`} onClick={onClick}>
+      <CarArt car={car} height={70} />
+      <div className="t-title-s ellipsis">{car.name}</div>
+      <div className="row" style={{ justifyContent: 'space-between', gap: 6 }}><RarityTag r={car.rarity} /><b className="t-small num">{money(car.price)}</b></div>
       {badge}
     </button>
   );

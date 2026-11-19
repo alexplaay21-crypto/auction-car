@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money, who, RARITY, RARITIES, LEDGER, ago } from '../format';
 import { CarArt, ContainerArt, Sheet, dropImageVersions } from '../components';
+import { TopBar } from '../ui';
+import { useApp } from '../App';
 
 const LABELS: Record<string, string> = {
   start_balance: 'Стартовый баланс', bet_step: 'Шаг ставки', auction_timer_s: 'Таймер контейнера, с', next_delay_s: 'Пауза между контейнерами, с',
@@ -26,13 +28,14 @@ async function resizeImage(file: File): Promise<{ mime: string; data: string }> 
   return { mime: 'image/jpeg', data: out.split(',')[1] };
 }
 
-export function Admin({ onBack }: { onBack: () => void }) {
+export function Admin() {
+  const { pop: onBack } = useApp();
   const [tab, setTab] = useState('stats');
   const tabs = [['stats', 'Обзор'], ['settings', 'Настройки'], ['cars', 'Машины'], ['containers', 'Контейнеры'], ['users', 'Игроки'], ['promo', 'Промо'], ['lots', 'Магазин'], ['rooms', 'Комнаты']];
   return (
-    <div className="page">
-      <div className="room-head"><b>🛠 Админка</b><button className="btn ghost small" onClick={onBack}>Назад</button></div>
-      <div className="chips scroll">{tabs.map(([k, l]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
+    <div className="screen">
+      <TopBar title="Админ-панель" onBack={onBack} />
+      <div className="chips">{tabs.map(([k, l]) => <button key={k} className={`chip${tab === k ? ' on' : ''}`} onClick={() => setTab(k)}>{l}</button>)}</div>
       {tab === 'stats' && <Stats />}
       {tab === 'settings' && <Settings />}
       {(tab === 'cars' || tab === 'containers') && <Catalog mode={tab} />}
@@ -60,7 +63,7 @@ function Stats() {
           ['Открытых комнат', s.rooms_open], ['Контейнеров за сутки', s.auctions_day], ['Продано за сутки', `${s.won_day.n} · ${money(s.won_day.sum)}`]]
           .map(([l, v]) => <div key={String(l)} className="glass tile"><div className="hint small">{l}</div><b>{v}</b></div>)}
       </div>
-      <div className="section"><h3>Журнал действий</h3>
+      <div><h3>Журнал действий</h3>
         <div className="glass list">{s.log.map((l: any) => <div key={l.id} className="top-row small"><span className="grow">{l.action} <span className="hint">{l.details}</span></span><span className="hint">{who({ username: l.username })} · {ago(l.created_at)}</span></div>)}</div>
       </div>
     </>
@@ -126,8 +129,8 @@ function Catalog({ mode }: { mode: string }) {
             {car.id && <label className="btn ghost wide">📷 Загрузить фото<input type="file" accept="image/*" hidden onChange={(e) => upload('car', car.id, e.target.files?.[0])} /></label>}
             <F label="Название" v={car.name} on={(v) => setCar({ ...car, name: v })} />
             <F label="Страна" v={car.country ?? ''} on={(v) => setCar({ ...car, country: v })} />
-            <div className="chips">{RARITIES.map((r) => <button key={r} className={car.rarity === r ? 'on' : ''} onClick={() => setCar({ ...car, rarity: r })}>{RARITY[r].icon} {RARITY[r].name}</button>)}</div>
-            <div className="chips">{['sedan', 'hatch', 'coupe', 'super', 'wagon', 'suv'].map((b) => <button key={b} className={car.body === b ? 'on' : ''} onClick={() => setCar({ ...car, body: b })}>{b}</button>)}</div>
+            <div className="chips">{RARITIES.map((r) => <button key={r} className={`chip${car.rarity === r ? ' on' : ''}`} onClick={() => setCar({ ...car, rarity: r })}>{RARITY[r].icon} {RARITY[r].name}</button>)}</div>
+            <div className="chips">{['sedan', 'hatch', 'coupe', 'super', 'wagon', 'suv'].map((b) => <button key={b} className={`chip${car.body === b ? ' on' : ''}`} onClick={() => setCar({ ...car, body: b })}>{b}</button>)}</div>
             <F label="Цена" v={car.price} num on={(v) => setCar({ ...car, price: v })} />
             <F label="Скорость, км/ч" v={car.max_speed} num on={(v) => setCar({ ...car, max_speed: v })} />
             <F label="Разгон 0–100 ×100 (450 = 4,5 с)" v={car.accel_x100} num on={(v) => setCar({ ...car, accel_x100: v })} />
