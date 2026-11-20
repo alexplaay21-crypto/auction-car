@@ -277,4 +277,40 @@ export function containerSvg(c, { studio = false, w = 300, h = 170 } = {}) {
 </svg>`;
 }
 
+// Торец контейнера с дверями (вид прямо): side — 'l' / 'r' (одна створка) или 'both'.
+export function containerDoorSvg(c, side = 'both') {
+  const flag = c?.flag || FLAG_BY_COUNTRY[c?.country] || 'world';
+  const main = FLAG_MAIN[flag] ?? '#17324f';
+  const code = `CARU ${String(100000 + ((Number(c?.id) || 1) * 48271) % 900000)} ${(Number(c?.id) || 1) % 10}`;
+  let ribs = '';
+  for (let x = 14; x < 240; x += 16) if (Math.abs(x - 122) > 8) ribs += `<rect x="${x}" y="16" width="7" height="227" fill="#000" opacity=".16"/><rect x="${x + 7}" y="16" width="2" height="227" fill="#fff" opacity=".12"/>`;
+  let rods = '';
+  for (const x of [38, 88, 156, 206]) {
+    rods += `<rect x="${x - 3}" y="12" width="6" height="235" rx="3" fill="#cfd4db"/><rect x="${x + 1}" y="12" width="2" height="235" fill="#6b717b"/>
+      <rect x="${x - 7}" y="24" width="14" height="8" rx="2" fill="#7d838d"/><rect x="${x - 7}" y="227" width="14" height="8" rx="2" fill="#7d838d"/>
+      <rect x="${x - 4}" y="148" width="24" height="10" rx="3" fill="#b4bac3" stroke="#4d535c" stroke-width="1.5"/>`;
+  }
+  const corner = (x, y) => `<rect x="${x - 6}" y="${y - 6}" width="12" height="12" rx="1.5" fill="#24272c"/><rect x="${x - 3}" y="${y - 2}" width="6" height="4" rx="1" fill="#0d0f12"/>`;
+  const vb = side === 'l' ? '0 0 122 259' : side === 'r' ? '122 0 122 259' : '0 0 244 259';
+  const [w, h] = side === 'both' ? [244, 259] : [122, 259];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${w}" height="${h}">
+  <defs>
+    <linearGradient id="ds" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".14"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient>
+    <linearGradient id="dd" x1="0" y1="0" x2="0" y2="1"><stop offset=".6" stop-color="#4a2a14" stop-opacity="0"/><stop offset="1" stop-color="#4a2a14" stop-opacity=".4"/></linearGradient>
+  </defs>
+  <rect width="244" height="259" fill="${main}"/>
+  ${flag === 'jp' ? '<circle cx="183" cy="72" r="24" fill="#bc002d"/>' : ''}
+  ${ribs}
+  <rect width="244" height="259" fill="url(#ds)"/><rect width="244" height="259" fill="url(#dd)"/>
+  <rect x="120" y="12" width="4" height="235" fill="#000" opacity=".6"/>
+  ${rods}
+  <rect x="14" y="36" width="96" height="36" rx="4" fill="#000" fill-opacity=".32"/>
+  <text x="20" y="52" font-family="Arial, sans-serif" font-weight="700" font-size="12" fill="#fff">${code}</text>
+  <text x="20" y="66" font-family="Arial, sans-serif" font-size="9" fill="#fff" fill-opacity=".75">22G1 · MAX 30480 KG</text>
+  <rect x="0" y="0" width="244" height="12" fill="#1d2026"/><rect x="0" y="247" width="244" height="12" fill="#15171b"/>
+  <rect x="0" y="0" width="10" height="259" fill="#1d2026"/><rect x="234" y="0" width="10" height="259" fill="#1d2026"/>
+  ${corner(5, 6)}${corner(239, 6)}${corner(5, 253)}${corner(239, 253)}
+</svg>`;
+}
+
 export const svgUrl = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
