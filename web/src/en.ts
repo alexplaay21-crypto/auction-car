@@ -229,4 +229,8 @@ export const EN: Record<string, string> = {
   'Показать список ({n})': 'Show list ({n})',
   'автор не указан': 'author not specified',
   'Графика машин отрисована по 3D-моделям с Sketchfab (лицензии CC BY / CC0, модели изменены: свет, ракурс, значки убраны). Марки и модели принадлежат их владельцам; игра с ними не связана.': 'Car artwork is rendered from Sketchfab 3D models (CC BY / CC0 licenses; modified: lighting, angle, badges removed). Makes and models belong to their owners; the game is not affiliated with them.',
+  'ЛЕГЕНДАРНАЯ!': 'LEGENDARY!',
+  'ЭПИЧЕСКАЯ!': 'EPIC!',
+  'нажми, чтобы пропустить': 'tap to skip',
+  'Закрыть': 'Close',
 };

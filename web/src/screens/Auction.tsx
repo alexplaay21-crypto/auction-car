@@ -1,3 +1,4 @@
+import { Unboxing } from '../Unboxing';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Gavel, LogOut, Users, Pencil, Package, RotateCcw } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
@@ -163,20 +164,15 @@ export function Auction() {
         <button className="btn go xl w" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>{t('Поставить {m}', { m: money(Number(amount) || 0) })}</button>
       </Sheet>
 
-      <Sheet open={!!reveal} onClose={() => setReveal(null)}>
-        {reveal?.car && (
-          <div className={`reveal r-${reveal.car.rarity}`}>
-            <div className="sm muted">{t('Контейнер твой за {m}', { m: money(reveal.current) })}</div>
-            <div className="reveal-art"><CarArt car={reveal.car} height={170} studio /></div>
-            <div className="h2">{reveal.car.name}</div>
-            <RarityTag r={reveal.car.rarity} />
-            <div className="h3">{t('Стоимость {m}', { m: money(reveal.car.price) })}</div>
-            {reveal.car.auto_sold != null
-              ? <div className="sm muted">{t('Гараж полон — машина сразу продана за {m}', { m: money(reveal.car.auto_sold) })}</div>
-              : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>{t('Открыть машину')}</button>}
-          </div>
-        )}
-      </Sheet>
+      {reveal?.car && (
+        <Unboxing container={reveal.container} car={reveal.car} onClose={() => setReveal(null)}>
+          <div className="sm muted">{t('Контейнер твой за {m}', { m: money(reveal.current) })}</div>
+          <div className="h3">{t('Стоимость {m}', { m: money(reveal.car.price) })}</div>
+          {reveal.car.auto_sold != null
+            ? <div className="sm muted">{t('Гараж полон — машина сразу продана за {m}', { m: money(reveal.car.auto_sold) })}</div>
+            : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>{t('Открыть машину')}</button>}
+        </Unboxing>
+      )}
     </>
   );
 }

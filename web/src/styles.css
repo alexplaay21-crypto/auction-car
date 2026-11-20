@@ -469,3 +469,68 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
 .cos-strip { display: flex; gap: 8px; }
 .cos-strip > span { position: relative; flex: 1; height: 54px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
 @media (prefers-reduced-motion: reduce) { .pbg *, .pbg::before, .fr::before, .fr::after, .bg-goldrush { animation: none !important; } }
+
+/* ---------- открытие контейнера ---------- */
+.unbox { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 16px; background: radial-gradient(120% 80% at 50% 40%, #141824, #07080c 70%); overflow: hidden; --open: 800ms; --shake: 500ms; }
+.ub-dim { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .5s; pointer-events: none; }
+.unbox.r-mythic.ph-0 .ub-dim, .unbox.r-mythic.ph-1 .ub-dim { opacity: .55; }
+.ub-stage { position: relative; width: min(92vw, 420px); aspect-ratio: 16 / 10; perspective: 900px; }
+.ub-light { position: absolute; left: 50%; top: 50%; width: 120%; height: 120%; transform: translate(-50%, -50%) scale(.2); border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--rc) 85%, white), color-mix(in srgb, var(--rc) 40%, transparent) 45%, transparent 70%);
+  opacity: 0; filter: blur(6px); transition: transform .7s cubic-bezier(.2, .8, .2, 1), opacity .5s; }
+.ph-1 .ub-light, .ph-2 .ub-light, .ph-3 .ub-light { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.r-common .ub-light { opacity: .45 !important; }
+.ub-car { position: absolute; inset: 6% 2%; display: grid; place-items: center; opacity: 0; transform: scale(.45) translateY(10%); transition: transform .8s cubic-bezier(.2, 1.2, .3, 1), opacity .35s; }
+.ub-car .car-pic, .ub-car .car-art, .ub-car .car-photo { width: 100%; height: auto !important; border-radius: 14px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 50%, transparent), 0 18px 50px -10px color-mix(in srgb, var(--rc) 70%, transparent); }
+.ph-2 .ub-car, .ph-3 .ub-car { opacity: 1; transform: none; }
+.nodoors.ph-1 .ub-car { opacity: 1; transform: scale(.9); }
+/* контейнер и двери */
+.ub-box { position: absolute; inset: 0; transform-style: preserve-3d; transition: opacity .4s .35s; }
+.ph-2 .ub-box, .ph-3 .ub-box { opacity: 0; }
+.ub-inside { position: absolute; inset: 14% 8% 10%; border-radius: 8px; background: linear-gradient(#050608, #111520); box-shadow: inset 0 0 40px color-mix(in srgb, var(--rc) 60%, transparent); }
+.ub-door { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; transform-style: preserve-3d; backface-visibility: hidden;
+  transition: transform var(--open) cubic-bezier(.55, .05, .3, 1); }
+.ub-door.l { left: 0; transform-origin: left center; }
+.ub-door.r { right: 0; transform-origin: right center; }
+.ub-face { position: absolute; top: 0; height: 100%; width: 200%; display: grid; place-items: center; }
+.ub-door.l .ub-face { left: 0; } .ub-door.r .ub-face { right: 0; }
+.ub-face .ct-art, .ub-face .ct-photo { width: 100% !important; height: 100% !important; object-fit: contain; }
+.ub-door::after { content: ''; position: absolute; top: 0; bottom: 0; width: 6px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rc) 90%, white), transparent); opacity: 0; }
+.ub-door.l::after { right: 0; } .ub-door.r::after { left: 0; }
+.ph-0 .ub-door::after { opacity: .9; animation: leak 0.4s ease-in-out infinite alternate; }
+.r-common.ph-0 .ub-door::after { opacity: .25; }
+@keyframes leak { to { opacity: .35; } }
+.ph-1 .ub-door.l, .ph-2 .ub-door.l, .ph-3 .ub-door.l { transform: rotateY(-115deg); }
+.ph-1 .ub-door.r, .ph-2 .ub-door.r, .ph-3 .ub-door.r { transform: rotateY(115deg); }
+.ph-0 .ub-box { animation: shake .12s linear infinite; }
+.r-common.ph-0 .ub-box { animation-duration: .25s; }
+.r-mythic.ph-0 .ub-box { animation: shake .07s linear infinite, swell var(--shake) ease-in forwards; }
+@keyframes shake { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-2px, 1px) rotate(-.6deg); } 75% { transform: translate(2px, -1px) rotate(.6deg); } }
+@keyframes swell { to { scale: 1.06; } }
+/* лучи, искры, вспышка, надпись */
+.ub-rays { position: absolute; left: calc(50% - 85vmax); top: calc(42% - 85vmax); width: 170vmax; height: 170vmax; opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 75%, transparent) 0 7deg, transparent 7deg 18deg);
+  -webkit-mask: radial-gradient(closest-side, #000 10%, transparent 55%); mask: radial-gradient(closest-side, #000 10%, transparent 55%);
+  transition: opacity .6s; animation: spinr 14s linear infinite; }
+@keyframes spinr { to { rotate: 360deg; } }
+.ph-2 .ub-rays, .ph-3 .ub-rays { opacity: 1; }
+.r-epic .ub-rays { animation-duration: 20s; }
+.ub-sparks { position: absolute; left: 50%; top: 42%; width: 0; height: 0; pointer-events: none; }
+.ub-sparks i { position: absolute; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #ffe48a; box-shadow: 0 0 10px #ffc23d; opacity: 0; }
+.ph-2 .ub-sparks i, .ph-3 .ub-sparks i { animation: spark 1.4s cubic-bezier(.1, .7, .3, 1) var(--d) infinite; }
+@keyframes spark { 0% { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(1); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(46vmin) scale(.3); } }
+.ub-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.r-mythic.ph-2 .ub-flash { animation: flash .7s ease-out; }
+.r-epic.ph-2 .ub-flash { animation: flash .45s ease-out; background: color-mix(in srgb, var(--rc) 50%, white); }
+@keyframes flash { 0% { opacity: .9; } 100% { opacity: 0; } }
+.ub-stamp { position: absolute; top: 12%; left: 0; right: 0; text-align: center; font-weight: 900; font-size: clamp(28px, 9vw, 44px); letter-spacing: 1px; pointer-events: none;
+  color: #ffd45c; text-shadow: 0 0 18px rgba(255, 196, 60, .9), 0 3px 0 #7a4a00; opacity: 0; transform: scale(2.4) rotate(-6deg); }
+.ub-stamp.epic { color: #d6a8ff; text-shadow: 0 0 16px rgba(180, 90, 255, .9), 0 3px 0 #3a1360; font-size: clamp(24px, 7.5vw, 36px); }
+.ph-2 .ub-stamp, .ph-3 .ub-stamp { animation: stamp .5s cubic-bezier(.2, 1.4, .4, 1) .25s forwards; }
+@keyframes stamp { to { opacity: 1; transform: scale(1) rotate(-4deg); } }
+.ub-info { position: relative; z-index: 2; width: min(92vw, 420px); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  opacity: 0; transform: translateY(16px); transition: opacity .4s, transform .4s; pointer-events: none; }
+.ph-3 .ub-info { opacity: 1; transform: none; pointer-events: auto; }
+.ub-skip { position: absolute; bottom: 24px; font-size: 12px; color: var(--muted); opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .ub-rays, .ub-sparks i, .ph-0 .ub-box { animation: none !important; } }

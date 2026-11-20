@@ -1,3 +1,4 @@
+import { Unboxing } from '../Unboxing';
 import { useCallback, useEffect, useState } from 'react';
 import { CarFront, Handshake, Zap, Landmark, ParkingSquare, Check, X, Store } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
@@ -61,7 +62,7 @@ export function Garage() {
             <div className="card list">
               {g.containers.map((c: any) => (
                 <Li key={c.id} lead={<ContainerArt c={c} size={30} />} title={t(c.name)} sub={t('{n} шт. · откроется без аукциона', { n: c.qty })}
-                  right={<button className="btn go s" disabled={busy} onClick={async () => { const r = await run('app_garage', { action: 'open', id: c.id }); if (r) setOpened(r); }}>{t('Открыть')}</button>} />
+                  right={<button className="btn go s" disabled={busy} onClick={async () => { const r = await run('app_garage', { action: 'open', id: c.id }); if (r) setOpened({ ...r, container: c }); }}>{t('Открыть')}</button>} />
               ))}
             </div>
           </>
@@ -76,18 +77,13 @@ export function Garage() {
           : <Empty icon={CarFront} title={t('Гараж пуст')} text={t('Выиграй контейнер на аукционе — внутри будет машина.')} action={t('К аукциону')} onAction={() => setTab('auction')} />}
       </div>
 
-      <Sheet open={!!opened} onClose={() => setOpened(null)}>
-        {opened && (
-          <div className={`reveal r-${opened.car.rarity}`}>
-            <div className="sm muted">{t('Контейнер открыт')}</div>
-            <div className="reveal-art"><CarArt car={opened.car} height={170} studio /></div>
-            <div className="h2">{opened.car.name}</div><RarityTag r={opened.car.rarity} />
-            <div className="h3">{t('Стоимость {m}', { m: money(opened.car.price) })}</div>
-            {opened.auto_sold != null && <div className="sm muted">{t('Гараж полон — продана за {m}', { m: money(opened.auto_sold) })}</div>}
-            <button className="btn go xl w" onClick={() => setOpened(null)}>{t('Отлично')}</button>
-          </div>
-        )}
-      </Sheet>
+      {opened && (
+        <Unboxing container={opened.container} car={opened.car} onClose={() => setOpened(null)}>
+          <div className="h3">{t('Стоимость {m}', { m: money(opened.car.price) })}</div>
+          {opened.auto_sold != null && <div className="sm muted">{t('Гараж полон — продана за {m}', { m: money(opened.auto_sold) })}</div>}
+          <button className="btn go xl w" onClick={() => setOpened(null)}>{t('Отлично')}</button>
+        </Unboxing>
+      )}
     </>
   );
 }

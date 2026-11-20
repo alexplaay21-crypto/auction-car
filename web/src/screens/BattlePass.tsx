@@ -1,3 +1,4 @@
+import { Unboxing } from '../Unboxing';
 import { useCallback, useEffect, useState } from 'react';
 import { Trophy, Lock, Check, Crown } from 'lucide-react';
 import { call, errorText, haptic, toast } from '../tg';
@@ -76,17 +77,13 @@ export function BattlePass() {
           ))}
         </div>
       </div>
-      <Sheet open={!!got} onClose={() => setGot(null)}>
-        {got && (
-          <div className={`reveal r-${got.rarity}`}>
-            <div className="sm muted">{t('Награда Battle Pass')}</div>
-            <div className="reveal-art"><CarArt car={got} height={170} studio /></div>
-            <div className="h2">{got.name}</div><RarityTag r={got.rarity} />
-            <div className="h3">{t('Стоимость {m}', { m: money(got.price) })}</div>
-            <button className="btn go xl w" onClick={() => setGot(null)}>{t('В гараж')}</button>
-          </div>
-        )}
-      </Sheet>
+      {got && (
+        <Unboxing car={got} onClose={() => setGot(null)}>
+          <div className="sm muted">{t('Награда Battle Pass')}</div>
+          <div className="h3">{t('Стоимость {m}', { m: money(got.price) })}</div>
+          <button className="btn go xl w" onClick={() => setGot(null)}>{t('В гараж')}</button>
+        </Unboxing>
+      )}
     </>
   );
 }
