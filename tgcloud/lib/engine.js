@@ -288,9 +288,10 @@ export async function sellRate(db, uid, userCarId) {
   if (!r) throw new GameError('CAR_NOT_FOUND');
   const st = await settings(db);
   const t = await now(db);
-  const quick = t - r.obtained_at <= st.quick_sell_window_s;
+  const win = r.is_vip ? (st.quick_sell_window_vip_s ?? st.quick_sell_window_s) : st.quick_sell_window_s;
+  const quick = t - r.obtained_at <= win;
   const rate = quick ? (r.is_vip ? st.comm_quick_vip_bps : st.comm_quick_bps) : (r.is_vip ? st.comm_state_vip_bps : st.comm_state_bps);
-  return { quick, rate, amount: Math.floor((r.price * (10000 - rate)) / 10000), price: r.price, quickUntil: r.obtained_at + st.quick_sell_window_s };
+  return { quick, rate, amount: Math.floor((r.price * (10000 - rate)) / 10000), price: r.price, quickUntil: r.obtained_at + win, window: win };
 }
 
 export async function sellCar(db, uid, userCarId) {

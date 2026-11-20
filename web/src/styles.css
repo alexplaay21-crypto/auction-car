@@ -591,3 +591,6 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
 .big-time { font-size: 26px; font-weight: 900; }
 .drive-tag { position: absolute; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 2; display: flex; gap: 10px; align-items: center;
   padding: 8px 10px 8px 14px; border-radius: 14px; background: rgba(0, 0, 0, .6); color: #fff; font-weight: 800; white-space: nowrap; }
+/* скидка в магазине */
+.btn s.was { opacity: .6; font-weight: 700; margin: 0 2px; }
+.btn .sale { margin-left: 6px; font-size: 12px; font-weight: 900; padding: 2px 7px; border-radius: 8px; background: #ff3b5c; color: #fff; }

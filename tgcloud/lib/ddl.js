@@ -7,7 +7,7 @@ import { CATALOG, CONTAINERS, GARAGE_TIERS } from './catalog.js';
 import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
 import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
-import { MIGRATION_20 } from './ddl9.js';
+import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19 } from './ddl8.js';
 
 export const SETTINGS = {
@@ -612,4 +612,6 @@ export const MIGRATIONS = [
   { id: 19, statements: MIGRATION_19 },
   // 20: гонки, где игрок управляет сам: залог ставки, проверка заезда по нажатиям.
   { id: 20, statements: MIGRATION_20 },
+  // 21: VIP — BMW M5 F90 в подарок и быстрая продажа 2 часа; премиум Battle Pass 49⭐ вместо 99⭐.
+  { id: 21, statements: MIGRATION_21 },
 ];

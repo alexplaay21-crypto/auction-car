@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Crown, Sparkles, Coins, Trophy, ParkingSquare, Gift, Zap, Landmark, Store, Send } from 'lucide-react';
+import { Crown, Sparkles, Coins, Trophy, ParkingSquare, Gift, Zap, Landmark, Store, Send, CarFront } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast, tg } from '../tg';
 import { money, RARITY } from '../format';
 import { CarCard, ContainerArt, CarArt, RarityTag, ProfileBg } from '../components';
@@ -8,7 +8,7 @@ import { Chances } from './Auction';
 import { useApp } from '../App';
 import { t } from '../i18n';
 
-const PERK_ICON: Record<string, any> = { garage: ParkingSquare, bonus: Gift, quick: Zap, state: Landmark, market: Store, transfer: Send, badge: Crown };
+const PERK_ICON: Record<string, any> = { car: CarFront, garage: ParkingSquare, bonus: Gift, quick: Zap, state: Landmark, market: Store, transfer: Send, badge: Crown };
 
 export function SeasonCar({ car, label }: { car: any; label: string }) {
   return (
@@ -74,6 +74,7 @@ export function ShopPage() {
                 return <div key={k} className="perk"><I size={18} className="c-gold" /><div><div className="sb sm">{t(title)}</div><div className="xs muted">{t(sub)}</div></div></div>;
               })}
             </div>
+            {!s.vip.owned && vip.car && <SeasonCar car={vip.car} label={t('В подарок с VIP')} />}
             {!s.vip.owned && <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('vip')}>{t('Купить VIP за ⭐ {n}', { n: vip.stars })}</button>}
           </div>
         )}
@@ -82,7 +83,7 @@ export function ShopPage() {
           <div className="card" style={{ borderColor: 'rgba(180,107,255,.45)', background: 'linear-gradient(160deg, rgba(180,107,255,.18), var(--card) 60%)' }}>
             <div className="row"><Ic icon={Trophy} tone="gold" size={46} /><div className="grow"><div className="h3">Battle Pass · {bp.season}</div><div className="sm muted">{t('машины, контейнеры и навык на каждом уровне')}</div></div></div>
             {!bp.owned && bp.car && <SeasonCar car={bp.car} label={t('Сразу в гараж с премиумом')} />}
-            {!bp.owned ? <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}>{t('Премиум за ⭐ {n}', { n: bp.stars })}</button>
+            {!bp.owned ? <button className="btn go xl w" disabled={stars.busy} onClick={() => stars.buy('bp')}>{t('Премиум за')} {bp.was_stars > bp.stars && <s className="was">⭐ {bp.was_stars}</s>} ⭐ {bp.stars}{bp.was_stars > bp.stars && <span className="sale">−{Math.floor((1 - bp.stars / bp.was_stars) * 100)}%</span>}</button>
               : <div className="sm c-gold b">{t('Премиум уже открыт')}</div>}
             {dx && !dx.owned && (
               <div className="dx-box">

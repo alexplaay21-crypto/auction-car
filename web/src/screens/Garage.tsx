@@ -128,7 +128,7 @@ export function CarPage({ id }: { id: number }) {
             <div className="card list">
               <Li icon={car.sale.quick ? Zap : Landmark} tone={car.sale.quick ? '' : 'blue'}
                 title={`${car.sale.quick ? t('Быстрая продажа') : t('Государству')} · ${money(car.sale.amount)}`}
-                sub={t('Сразу, комиссия {n}%', { n: car.sale.rate / 100 }) + (car.sale.quick ? t(' · первые 15 минут после получения') : '')}
+                sub={t('Сразу, комиссия {n}%', { n: car.sale.rate / 100 }) + (car.sale.quick ? t(' · первые {n} после получения', { n: (car.sale.window ?? 900) >= 3600 ? t('{h} ч', { h: car.sale.window / 3600 }) : t('{m} мин', { m: Math.round((car.sale.window ?? 900) / 60) }) }) : '')}
                 onClick={() => !busy && run('app_garage', { action: 'sell', id: car.user_car_id }, (r) => t('Продано за {m}', { m: money(r.sold.amount) }))} />
               {['epic', 'mythic'].includes(car.rarity) && <Li icon={Store} tone="green" title={t('Выставить на рынок')} sub={t('Свою цену увидят все игроки')} onClick={() => setMode('market')} />}
               <Li icon={Handshake} tone="gold" title={t('Продать игроку')} sub={t('Предложение придёт ему в бот')} onClick={() => setMode('player')} />

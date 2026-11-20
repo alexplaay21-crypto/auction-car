@@ -6,7 +6,7 @@
 //  guest — принятие вызова: едешь против «призрака» автора вызова; если вызов успел принять
 //          другой игрок — залог возвращается.
 // Старые открытые вызовы (с прежним расчётом времени) отменяются с возвратом ставки.
-import { NOW, S, post } from './sql.js';
+import { NOW, S, RATE, post } from './sql.js';
 import { CUR_SEASON } from './ddl3.js';
 
 export const DNF = 999_999;
@@ -133,4 +133,34 @@ export const MIGRATION_20 = [
    END`,
   // старые вызовы считались по формуле — отменить с возвратом ставки
   `UPDATE races SET status = 'cancelled', resolved_at = ${NOW} WHERE status = 'open' AND held = 0`,
+];
+
+// Миграция 21: VIP — в подарок BMW M5 F90 (настройка vip_car_id; уже купившие VIP получают её сейчас),
+// быстрая продажа для VIP доступна 2 часа после получения машины (остальным — 15 минут);
+// премиум Battle Pass со скидкой: 49⭐ вместо 99⭐ (зачёркнутая цена — star_products.was_stars).
+export const VIP_CAR_ID = 14;
+const WINDOW = (u) => `(CASE WHEN (SELECT is_vip FROM users WHERE id = ${u}) = 1 THEN ${S('quick_sell_window_vip_s')} ELSE ${S('quick_sell_window_s')} END)`;
+const SELL_RATE = (uc, u) => `(CASE WHEN ${NOW} - (SELECT obtained_at FROM user_cars WHERE id = ${uc}) <= ${WINDOW(u)}
+  THEN ${RATE('comm_quick', u)} ELSE ${RATE('comm_state', u)} END)`;
+const VIP_CAR = (u) => `INSERT INTO car_grants (op_id, user_id, car_id, source, created_at)
+  SELECT 'vipcar:' || ${u}, ${u}, ${S('vip_car_id')}, 'shop', ${NOW}
+  WHERE NOT EXISTS (SELECT 1 FROM car_grants WHERE op_id = 'vipcar:' || ${u});`;
+export const MIGRATION_21 = [
+  `INSERT INTO settings (k, v) VALUES ('quick_sell_window_vip_s', 7200) ON CONFLICT (k) DO UPDATE SET v = excluded.v`,
+  `INSERT INTO settings (k, v) VALUES ('vip_car_id', ${VIP_CAR_ID}) ON CONFLICT (k) DO NOTHING`,
+  'DROP TRIGGER IF EXISTS car_sales_bi',
+  `CREATE TRIGGER IF NOT EXISTS car_sales_bi BEFORE INSERT ON car_sales BEGIN
+     SELECT RAISE(ABORT, 'CAR_NOT_FOUND') WHERE NOT EXISTS (
+       SELECT 1 FROM user_cars WHERE id = NEW.user_car_id AND user_id = NEW.user_id AND status = 'owned');
+     SELECT RAISE(ABORT, 'BAD_SALE') WHERE NEW.created_at <> ${NOW} OR NEW.rate_bps <> ${SELL_RATE('NEW.user_car_id', 'NEW.user_id')}
+       OR NEW.amount <> (SELECT c.price FROM user_cars u JOIN cars c ON c.id = u.car_id WHERE u.id = NEW.user_car_id) * (10000 - NEW.rate_bps) / 10000;
+   END`,
+  `CREATE TRIGGER IF NOT EXISTS vip_car AFTER INSERT ON vip_grants BEGIN
+     ${VIP_CAR('NEW.user_id')}
+   END`,
+  `INSERT INTO car_grants (op_id, user_id, car_id, source, created_at)
+     SELECT 'vipcar:' || id, id, ${S('vip_car_id')}, 'shop', ${NOW} FROM users
+     WHERE is_vip = 1 AND NOT EXISTS (SELECT 1 FROM car_grants WHERE op_id = 'vipcar:' || users.id)`,
+  'ALTER TABLE star_products ADD COLUMN was_stars INTEGER',
+  `UPDATE star_products SET stars = 49, was_stars = 99 WHERE id = 'bp'`,
 ];
