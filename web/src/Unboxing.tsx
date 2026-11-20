@@ -1,30 +1,32 @@
-// Открытие контейнера: контейнер дрожит → разворачивается дверями к экрану → двери распахиваются,
-// изнутри бьёт свет цвета редкости → выезжает машина. Чем реже машина, тем зрелищнее:
-// легендарная — затемнение, долгая дрожь, золотые лучи, искры, вспышка, фанфары.
+// Открытие контейнера: 3D-коробка дрожит → разворачивается торцом с дверями к экрану →
+// двери распахиваются, изнутри бьёт свет цвета редкости → выезжает машина.
+// Чем реже машина, тем зрелищнее: легендарная — затемнение, долгая дрожь, золотые лучи, искры, фанфары.
 // Тап — пропустить. После анимации показываются children (цена, кнопки).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { CarArt, ContainerArt, RarityTag } from './components';
-import { containerDoorSvg, svgUrl } from './art';
+import { CarArt, RarityTag } from './components';
+import { containerDoorSvg, containerSideSvg, containerTopSvg, svgUrl } from './art';
 import { fx } from './sound';
 import { t } from './i18n';
 
 // мс: дрожь, разворот, открытие дверей, пауза до итога
 const TIMING: Record<string, [number, number, number, number]> = {
-  common: [350, 600, 650, 500],
-  rare: [600, 650, 700, 600],
-  epic: [1000, 700, 800, 900],
-  mythic: [1600, 800, 950, 1300],
+  common: [450, 1100, 700, 500],
+  rare: [700, 1150, 750, 600],
+  epic: [1100, 1250, 850, 900],
+  mythic: [1700, 1400, 1000, 1300],
 };
 
 export function Unboxing({ container, car, onClose, children }: { container?: any; car: any; onClose: () => void; children?: ReactNode }) {
   const r = car?.rarity ?? 'common';
   const [shake, turn, open, rest] = TIMING[r] ?? TIMING.common;
   const doors = !!container;
-  // 0 — дрожит боком, 1 — разворот, 2 — двери открываются, 3 — машина выехала, 4 — итог
+  // 0 — дрожит (вид 3/4), 1 — разворот к дверям, 2 — двери открываются, 3 — машина выехала, 4 — итог
   const [phase, setPhase] = useState(doors ? 0 : 3);
   const timers = useRef<number[]>([]);
-  const doorL = useMemo(() => (doors ? svgUrl(containerDoorSvg(container, 'l')) : ''), [doors, container]);
-  const doorR = useMemo(() => (doors ? svgUrl(containerDoorSvg(container, 'r')) : ''), [doors, container]);
+  const img = useMemo(() => (doors ? {
+    side: svgUrl(containerSideSvg(container)), top: svgUrl(containerTopSvg(container)),
+    l: svgUrl(containerDoorSvg(container, 'l')), r: svgUrl(containerDoorSvg(container, 'r')), end: svgUrl(containerDoorSvg(container, 'both')),
+  } : null), [doors, container]);
   useEffect(() => {
     const at = (ms: number, f: () => void) => timers.current.push(window.setTimeout(f, ms));
     if (doors) {
@@ -49,16 +51,22 @@ export function Unboxing({ container, car, onClose, children }: { container?: an
       <div className="ub-stage">
         <div className="ub-light" />
         <div className="ub-car"><CarArt car={car} height={180} studio /></div>
-        {doors && (
-          <>
-            <div className="ub-side"><ContainerArt c={container} size={130} /></div>
-            <div className="ub-front">
-              <div className="ub-inside" />
-              <img className="ub-door l" src={doorL} alt="" />
-              <img className="ub-door r" src={doorR} alt="" />
-              <div className="ub-seam" />
+        {img && (
+          <div className="ub-scene">
+            <div className="ub-cube">
+              <img className="f side" src={img.side} alt="" />
+              <img className="f back" src={img.side} alt="" />
+              <img className="f top" src={img.top} alt="" />
+              <img className="f bottom" src={img.top} alt="" />
+              <img className="f rear" src={img.end} alt="" />
+              <div className="f doors">
+                <div className="ub-hole" />
+                <img className="ub-door l" src={img.l} alt="" />
+                <img className="ub-door r" src={img.r} alt="" />
+                <div className="ub-seam" />
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
       {r === 'mythic' && <div className="ub-stamp">{t('ЛЕГЕНДАРНАЯ!')}</div>}

@@ -488,32 +488,38 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
 .ub-car .car-pic, .ub-car .car-art, .ub-car .car-photo { width: 100%; height: auto !important; border-radius: 14px;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 50%, transparent), 0 18px 50px -10px color-mix(in srgb, var(--rc) 70%, transparent); }
 .unbox:is(.ph-3, .ph-4) .ub-car { opacity: 1; transform: none; }
-/* 1) боком: дрожит, потом поворачивается */
-.ub-side { position: absolute; inset: 0; display: grid; place-items: center; transform-style: preserve-3d; z-index: 2;
-  transition: transform var(--turn) cubic-bezier(.5, 0, .75, 0), opacity calc(var(--turn) * .5) calc(var(--turn) * .5); }
-.ub-side .ct-art, .ub-side .ct-photo { width: 100% !important; height: auto !important; }
-.ph-0 .ub-side { animation: shake .12s linear infinite; }
-.r-common.ph-0 .ub-side { animation-duration: .25s; }
-.r-mythic.ph-0 .ub-side { animation: shake .07s linear infinite, swell var(--shake) ease-in forwards; }
-.unbox:not(.ph-0) .ub-side { transform: rotateY(80deg) scale(.9); opacity: 0; }
-/* 2) торец с дверями поворачивается к экрану */
-.ub-front { position: absolute; inset: -2% 0; margin: auto; height: 104%; width: auto; aspect-ratio: 244 / 259; transform-style: preserve-3d; z-index: 2;
-  transform: rotateY(-80deg) scale(.9); opacity: 0;
-  transition: transform var(--turn) cubic-bezier(.25, 1, .5, 1) calc(var(--turn) * .45), opacity .2s calc(var(--turn) * .45); }
-.unbox:not(.ph-0) .ub-front { transform: none; opacity: 1; }
-.r-mythic.ph-1 .ub-front { animation: shake .08s linear calc(var(--turn) * .9) infinite; }
-.unbox:is(.ph-3, .ph-4) .ub-front { opacity: 0; transition: opacity .45s .25s; }
-.ub-inside { position: absolute; inset: 4% 4%; background: linear-gradient(#030405, #0d1018); box-shadow: inset 0 0 50px color-mix(in srgb, var(--rc) 70%, transparent); }
-.ub-door { position: absolute; top: 0; height: 100%; width: 50%; filter: drop-shadow(0 6px 14px rgba(0,0,0,.6)); transition: transform var(--open) cubic-bezier(.55, .05, .3, 1), filter var(--open); }
+/* 3D-коробка 20-футового контейнера: L — длина, H — высота, D — ширина (торец с дверями) */
+.ub-scene { position: absolute; inset: 0; display: grid; place-items: center; perspective: 900px; z-index: 2; transition: opacity .45s .25s; }
+.unbox:is(.ph-3, .ph-4) .ub-scene { opacity: 0; }
+.ub-cube { --L: 250px; --H: 107px; --D: 101px; position: relative; width: var(--L); height: var(--H); transform-style: preserve-3d;
+  transform: rotateX(-16deg) rotateY(-32deg); transition: transform var(--turn) cubic-bezier(.65, 0, .35, 1); }
+.ph-0 .ub-cube { animation: shake .12s linear infinite; }
+.r-common.ph-0 .ub-cube { animation-duration: .25s; }
+.r-mythic.ph-0 .ub-cube { animation: shake .07s linear infinite; }
+/* поворот: торец с дверями (правый) встаёт прямо к экрану и приближается */
+.unbox:not(.ph-0) .ub-cube { transform: rotateX(-4deg) rotateY(-90deg) scale3d(1.9, 1.9, 1.9); }
+.r-mythic.ph-1 .ub-cube { animation: shake .08s linear calc(var(--turn) * .9) infinite; }
+.ub-cube .f { position: absolute; display: block; backface-visibility: hidden; }
+.ub-cube .side { left: 0; top: 0; width: var(--L); height: var(--H); transform: translateZ(calc(var(--D) / 2)); }
+.ub-cube .back { left: 0; top: 0; width: var(--L); height: var(--H); transform: rotateY(180deg) translateZ(calc(var(--D) / 2)); filter: brightness(.6); }
+.ub-cube .top { left: 0; top: calc((var(--H) - var(--D)) / 2); width: var(--L); height: var(--D); transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); }
+.ub-cube .bottom { left: 0; top: calc((var(--H) - var(--D)) / 2); width: var(--L); height: var(--D); transform: rotateX(-90deg) translateZ(calc(var(--H) / 2)); filter: brightness(.3); }
+.ub-cube .rear { left: calc((var(--L) - var(--D)) / 2); top: 0; width: var(--D); height: var(--H); transform: rotateY(-90deg) translateZ(calc(var(--L) / 2)); filter: brightness(.7); }
+.ub-cube .doors { left: calc((var(--L) - var(--D)) / 2); top: 0; width: var(--D); height: var(--H); transform: rotateY(90deg) translateZ(calc(var(--L) / 2));
+  transform-style: preserve-3d; backface-visibility: visible; }
+/* на виде 3/4 боковые грани освещены по-разному */
+.ub-cube .side { filter: brightness(1); } .ub-cube .doors .ub-door { filter: brightness(.85); }
+.ub-hole { position: absolute; inset: 5% 5%; background: linear-gradient(#020304, #0b0e15); box-shadow: inset 0 0 30px color-mix(in srgb, var(--rc) 80%, transparent); }
+.ub-door { position: absolute; top: 0; height: 100%; width: 50%; transition: transform var(--open) cubic-bezier(.55, .05, .3, 1), filter var(--open); }
 .ub-door.l { left: 0; transform-origin: left center; }
 .ub-door.r { right: 0; transform-origin: right center; }
-.unbox:is(.ph-2, .ph-3, .ph-4) .ub-door.l { transform: rotateY(-105deg); filter: brightness(.55); }
-.unbox:is(.ph-2, .ph-3, .ph-4) .ub-door.r { transform: rotateY(105deg); filter: brightness(.55); }
+.unbox:is(.ph-2, .ph-3, .ph-4) .ub-door.l { transform: rotateY(-108deg); filter: brightness(.5); }
+.unbox:is(.ph-2, .ph-3, .ph-4) .ub-door.r { transform: rotateY(108deg); filter: brightness(.5); }
 /* свет пробивается в щель между дверями */
-.ub-seam { position: absolute; left: calc(50% - 3px); top: 5%; bottom: 5%; width: 6px; border-radius: 3px;
+.ub-seam { position: absolute; left: calc(50% - 2px); top: 5%; bottom: 5%; width: 4px; transform: translateZ(1px); border-radius: 3px;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rc) 90%, white), transparent); opacity: 0; filter: blur(1px); }
-.ph-1 .ub-seam { opacity: .9; animation: leak .35s ease-in-out infinite alternate; }
-.r-common.ph-1 .ub-seam { opacity: .25; }
+.unbox:is(.ph-0, .ph-1) .ub-seam { opacity: .9; animation: leak .35s ease-in-out infinite alternate; }
+.r-common:is(.ph-0, .ph-1) .ub-seam { opacity: .25; }
 .unbox:is(.ph-2, .ph-3, .ph-4) .ub-seam { opacity: 0; }
 @keyframes leak { to { opacity: .35; box-shadow: 0 0 18px 4px color-mix(in srgb, var(--rc) 70%, transparent); } }
 @keyframes shake { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -2px 1px; rotate: -.6deg; } 75% { translate: 2px -1px; rotate: .6deg; } }
@@ -543,4 +549,4 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
   opacity: 0; transform: translateY(16px); transition: opacity .4s, transform .4s; pointer-events: none; }
 .ph-4 .ub-info { opacity: 1; transform: none; pointer-events: auto; }
 .ub-skip { position: absolute; bottom: 24px; font-size: 12px; color: var(--muted); opacity: .7; }
-@media (prefers-reduced-motion: reduce) { .ub-rays, .ub-sparks i, .ub-side, .ub-front { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ub-rays, .ub-sparks i, .ub-cube { animation: none !important; } }

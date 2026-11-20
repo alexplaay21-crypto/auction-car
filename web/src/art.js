@@ -277,6 +277,31 @@ export function containerSvg(c, { studio = false, w = 300, h = 170 } = {}) {
 </svg>`;
 }
 
+// Плоский борт контейнера (600×260) — грань 3D-коробки при открытии.
+export function containerSideSvg(c) {
+  const flag = c?.flag || FLAG_BY_COUNTRY[c?.country] || 'world';
+  let ribs = '';
+  for (let x = 12; x < 600; x += 24) ribs += `<rect x="${x}" y="0" width="10" height="260" fill="#000" opacity=".13"/><rect x="${x + 10}" y="0" width="2.5" height="260" fill="#fff" opacity=".16"/>`;
+  const corner = (x, y) => `<rect x="${x - 6}" y="${y - 6}" width="12" height="12" rx="1.5" fill="#24272c"/><rect x="${x - 3}" y="${y - 2}" width="6" height="4" rx="1" fill="#0d0f12"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260" width="600" height="260">
+  <defs><linearGradient id="sd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".08"/><stop offset=".6" stop-color="#4a2a14" stop-opacity="0"/><stop offset="1" stop-color="#4a2a14" stop-opacity=".45"/></linearGradient></defs>
+  ${flagArt(flag)}${ribs}<rect width="600" height="260" fill="url(#sd)"/>${sideStencil()}
+  <rect x="0" y="0" width="600" height="14" fill="#1d2026"/><rect x="0" y="246" width="600" height="14" fill="#15171b"/>
+  <rect x="0" y="0" width="12" height="260" fill="#1d2026"/><rect x="588" y="0" width="12" height="260" fill="#1d2026"/>
+  ${corner(6, 7)}${corner(594, 7)}${corner(6, 253)}${corner(594, 253)}
+</svg>`;
+}
+// Крыша (600×244): цвет контейнера, рёбра.
+export function containerTopSvg(c) {
+  const flag = c?.flag || FLAG_BY_COUNTRY[c?.country] || 'world';
+  const main = FLAG_MAIN[flag] ?? '#17324f';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 244" width="600" height="244">
+  <rect width="600" height="244" fill="${main}"/><rect width="600" height="244" fill="#fff" opacity=".22"/>
+  ${Array.from({ length: 24 }, (_, i) => `<rect x="${i * 25 + 6}" y="0" width="10" height="244" fill="#000" opacity=".08"/>`).join('')}
+  <rect width="600" height="244" fill="none" stroke="#1d2026" stroke-width="16"/>
+</svg>`;
+}
+
 // Торец контейнера с дверями (вид прямо): side — 'l' / 'r' (одна створка) или 'both'.
 export function containerDoorSvg(c, side = 'both') {
   const flag = c?.flag || FLAG_BY_COUNTRY[c?.country] || 'world';
