@@ -694,3 +694,9 @@ body { background-image: none; }
 .tabbar .badge-dot { box-shadow: 0 0 0 2px rgba(20, 22, 30, .9); }
 
 .carcard .price { white-space: nowrap; }
+/* перетаскивание по меню: подсветка идёт за пальцем без задержки и чуть «вздувается», как линза */
+.tabbar .in { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.tabbar .in.dragging { touch-action: none; }
+.tabbar .in.dragging .tab-pill { transition: opacity .2s; transform: translateX(calc(var(--i) * 100%)) scale(1.08, 1.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 6px 18px rgba(0, 0, 0, .35); }
+.tabbar .in.dragging button.on:not(.mid) { transform: scale(1.06); }

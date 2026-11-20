@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Home as HomeIcon, Flag, Gavel, Store, UserRound, Loader2 } from 'lucide-react';
 import { call, tg } from './tg';
 import { Toasts } from './components';
@@ -83,18 +83,7 @@ export function App() {
             {tab === 'profile' && <Player id={me.user.id} root />}
           </>
         )}
-        <nav className="tabbar">
-          <div className="in">
-            <span className="tab-pill" style={{ ['--i' as any]: TABS.findIndex(([k]) => k === tab), opacity: top || tab === 'auction' ? 0 : 1 }} />
-            {TABS.map(([k, I, label]) => (
-              <button key={k} className={`${k === 'auction' ? 'mid ' : ''}${!top && tab === k ? 'on' : ''}`} onClick={() => setTab(k)}>
-                {k === 'auction' ? <span className="fab"><I size={26} strokeWidth={2.4} /></span> : <I size={22} strokeWidth={2.2} />}
-                <span>{t(label)}</span>
-                {k === 'home' && me.bonus.available && <span className="badge-dot" />}
-              </button>
-            ))}
-          </div>
-        </nav>
+        <TabBar tab={tab} top={!!top} setTab={setTab} bonus={!!me.bonus.available} />
         <Toasts />
       </div>
     </AppCtx.Provider>
@@ -120,4 +109,59 @@ function Page({ r }: { r: Route }) {
     case 'feedback': return <FeedbackPage />;
     case 'style': return <StylePage />;
   }
+}
+
+// Нижнее меню-островок: нажатие или проведение пальцем — подсветка едет за пальцем,
+// при отпускании открывается раздел под ним.
+function TabBar({ tab, top, setTab, bonus }: { tab: Tab; top: boolean; setTab: (t: Tab) => void; bonus: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const st = useRef<{ x0: number; moved: boolean; last: number } | null>(null);
+  const suppress = useRef(false);
+  const [pos, setPos] = useState<number | null>(null);
+  const cur = TABS.findIndex(([k]) => k === tab);
+  const at = (x: number) => {
+    const r = ref.current!.getBoundingClientRect();
+    const w = (r.width - 12) / TABS.length;
+    return Math.max(0, Math.min(TABS.length - 1, (x - r.left - 6) / w - 0.5));
+  };
+  const down = (e: React.PointerEvent) => { st.current = { x0: e.clientX, moved: false, last: Math.round(at(e.clientX)) }; };
+  const move = (e: React.PointerEvent) => {
+    const s = st.current;
+    if (!s) return;
+    if (!s.moved && Math.abs(e.clientX - s.x0) < 8) return;
+    if (!s.moved) { s.moved = true; ref.current?.setPointerCapture?.(e.pointerId); }
+    const p = at(e.clientX);
+    setPos(p);
+    const i = Math.round(p);
+    if (i !== s.last) { s.last = i; select(); }
+  };
+  const up = () => {
+    const s = st.current;
+    st.current = null;
+    if (s?.moved) {
+      suppress.current = true; setTimeout(() => { suppress.current = false; }, 50);
+      const i = s.last;
+      setPos(null);
+      if (TABS[i][0] !== tab || top) setTab(TABS[i][0]);
+    }
+  };
+  const shown = pos ?? cur;
+  const hide = pos == null && (top || tab === 'auction');
+  return (
+    <nav className="tabbar">
+      <div ref={ref} className={`in${pos != null ? ' dragging' : ''}`} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+        <span className="tab-pill" style={{ ['--i' as any]: shown, opacity: hide ? 0 : 1 }} />
+        {TABS.map(([k, I, label], i) => {
+          const on = pos != null ? Math.round(pos) === i : !top && tab === k;
+          return (
+            <button key={k} className={`${k === 'auction' ? 'mid ' : ''}${on ? 'on' : ''}`} onClick={() => { if (!suppress.current) setTab(k); }}>
+              {k === 'auction' ? <span className="fab"><I size={26} strokeWidth={2.4} /></span> : <I size={22} strokeWidth={2.2} />}
+              <span>{t(label)}</span>
+              {k === 'home' && bonus && <span className="badge-dot" />}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
 }
