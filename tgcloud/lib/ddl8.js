@@ -68,3 +68,6 @@ export function upsertWorld(cid) {
 
 // 16: японский контейнер — 50 машин по 3D-моделям.
 export const MIGRATION_16 = upsertWorld(1);
+
+// 17: американский контейнер — 50 машин по 3D-моделям.
+export const MIGRATION_17 = upsertWorld(3);
