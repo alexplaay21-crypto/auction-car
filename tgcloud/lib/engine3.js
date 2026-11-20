@@ -1,7 +1,7 @@
 // lib/engine3.js — гонки, навык гонщика, рынок, Battle Pass, друзья, профили игроков,
 // динамические цены контейнеров. Деньги проводят триггеры миграции 3 (lib/ddl3.js).
 import { GameError, toGameError, settings, getUser, findUser, now } from './engine.js';
-import { runTime, pickBot, TRACKS } from './race.js';
+import { TRACKS } from './race.js';
 import { reaction, skillPrice, skillLevel, SKILL_MAX, SKILL_LEVELS } from './ddl3.js';
 
 const NOW = '(SELECT now FROM v_now)';
@@ -37,69 +37,6 @@ export async function buySkill(db, uid, count, opId) {
 }
 
 // ---------- гонки ----------
-async function myCar(db, uid, userCarId) {
-  const c = await db.get(
-    `SELECT uc.id AS user_car_id, c.* FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.id = :i AND uc.user_id = :u AND uc.status = 'owned'`,
-    { ':i': Number(userCarId) || 0, ':u': uid });
-  if (!c) throw new GameError('CAR_NOT_FOUND');
-  return c;
-}
-const trackOf = (t) => { if (!TRACKS[t]) throw new GameError('BAD_TRACK'); return t; };
-
-export async function raceBot(db, uid, { carId, track, stake, opId }) {
-  const st = await settings(db);
-  const s = intOf(stake, st.race_min_stake, st.race_max_stake);
-  const tr = trackOf(track);
-  const car = await myCar(db, uid, carId);
-  const op = `race:${uid}:${opId}`;
-  const done = await db.get('SELECT id FROM races WHERE op_id = :op', { ':op': op });
-  if (done) return raceView(db, done.id);
-  const cars = await db.all('SELECT * FROM cars WHERE is_active = 1');
-  const bot = pickBot(cars, car);
-  const me = runTime(car, tr, reaction(await skillOf(db, uid)));
-  const them = runTime(bot.car, tr, bot.reaction);
-  const r = await exec(db,
-    `INSERT INTO races (op_id, kind, track, status, stake, host_id, host_car, host_ms, guest_ms, bot_car, winner_id, created_at, resolved_at)
-     VALUES (:op, 'bot', :t, 'done', :s, :u, :hc, :hm, :gm, :bc, :w, ${NOW}, ${NOW})`,
-    { ':op': op, ':t': tr, ':s': s, ':u': uid, ':hc': car.user_car_id, ':hm': me.ms, ':gm': them.ms, ':bc': bot.car.id, ':w': me.ms < them.ms ? uid : null });
-  return { ...(await raceView(db, r.lastInsertRowid)), glitch: { host: me.glitch, guest: them.glitch } };
-}
-
-export async function raceCreate(db, uid, { carId, track, stake, opId }) {
-  const st = await settings(db);
-  const s = intOf(stake, st.race_min_stake, st.race_max_stake);
-  const car = await myCar(db, uid, carId);
-  const op = `race:${uid}:${opId}`;
-  const done = await db.get('SELECT id FROM races WHERE op_id = :op', { ':op': op });
-  if (done) return raceView(db, done.id);
-  const r = await exec(db,
-    `INSERT INTO races (op_id, kind, track, status, stake, host_id, host_car, created_at) VALUES (:op, 'pvp', :t, 'open', :s, :u, :c, ${NOW})`,
-    { ':op': op, ':t': trackOf(track), ':s': s, ':u': uid, ':c': car.user_car_id });
-  return raceView(db, r.lastInsertRowid);
-}
-
-export async function raceAccept(db, uid, raceId, carId) {
-  const race = await db.get(`SELECT * FROM races WHERE id = :r AND status = 'open'`, { ':r': Number(raceId) || 0 });
-  if (!race) throw new GameError('RACE_CLOSED');
-  if (race.host_id === uid) throw new GameError('SELF_RACE');
-  const guestCar = await myCar(db, uid, carId);
-  const hostCar = await db.get(
-    `SELECT c.* FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.id = :i AND uc.user_id = :u AND uc.status = 'owned'`, { ':i': race.host_car, ':u': race.host_id });
-  if (!hostCar) {
-    await db.run(`UPDATE races SET status = 'cancelled', resolved_at = ${NOW} WHERE id = :r AND status = 'open'`, { ':r': race.id });
-    throw new GameError('HOST_CAR_GONE');
-  }
-  const h = runTime(hostCar, race.track, reaction(await skillOf(db, race.host_id)));
-  const g = runTime(guestCar, race.track, reaction(await skillOf(db, uid)));
-  const r = await exec(db,
-    `UPDATE races SET status = 'done', guest_id = :g, guest_car = :gc, host_ms = :hm, guest_ms = :gm, winner_id = :w, resolved_at = ${NOW}
-     WHERE id = :r AND status = 'open'`,
-    { ':g': uid, ':gc': guestCar.user_car_id, ':hm': h.ms, ':gm': g.ms, ':w': h.ms <= g.ms ? race.host_id : uid, ':r': race.id });
-  if (!r.rowsAffected) throw new GameError('RACE_CLOSED');
-  await db.run(`INSERT INTO outbox (chat_id, kind, ref, created_at) VALUES (:c, 'race', :r, ${NOW})`, { ':c': race.host_id, ':r': race.id });
-  return { ...(await raceView(db, race.id)), glitch: { host: h.glitch, guest: g.glitch } };
-}
-
 export async function raceCancel(db, uid, raceId) {
   const r = await exec(db, `UPDATE races SET status = 'cancelled', resolved_at = ${NOW} WHERE id = :r AND host_id = :u AND status = 'open'`,
     { ':r': Number(raceId) || 0, ':u': uid });

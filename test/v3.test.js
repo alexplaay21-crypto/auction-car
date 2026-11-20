@@ -67,25 +67,6 @@ test('рынок: выставить, купить (деньги и машина
   await ok();
 });
 
-test('гонка с ботом: ставка и выплата; вызов игроку: залог и банк победителю', async () => {
-  const uc = await give(2, 8);
-  const r = await G.raceBot(db, 2, { carId: uc, track: 'drag', stake: 1000, opId: op() });
-  assert.equal(await bal(2), 15_000 + (r.winner_id === 2 ? 900 : -1000));
-  const c = await G.raceCreate(db, 2, { carId: uc, track: 'circuit', stake: 2000, opId: op() });
-  const before = await bal(2);
-  const uc3 = await give(3, 16);
-  const done = await G.raceAccept(db, 3, c.id, uc3);
-  const w = done.winner_id;
-  assert.ok([2, 3].includes(w));
-  assert.equal(await bal(w === 2 ? 2 : 3), (w === 2 ? before : 15_000 - 2000) + 3800, 'банк 4000 минус 5%');
-  const c2 = await G.raceCreate(db, 2, { carId: uc, track: 'rally', stake: 500, opId: op() });
-  const b2 = await bal(2);
-  await G.raceCancel(db, 2, c2.id);
-  assert.equal(await bal(2), b2 + 500, 'отменённый вызов возвращает залог');
-  await assert.rejects(G.raceAccept(db, 3, c2.id, uc3), { code: 'RACE_CLOSED' });
-  await ok();
-});
-
 test('навык гонщика: 210 улучшений за $2 000 000, показатель 0,98 → 0,20', async () => {
   const v = await G.buySkill(db, 2, 10, op());
   assert.equal(v.purchases, 10);
