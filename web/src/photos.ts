@@ -1,5 +1,5 @@
 // Создано сборкой графики: машины, отрисованные по 3D-моделям (id → версия файла).
-export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5"};
+export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","57":"459d60a8","58":"4f85af93","59":"00517042","60":"4cfa73e0","61":"f99d9cb1","62":"e23e1c1f","63":"2c794425","64":"2c587116","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5","800":"eeba75ef","801":"16efa2b2","802":"6404d236","803":"fe899356","804":"8420d410","805":"f2868d97","806":"c356d3e1","807":"fd5c0576","808":"77533157","809":"7af2d187","810":"f1bd6c86","811":"3a6d0fe1","812":"868eb666","813":"3e71a8d5","814":"fbbca4e9","815":"baa414bb","816":"3e570769","817":"a8e2ecd6","818":"46dbdb2e","819":"26833595","820":"7e922fbf","821":"dd80c668","822":"ef7809ed","823":"2c1bea36","824":"a64f7c5a","825":"2210220a","826":"e92c377b","827":"a1028d92","828":"f64d61d4","829":"79665dcc","830":"46eae1a6","831":"558d4b93","832":"dd47b656","833":"ff5e8584","834":"4de17660","835":"d57c807e","836":"0e4b080c","837":"90394e20","838":"068fa6b3","839":"f2eabd32","840":"8d3ff734","841":"9af1cb5c"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -1200,5 +1200,305 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "author": "vecarz",
   "license": "CC Attribution",
   "page": "https://sketchfab.com/3d-models/none-8a0b3352bacd494d82927aad5ddd05b6"
+ },
+ {
+  "car": "Kiya Rio",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-174691e01fec4accb318159d6a3de3b3"
+ },
+ {
+  "car": "Kiya Sportage",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8f794775950041d7a9ae867e40646a33"
+ },
+ {
+  "car": "Volva XC60",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-986e54be12664ff59d0748d003883ace"
+ },
+ {
+  "car": "Kiya Sorento",
+  "author": "mvntyyy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-cc8ead2872aa4dbc8b7d82e38e108b46"
+ },
+ {
+  "car": "Kiya Picanto",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-15ba97d8505e4738a56d253aa088c7e3"
+ },
+ {
+  "car": "Kiya K5",
+  "author": "UZBEK 3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1fa025db826442f18db0401757f5695a"
+ },
+ {
+  "car": "Hyundei Sonata",
+  "author": "m3ika",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c435ef02b27140e2a5f800c622bb4c04"
+ },
+ {
+  "car": "Hyundei Elantra",
+  "author": "Maroi Mister Let Me Think Official 3D Studio",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-673a4a83715d411ba713c0c270cdf93f"
+ },
+ {
+  "car": "Hyundei Tucson",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d475600c7ede4ff1ad2c2e7315c869b8"
+ },
+ {
+  "car": "Kiya Telluride",
+  "author": "mvntyyy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-25ec44e4f55f4bceb7a61ec83ab4c45f"
+ },
+ {
+  "car": "Hyundei Creta",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-995cd59ae58b4527b079dc4bf8a36049"
+ },
+ {
+  "car": "Hyundei Ioniq 5",
+  "author": "dannzjs",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5825eb37aa65442c86f8ae3d8e9e96e0"
+ },
+ {
+  "car": "Shkoda Octavia",
+  "author": "DR1KING100K",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-146db6aa7d7541b49c7f6f7e2253e18c"
+ },
+ {
+  "car": "Shkoda Superb",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2da5059c3068448b9541eafb930a45a0"
+ },
+ {
+  "car": "Shkoda Kodiaq",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-552f742607924f58a7b64fbc4a5a1744"
+ },
+ {
+  "car": "Shkoda Kamiq",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3ed82ec208424ae1ab01b90c195e2b6c"
+ },
+ {
+  "car": "Minny Countryman",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2b3e8afed5d64ffea7d91f477636ef30"
+ },
+ {
+  "car": "Hyundei i20",
+  "author": "@ShreyanshChaurasia_12",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6c267be59fb94253bff935616eddcc99"
+ },
+ {
+  "car": "Hyundei Kona",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e12f3486f1644cde83d31f153f707fb5"
+ },
+ {
+  "car": "Volva XC90",
+  "author": "jday.amx",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-215241839e264612b36d13974aca8774"
+ },
+ {
+  "car": "Volva S60",
+  "author": "Villanueva-Jonatan-32621",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-497ff3c46a2b4346a4f03883c7fff9c2"
+ },
+ {
+  "car": "Minny Cooper",
+  "author": "kowalski_30",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f4eaecb588254bfabf295fedfdf01775"
+ },
+ {
+  "car": "Range Rovar Evoque",
+  "author": "minghauLoh",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e0bb09118ab84fe0a0530bd0df2fd74a"
+ },
+ {
+  "car": "Land Rovar Discovery",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-48d256ab61c748d2ae1757ad39897353"
+ },
+ {
+  "car": "Dachia Duster",
+  "author": "Car Simulator 2-Preview",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a39e5e2fe34f45399e080f1491162898"
+ },
+ {
+  "car": "Dachia Sandero",
+  "author": "シRuletăシ",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8ee1188f4d694d4c9b648c8dd5b471da"
+ },
+ {
+  "car": "Polstar 2",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f3b67fb9e1f149709545af79a6a438a7"
+ },
+ {
+  "car": "Shkoda Karoq",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7e359874ebe744158eddc37c9da8f487"
+ },
+ {
+  "car": "Kiya Carnival",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d7c438d0d2d64ce092e396fa802d7830"
+ },
+ {
+  "car": "Hyundei Palisade",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-307840c131284fa8a50bf4624ed865d7"
+ },
+ {
+  "car": "Land Rovar Defender",
+  "author": "David_Holiday",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-26f042fcf1594890a529bfb41f0fae0d"
+ },
+ {
+  "car": "Kiya Stinger",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b1493e68069f4b869743de7a4220a4f4"
+ },
+ {
+  "car": "Hyundei i30 N",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7fd413458d954ad4b23094bccf6bbd6e"
+ },
+ {
+  "car": "Hyundei Ioniq 5 N",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2e62fa6cd7814178acf49df42bb4ff24"
+ },
+ {
+  "car": "Kiya EV6 GT",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-44d11e83ef40492bb4bc3d9fbc41e5e0"
+ },
+ {
+  "car": "Range Rover",
+  "author": "diw3d",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d1fe581b3baf4af89275e9aa9a1392e2"
+ },
+ {
+  "car": "Jaguarr F-Type",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8c26bccda3254d9fbc9c987f39c22108"
+ },
+ {
+  "car": "Minny John Cooper Works",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a719330d72604ad1b9fbacc543a3b637"
+ },
+ {
+  "car": "Lotos Emira",
+  "author": "vecarz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-833504e99cc44c3c9bb8a7f8dcd5e718"
+ },
+ {
+  "car": "Aston Martyn Vantage",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7536711b006a425ba1125931c3fde75d"
+ },
+ {
+  "car": "Bentli Bentayga",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a24ffb3f7fee449fb18d58cd430f38a9"
+ },
+ {
+  "car": "Bentli Continental GT",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8e5fa2daca234948bea87b1a55067bbc"
+ },
+ {
+  "car": "Jenesis GV80",
+  "author": "AcidicCrate7514",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-dc2086c414b240f794b084ba00ebcde3"
+ },
+ {
+  "car": "Shkoda Octavia RS",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-892e152237fa4e8bbeb6afb20169f0c2"
+ },
+ {
+  "car": "Rols-Rois Phantom",
+  "author": "steflinga",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3f14b8ce7b394b438e37cd398e0ad6bb"
+ },
+ {
+  "car": "Aston Martyn DBS",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c7fb95e6b7ce40df8e3c4a55b7ecf9d9"
+ },
+ {
+  "car": "Rols-Rois Cullinan",
+  "author": "BMW'S Lost Proxy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5360b33a199f4b5e8dbadcdbcb3ad1f6"
+ },
+ {
+  "car": "McLaran 720S",
+  "author": "_shobh19",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f7bece69400f4640a4a3be746b44998b"
+ },
+ {
+  "car": "Konigseg Jesko",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c657f51fb0db43e38fea172dfa385287"
+ },
+ {
+  "car": "McLaran P1",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4acac56c712544b68f5ec2281eb1047d"
  }
 ];
