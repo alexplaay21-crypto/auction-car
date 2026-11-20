@@ -79,3 +79,7 @@ export const MIGRATION_18 = upsertWorld(7);
 export const MIGRATION_19 = upsertWorld(8);
 // 22: итальянский контейнер — 50 машин.
 export const MIGRATION_22 = upsertWorld(4);
+// 23: российский контейнер — 50 машин.
+export const MIGRATION_23 = upsertWorld(5);
+// 24: китайский контейнер — 50 машин.
+export const MIGRATION_24 = upsertWorld(6);

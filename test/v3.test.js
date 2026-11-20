@@ -24,12 +24,12 @@ beforeEach(async () => {
 
 test('8 стран, у каждого контейнера флаг; в немецком 50 машин (30/14/4/2)', async () => {
   assert.equal((await db.get('SELECT count(*) AS n FROM containers')).n, 8);
-  assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 6);
+  assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 8);
   const de = await db.all("SELECT c.rarity, count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 2 GROUP BY c.rarity ORDER BY c.rarity");
   assert.deepEqual(Object.fromEntries(de.map((r) => [r.rarity, r.n])), { common: 30, epic: 4, mythic: 2, rare: 14 });
   const flags = (await db.all('SELECT flag FROM container_meta ORDER BY container_id')).map((r) => r.flag);
   assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world']);
-  for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, [1, 2, 3, 4, 7, 8].includes(c) ? 50 : 8);
+  for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, [1, 2, 3, 4, 5, 6, 7, 8].includes(c) ? 50 : 8);
 });
 
 test('динамическая цена: дорогие торги поднимают стартовую цену, пустые — снижают (не больше 10% за раз)', async () => {

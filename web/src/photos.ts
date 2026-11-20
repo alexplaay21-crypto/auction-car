@@ -1,5 +1,5 @@
 // Создано сборкой графики: машины, отрисованные по 3D-моделям (id → версия файла).
-export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","25":"1d974635","26":"a9f444e9","27":"669cd460","28":"355be7f2","29":"41806229","30":"2fcfd5c3","31":"de0133e1","32":"d2b788a4","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","57":"459d60a8","58":"4f85af93","59":"00517042","60":"4cfa73e0","61":"f99d9cb1","62":"e23e1c1f","63":"2c794425","64":"2c587116","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","400":"fcc886f3","401":"bebdffce","402":"133ab1f9","403":"e774e05f","404":"50ac7f1a","405":"78219fcd","406":"a7946582","407":"6c871423","408":"85995720","409":"2026ada6","410":"5505bbd8","411":"fd101c63","412":"8cceeb62","413":"a5ea2d1b","414":"53049583","415":"64a5d9f7","416":"015c01b2","417":"89127b89","418":"91ecfdc7","419":"444cd3e1","420":"f0d3aa1c","421":"bcdc0677","422":"7d025495","423":"e50c1e5e","424":"de58c141","425":"0a0dac62","426":"000bb579","427":"50cb19c5","428":"dae295ca","429":"69657b6c","430":"821981cb","431":"938351fd","432":"006bc080","433":"3099dee9","434":"85101a9e","435":"3acd1731","436":"9f36aa85","437":"c36f9a98","438":"6a17d1d2","439":"415a67c4","440":"1fc58375","441":"7feca332","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5","800":"eeba75ef","801":"16efa2b2","802":"6404d236","803":"fe899356","804":"8420d410","805":"f2868d97","806":"c356d3e1","807":"fd5c0576","808":"77533157","809":"7af2d187","810":"f1bd6c86","811":"3a6d0fe1","812":"868eb666","813":"3e71a8d5","814":"fbbca4e9","815":"baa414bb","816":"3e570769","817":"a8e2ecd6","818":"46dbdb2e","819":"26833595","820":"7e922fbf","821":"dd80c668","822":"ef7809ed","823":"2c1bea36","824":"a64f7c5a","825":"2210220a","826":"e92c377b","827":"a1028d92","828":"f64d61d4","829":"79665dcc","830":"46eae1a6","831":"558d4b93","832":"dd47b656","833":"ff5e8584","834":"4de17660","835":"d57c807e","836":"0e4b080c","837":"90394e20","838":"068fa6b3","839":"f2eabd32","840":"8d3ff734","841":"9af1cb5c"};
+export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","25":"1d974635","26":"a9f444e9","27":"669cd460","28":"355be7f2","29":"41806229","30":"2fcfd5c3","31":"de0133e1","32":"d2b788a4","33":"d5e1d993","34":"ab2576b9","35":"89325fb6","36":"03269f52","37":"428b4c86","38":"159b23bc","39":"9f814427","40":"cb911a91","41":"3025a3ad","42":"f3f09072","43":"3a9497bf","44":"52059fd8","45":"7c36f47a","46":"c2125835","47":"8bb3248a","48":"f498cce1","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","57":"459d60a8","58":"4f85af93","59":"00517042","60":"4cfa73e0","61":"f99d9cb1","62":"e23e1c1f","63":"2c794425","64":"2c587116","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","400":"fcc886f3","401":"bebdffce","402":"133ab1f9","403":"e774e05f","404":"50ac7f1a","405":"78219fcd","406":"a7946582","407":"6c871423","408":"85995720","409":"2026ada6","410":"5505bbd8","411":"fd101c63","412":"8cceeb62","413":"a5ea2d1b","414":"53049583","415":"64a5d9f7","416":"015c01b2","417":"89127b89","418":"91ecfdc7","419":"444cd3e1","420":"f0d3aa1c","421":"bcdc0677","422":"7d025495","423":"e50c1e5e","424":"de58c141","425":"0a0dac62","426":"000bb579","427":"50cb19c5","428":"dae295ca","429":"69657b6c","430":"821981cb","431":"938351fd","432":"006bc080","433":"3099dee9","434":"85101a9e","435":"3acd1731","436":"9f36aa85","437":"c36f9a98","438":"6a17d1d2","439":"415a67c4","440":"1fc58375","441":"7feca332","500":"0712a3b4","501":"b19fc992","502":"aa7bc664","503":"2e2b612d","504":"6c94a44f","505":"1e71cfe9","506":"8e912b0d","507":"88af76b9","508":"13deb5b4","509":"820f8c3d","510":"fb3b368c","511":"adf7c07c","512":"867b5482","513":"93578d43","514":"e9499cc2","515":"09119b69","516":"1ab1aa9a","517":"623c0375","518":"4d11e506","519":"ad3e488b","520":"3a509934","521":"2d013b0f","522":"d1fdc1a2","523":"3a115cf0","524":"4edfc026","525":"8514b463","526":"d9fa4224","527":"a2f50fc7","528":"16b8d229","529":"0db4d729","530":"ec13fe4d","531":"67f18efe","532":"f3a16a7f","533":"b8872dda","534":"c09206c7","535":"2ea13bf2","536":"72326d72","537":"82b176db","538":"6c969a55","539":"0571fa2f","540":"841c4727","541":"2178f94d","600":"a434e4f5","601":"5b22333f","602":"bb13e2a2","603":"0400f830","604":"5ee961b6","605":"de4becc6","606":"c453c314","607":"faec16b5","608":"b71ffbce","609":"a63ad1d8","610":"660e42f8","611":"1cb44818","612":"d9fc7304","613":"c698cb34","614":"829e5b82","615":"54e3be48","616":"b30bd8be","617":"7c008c9b","618":"a4dde51b","619":"4df86f43","620":"537558ba","621":"dc45e8c5","622":"47086079","623":"7e3dd2f1","624":"185e5444","625":"33c7158d","626":"a8dc652e","627":"68dbcbb0","628":"47096cd9","629":"410bf058","630":"a32553f9","631":"1748e304","632":"8c13de89","633":"b28d786d","634":"046fb6dc","635":"4c991a33","636":"fea0c01a","637":"d1986529","638":"626adf29","639":"5f15ddc5","640":"59854431","641":"6ac915a0","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5","800":"eeba75ef","801":"16efa2b2","802":"6404d236","803":"fe899356","804":"8420d410","805":"f2868d97","806":"c356d3e1","807":"fd5c0576","808":"77533157","809":"7af2d187","810":"f1bd6c86","811":"3a6d0fe1","812":"868eb666","813":"3e71a8d5","814":"fbbca4e9","815":"baa414bb","816":"3e570769","817":"a8e2ecd6","818":"46dbdb2e","819":"26833595","820":"7e922fbf","821":"dd80c668","822":"ef7809ed","823":"2c1bea36","824":"a64f7c5a","825":"2210220a","826":"e92c377b","827":"a1028d92","828":"f64d61d4","829":"79665dcc","830":"46eae1a6","831":"558d4b93","832":"dd47b656","833":"ff5e8584","834":"4de17660","835":"d57c807e","836":"0e4b080c","837":"90394e20","838":"068fa6b3","839":"f2eabd32","840":"8d3ff734","841":"9af1cb5c"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -1800,5 +1800,605 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "author": "vecarz",
   "license": "CC Attribution",
   "page": "https://sketchfab.com/3d-models/none-dee0c9fd1ba344c8a39d1fdb6cba3f6d"
+ },
+ {
+  "car": "BYDD Atto 3",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3e9408e95e3a4d7db8c332b31019e30d"
+ },
+ {
+  "car": "Jeely Binyue",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-85f198cccbad422a98dd4e01f6f85761"
+ },
+ {
+  "car": "Cherri Tiggo 7 Pro",
+  "author": "Cobalt Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-db7a4897c2f94d458a67200b45a15c18"
+ },
+ {
+  "car": "BYDD Dolphin",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c4a97baaadda487faa7ed90ecd1b057d"
+ },
+ {
+  "car": "Cherri QQ",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-183ade229e7b4f8f8fb18bc76dcfcf38"
+ },
+ {
+  "car": "Cherri Tiggo 9",
+  "author": "Nieve5677",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8d7c3a2c7af44196b5b1a360cda7f577"
+ },
+ {
+  "car": "BYDD e6",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a30c5e6432a9452fa476c65f43d5e058"
+ },
+ {
+  "car": "Havall H9",
+  "author": "GARAGISTA",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7cab222e4fef447395d63d901cf472d2"
+ },
+ {
+  "car": "Wulin Hongguang S",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-00849ced1ae14b3d8e1e55e934f50cb4"
+ },
+ {
+  "car": "Jeely Emgrand",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-620f85b9e5f9407eaefee2482d20429f"
+ },
+ {
+  "car": "Hongchi H5",
+  "author": "MattDoesBlender",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b0b634820fcf47acb55c0d641fe69932"
+ },
+ {
+  "car": "Cherri Tiggo 8 Pro",
+  "author": "WarlordX",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e7611694c7a644ce8e642317f30710db"
+ },
+ {
+  "car": "Cherri Tiggo 4",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-292847e6895e42ba8f7b884423f98096"
+ },
+ {
+  "car": "Cherri Arrizo 8",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b538ea28bd094a2aaac9fbca21f4b3b0"
+ },
+ {
+  "car": "Hongchi HS5",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ecc8a0991e07415a90a18905332634c2"
+ },
+ {
+  "car": "Havall H6",
+  "author": "GARAGISTA",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5f4841ba0ea344b0b78f1938c6f3dd37"
+ },
+ {
+  "car": "BYDD Seagull",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-eb996c7006b74ec88c7131a5c0eac116"
+ },
+ {
+  "car": "EM-G HS",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2df44a9a4e2449d3a5c6271db2ce3d10"
+ },
+ {
+  "car": "Grate Wall Poer",
+  "author": "Mixmamo.studio:   An effortless 3D collections.",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-677dde7012244a8ba8eadaa393a1bbc7"
+ },
+ {
+  "car": "Changann CS35 Plus",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ce73caccc1fb4d6f841e4398e667ff2b"
+ },
+ {
+  "car": "Changann CS75 Plus",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ffc28a1f44dc40beb25fa6d1ab085c8e"
+ },
+ {
+  "car": "Changann UNI-K",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-00f39302c28640df88bd2f60beb87063"
+ },
+ {
+  "car": "Changann UNI-V",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a2d06788633f4e4f87abcc3abebc524a"
+ },
+ {
+  "car": "Havall Big Dog",
+  "author": "ItsDiyor",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e147e86ccad6405dbb3b1a6ed67889cf"
+ },
+ {
+  "car": "Changann CS55 Plus",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3f9037b11d4c4e8fa0caa78f225f2046"
+ },
+ {
+  "car": "EM-G ZS",
+  "author": "MattDoesBlender",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-373b2ab7a9ae421a8ff6844b989683f1"
+ },
+ {
+  "car": "MG4",
+  "author": "mkonstadakis",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d2edc9103bdb48f5a202857146f9aa11"
+ },
+ {
+  "car": "Wulin Hongguang Mini EV",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d80877acc62d4387a1ed680cf35d54b2"
+ },
+ {
+  "car": "Changann Eado Plus",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a50de32e1c844363ad75e04d37a03fa8"
+ },
+ {
+  "car": "Neta V",
+  "author": "MimmoLagonigro",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-be06c3d915b44f17939b29a204501609"
+ },
+ {
+  "car": "BYDD Han",
+  "author": "MattDoesBlender",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f7ee6b12224543c38f17f9122b4f1eaf"
+ },
+ {
+  "car": "Zeekar 001",
+  "author": "MimmoLagonigro",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b278f4af168d410483b2e1ecc21097f6"
+ },
+ {
+  "car": "BYDD Seal",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7a901917daf84cada2667746e3efff4f"
+ },
+ {
+  "car": "Avatr 11",
+  "author": "MimmoLagonigro",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-61e5a2d3c0a5422793cc5e9b570c5cd6"
+ },
+ {
+  "car": "BYDD Seal 06 GT",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c1ed22a7638a4cc3b9a4ad0b73d071f2"
+ },
+ {
+  "car": "Cherri Jaecoo J7",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b79411ae7d784317a147e9ec280f9fc5"
+ },
+ {
+  "car": "Xpen P7",
+  "author": "MattDoesBlender",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0ba18de831ba485fadb899d774a64d4b"
+ },
+ {
+  "car": "Hongchi H9",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1b853da0af4a49beaed22f7c26309611"
+ },
+ {
+  "car": "GAC Trumpchi GS4",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7564352c15374da2b85443c5defc6e56"
+ },
+ {
+  "car": "Cherri Arrizo 5",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7aac6dc62f784d0180b197b058ada2a7"
+ },
+ {
+  "car": "EM-G Cyberster",
+  "author": "MattDoesBlender",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b09230c308b74680b5372b37476ad0ab"
+ },
+ {
+  "car": "Xiaomy SU7",
+  "author": "Dave Love SketchFab",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7b5feac3e32940b1a66b9a46fbb7122e"
+ },
+ {
+  "car": "Dongfeng Aeolus AX70",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-599c160d56cd49ff9016f9348b02ae11"
+ },
+ {
+  "car": "Jetur Dashing",
+  "author": "UZBEK 3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a8cd6bc24cbf44fc951631078caaffde"
+ },
+ {
+  "car": "Xiaomy SU7 Ultra",
+  "author": "TechFreak",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-19da48fdd841430b90046c7ed43b3cc8"
+ },
+ {
+  "car": "BYDD Yangwang U8",
+  "author": "martinmaysketcfab",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e41c7d031c454d1c834a6f597c139521"
+ },
+ {
+  "car": "GAC Aion Hyper SSR",
+  "author": "JUSTGAME",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1b0e5bbe68dc4fecabe2fa31f3fdd82f"
+ },
+ {
+  "car": "Zeekar 007",
+  "author": "MimmoLagonigro",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2d0e7cfd6d30440e896ddd08fe270534"
+ },
+ {
+  "car": "BYDD Yangwang U9",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-cd3d00f0d5614612a723ffc884d8cdc7"
+ },
+ {
+  "car": "Neo EP9",
+  "author": "VuckyZ",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b4092cb9ff7140a0b49716e65b187844"
+ },
+ {
+  "car": "Lado Granta",
+  "author": "Ilya",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-922d4ffb8a4647728830be45d846cca5"
+ },
+ {
+  "car": "GAS Volga 31105",
+  "author": "Pipin",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-156d3329c0644057b9becce591b98fa2"
+ },
+ {
+  "car": "Lado Niva Legend",
+  "author": "zhe_kan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2c50095886bd4b679f06b3d85225b999"
+ },
+ {
+  "car": "Lado Vesta",
+  "author": "Haderium",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d23d4b6447bf47fcb37f919298e94cad"
+ },
+ {
+  "car": "VAS 2121",
+  "author": "1518vladimir",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c711a9840d494535968e3cee0ec4588c"
+ },
+ {
+  "car": "Lado 2104",
+  "author": "sMoKi",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ba563a31b4754a66a5f0e7f893145922"
+ },
+ {
+  "car": "Lado 2105",
+  "author": "Ermakov",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3bd3c4aeba2c4a65aa4e8a57c193d432"
+ },
+ {
+  "car": "Lado 2103",
+  "author": "Black Snow",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9d02e433d9dc4b92a271a4c8641b6211"
+ },
+ {
+  "car": "Lado Priora",
+  "author": "blender aboba",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1551b8223bdf4d78ab3e8e568530836d"
+ },
+ {
+  "car": "Lado 2107",
+  "author": "tiunov.se",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-31201f80892b404a8e49c272490a664c"
+ },
+ {
+  "car": "Lado 2109",
+  "author": "Bogdan Styopin",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-404b8c9d153b4e99a24eb16601ce7397"
+ },
+ {
+  "car": "VAS 2115",
+  "author": "aleksandrkorolkov091",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-facb2f007bd04b9ab8e6a1ee5d73d0aa"
+ },
+ {
+  "car": "Lado 2110",
+  "author": "kostja334567",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-cf0683a8d0e64d24a2d45e198c1320ad"
+ },
+ {
+  "car": "Lado 2106",
+  "author": "ivsxworx",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-644ffb3c222241ca9ee1a1047deffb14"
+ },
+ {
+  "car": "Lado 2101",
+  "author": "Terllok",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-65c16bf7805d4e5d9d8073af60b10397"
+ },
+ {
+  "car": "Moskvych 407",
+  "author": "Ford mondeo",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-58235af9848f44dab826bca9ab1bc084"
+ },
+ {
+  "car": "UAS Hunter",
+  "author": "tafooR",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-01de3d58f22c4f34b056c03cadb4e7d0"
+ },
+ {
+  "car": "UAS Buhanka",
+  "author": "Res1n",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e16617dcac72481784cdb6da504b50b6"
+ },
+ {
+  "car": "Moskvych 2140",
+  "author": "zhe_kan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-72d8d3694c34453ebc1b99ced63f0ab3"
+ },
+ {
+  "car": "VAS 1111 Oka",
+  "author": "karrifun",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-199d27241aa94c528c4d0f8041f1a502"
+ },
+ {
+  "car": "GAS Volga 3110",
+  "author": "maxdragonn",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-19074d0e6287462ea5e2be3e0a115665"
+ },
+ {
+  "car": "GAS Volga Siber",
+  "author": "Daniel_Bakunin",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-12c336887d8d4abd908a464fc656cdfd"
+ },
+ {
+  "car": "UAS 452",
+  "author": "Ermakov",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-19fc25e92ea045cb859995dc6fa781d2"
+ },
+ {
+  "car": "Moskvych 2141",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8b2e431a32334db98613ff43dd620fec"
+ },
+ {
+  "car": "Moskvych 412",
+  "author": "Alexander Bakhtin",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b6eb96e28f184cf5a8098f68570f2314"
+ },
+ {
+  "car": "IZh Kombi",
+  "author": "trolleway",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e2d950ee7b3d43949b9957a7cc49f407"
+ },
+ {
+  "car": "Moskvych 401",
+  "author": "Marat_Babarykin",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ae5b71e2656b440da89c5f6bd9ca0096"
+ },
+ {
+  "car": "VAS 2107",
+  "author": "Arkady Gribachev",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-91270dab9d1a47c7ba7ffaaf8c8b0beb"
+ },
+ {
+  "car": "ZAS 965",
+  "author": "trolleway",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f247a63bf1314f8aba4fd34b729e91f2"
+ },
+ {
+  "car": "Lado 2108",
+  "author": "aero1226",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b8f15f3bd6ba440381f7130bdfb0b204"
+ },
+ {
+  "car": "ZYS 101",
+  "author": "Anton Sereda",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-64681d43998343cfb8dfb666634e8689"
+ },
+ {
+  "car": "Kamas 4310",
+  "author": "trystyrobot",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7da12f4bbf8c45889b507c9c2c515b28"
+ },
+ {
+  "car": "Moskvych 400",
+  "author": "ThankSang0301",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-fb4ba8cd90084860b698600439bd4913"
+ },
+ {
+  "car": "GAS 21 Volga",
+  "author": "Nieve5677",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f3d9901353a8497696a52b901b0acd52"
+ },
+ {
+  "car": "GAS 24 Volga",
+  "author": "Sergey Egelsky",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8492f930a3b64b52a24b7c4dff9f7b4f"
+ },
+ {
+  "car": "UAS 469 Classic",
+  "author": "zhe_kan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-027fa204ce25452fac61a93ccfb8f1f8"
+ },
+ {
+  "car": "Lado 4x4 Urban",
+  "author": "Villanueva-Jonatan-32621",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-83ca48c3faa347549ede04cb7221f4ef"
+ },
+ {
+  "car": "GAS 69",
+  "author": "Ford mondeo",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-431b7e7b962c4cdf99c4a18007eaa671"
+ },
+ {
+  "car": "UAS 3163 Patriot",
+  "author": "zhe_kan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-18341219ad244087a2c48ae50bb2bcd6"
+ },
+ {
+  "car": "Zill 130",
+  "author": "nghesiyeubuom97",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-38e93a0437c84184a141fe44a5125e4f"
+ },
+ {
+  "car": "UAS Hunter Expedition",
+  "author": "zhe_kan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e6db8a23a6c8406a8ad876f1c7a3290f"
+ },
+ {
+  "car": "Lado Samara T3",
+  "author": "Vyacheslav",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9a4823b70a5e448bb8c01556af60e9f9"
+ },
+ {
+  "car": "UAS 469",
+  "author": "Yo.Ri",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-70c8691c6fb64b859fbfc16babfa2c5f"
+ },
+ {
+  "car": "Lado Samara 21099",
+  "author": "Peter_Egorov2000",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-df242c92371547f8a6bd8e97cb3a5e3b"
+ },
+ {
+  "car": "GAS 66",
+  "author": "tiunov.se",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4ae573e2fb084f63bd63a2bb44852c68"
+ },
+ {
+  "car": "GAS Tigr",
+  "author": "42manako",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2b3a105cf2f64046ac19977ce35c1a5e"
+ },
+ {
+  "car": "Zill 157",
+  "author": "dugito03",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-bc45123f030540f3bd66edc7e548726d"
+ },
+ {
+  "car": "Kamas 5330",
+  "author": "Brout",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e86a62f4b8c84e03b2c6e32c51474bc7"
+ },
+ {
+  "car": "Marusya B2",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5b6c1e7df1fe43bba80d0fd2da41d952"
+ },
+ {
+  "car": "Marusya B1",
+  "author": "Ricy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ec1d0069379f41d285ed009d7498f869"
  }
 ];
