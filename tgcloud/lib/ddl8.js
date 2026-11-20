@@ -77,3 +77,5 @@ export const MIGRATION_18 = upsertWorld(7);
 
 // 19: контейнер «Весь мир» — 50 машин по 3D-моделям.
 export const MIGRATION_19 = upsertWorld(8);
+// 22: итальянский контейнер — 50 машин.
+export const MIGRATION_22 = upsertWorld(4);

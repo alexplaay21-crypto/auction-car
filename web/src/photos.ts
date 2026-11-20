@@ -1,5 +1,5 @@
 // Создано сборкой графики: машины, отрисованные по 3D-моделям (id → версия файла).
-export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","57":"459d60a8","58":"4f85af93","59":"00517042","60":"4cfa73e0","61":"f99d9cb1","62":"e23e1c1f","63":"2c794425","64":"2c587116","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5","800":"eeba75ef","801":"16efa2b2","802":"6404d236","803":"fe899356","804":"8420d410","805":"f2868d97","806":"c356d3e1","807":"fd5c0576","808":"77533157","809":"7af2d187","810":"f1bd6c86","811":"3a6d0fe1","812":"868eb666","813":"3e71a8d5","814":"fbbca4e9","815":"baa414bb","816":"3e570769","817":"a8e2ecd6","818":"46dbdb2e","819":"26833595","820":"7e922fbf","821":"dd80c668","822":"ef7809ed","823":"2c1bea36","824":"a64f7c5a","825":"2210220a","826":"e92c377b","827":"a1028d92","828":"f64d61d4","829":"79665dcc","830":"46eae1a6","831":"558d4b93","832":"dd47b656","833":"ff5e8584","834":"4de17660","835":"d57c807e","836":"0e4b080c","837":"90394e20","838":"068fa6b3","839":"f2eabd32","840":"8d3ff734","841":"9af1cb5c"};
+export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","25":"1d974635","26":"a9f444e9","27":"669cd460","28":"355be7f2","29":"41806229","30":"2fcfd5c3","31":"de0133e1","32":"d2b788a4","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","57":"459d60a8","58":"4f85af93","59":"00517042","60":"4cfa73e0","61":"f99d9cb1","62":"e23e1c1f","63":"2c794425","64":"2c587116","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","400":"fcc886f3","401":"bebdffce","402":"133ab1f9","403":"e774e05f","404":"50ac7f1a","405":"78219fcd","406":"a7946582","407":"6c871423","408":"85995720","409":"2026ada6","410":"5505bbd8","411":"fd101c63","412":"8cceeb62","413":"a5ea2d1b","414":"53049583","415":"64a5d9f7","416":"015c01b2","417":"89127b89","418":"91ecfdc7","419":"444cd3e1","420":"f0d3aa1c","421":"bcdc0677","422":"7d025495","423":"e50c1e5e","424":"de58c141","425":"0a0dac62","426":"000bb579","427":"50cb19c5","428":"dae295ca","429":"69657b6c","430":"821981cb","431":"938351fd","432":"006bc080","433":"3099dee9","434":"85101a9e","435":"3acd1731","436":"9f36aa85","437":"c36f9a98","438":"6a17d1d2","439":"415a67c4","440":"1fc58375","441":"7feca332","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5","800":"eeba75ef","801":"16efa2b2","802":"6404d236","803":"fe899356","804":"8420d410","805":"f2868d97","806":"c356d3e1","807":"fd5c0576","808":"77533157","809":"7af2d187","810":"f1bd6c86","811":"3a6d0fe1","812":"868eb666","813":"3e71a8d5","814":"fbbca4e9","815":"baa414bb","816":"3e570769","817":"a8e2ecd6","818":"46dbdb2e","819":"26833595","820":"7e922fbf","821":"dd80c668","822":"ef7809ed","823":"2c1bea36","824":"a64f7c5a","825":"2210220a","826":"e92c377b","827":"a1028d92","828":"f64d61d4","829":"79665dcc","830":"46eae1a6","831":"558d4b93","832":"dd47b656","833":"ff5e8584","834":"4de17660","835":"d57c807e","836":"0e4b080c","837":"90394e20","838":"068fa6b3","839":"f2eabd32","840":"8d3ff734","841":"9af1cb5c"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -1500,5 +1500,305 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "author": "Ddiaz Design",
   "license": "CC Attribution",
   "page": "https://sketchfab.com/3d-models/none-4acac56c712544b68f5ec2281eb1047d"
+ },
+ {
+  "car": "Fiatt Punto",
+  "author": "Lionsharp Studios",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-48db6facb4b64e99b60f36b8c01185e1"
+ },
+ {
+  "car": "Fiatt 500",
+  "author": "Francesco Coldesina",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4606659ff31142e3b8080f995514452f"
+ },
+ {
+  "car": "Alpha Romio Giulietta",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1622fa52b112463ba678d88abc0b08f7"
+ },
+ {
+  "car": "Fiatt Panda",
+  "author": "Valentina Pantaleoni",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-38887c2e43294e34a2e032af23a64a80"
+ },
+ {
+  "car": "Fiatt Grande Punto",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-888037316bf8471c96014aeec9975f1d"
+ },
+ {
+  "car": "Fiatt Barchetta",
+  "author": "Ricy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1f4a33656cca442885dc708c38bb3332"
+ },
+ {
+  "car": "Alpha Romio Spider",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ae0f680cc2494f12b3f78b6dfd9ad5ff"
+ },
+ {
+  "car": "Fiatt Punto Evo",
+  "author": "Álterego",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7bd922acb92747bba5aec447ca260cd9"
+ },
+ {
+  "car": "Fiatt Panda 4x4",
+  "author": "ElectricWolf",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8964a8f8ef4942ceaa947f2cd26a6533"
+ },
+ {
+  "car": "Alpha Romio 156",
+  "author": "ImperialBlue3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-690d4f118d844f918df22b28b2cb4205"
+ },
+ {
+  "car": "Fiatt Bravo",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e59c3d9c7eb34afeb9a96ada26110138"
+ },
+ {
+  "car": "Fiatt 850 Spider",
+  "author": "Lucas Soler",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8ea03b3cbb9f439ea82a68ddbeb5f6ae"
+ },
+ {
+  "car": "Alpha Romio 147",
+  "author": "ImperialBlue3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0bbd8de645fd4c659f76d9d6d0b16985"
+ },
+ {
+  "car": "Iveco Daily",
+  "author": "Randonavt",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3f7d73f4cddf40ef8c00d2d35513baa7"
+ },
+ {
+  "car": "Fiatt Abarth 500",
+  "author": "Luquita",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b59a403dfa1d40318c1126e658f87c19"
+ },
+ {
+  "car": "Abart 595",
+  "author": "Racing Carz U3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4fb5ffae29e04abe946e0f365555fe3a"
+ },
+ {
+  "car": "Fiatt Ducato",
+  "author": "hamlo",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b52eea677b32415e893e39c2fcb76163"
+ },
+ {
+  "car": "Alpha Romio Giulia",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6ab89536590d478598d64396ad4ac4ca"
+ },
+ {
+  "car": "Alpha Romio Stelvio",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b6e382aee4a44fb3b1222d7191470640"
+ },
+ {
+  "car": "Alpha Romio Tonale",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-19e572df8609438e83d1583cad9a20d4"
+ },
+ {
+  "car": "Alpha Romio Giulia Sprint",
+  "author": "MMC Works",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ee5f8e442fc443b284d35c917671d144"
+ },
+ {
+  "car": "Alpha Romio Brera",
+  "author": "Nieve5677",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-38e1bc7d2cbe47bcace96eb7c40e9206"
+ },
+ {
+  "car": "Alpha Romio 159",
+  "author": "シRuletăシ",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a1d2af46022444f293d12947884cde94"
+ },
+ {
+  "car": "Fiatt Stilo",
+  "author": "Merc_TV",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-14498133ecab471e8aaa9f1697ffe9c2"
+ },
+ {
+  "car": "Lanchia Delta",
+  "author": "PapaX007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a903b9d9a03046f2b4275ef4f33ea437"
+ },
+ {
+  "car": "Fiatt Argo",
+  "author": "wjmatos",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5fd176af97884d1eabdce909f9a854ed"
+ },
+ {
+  "car": "Fiatt 126p",
+  "author": "Martin Trafas",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-edc1b9d866484e048b4c54d917cca900"
+ },
+ {
+  "car": "Fiatt Uno",
+  "author": "ARDmation",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e81d01b9513947ac9e223fff1e669eff"
+ },
+ {
+  "car": "Fiatt Linea",
+  "author": "linea_1.6mjet",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c5c99d7aedaa4dc1a2c7690b56571b1a"
+ },
+ {
+  "car": "Fiatt Toro",
+  "author": "FreshCanidae1571",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-824ea9935afc44d0bbf23b911b4dc6f9"
+ },
+ {
+  "car": "Alpha Romio Giulia Quadrifoglio",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e001168eeb00429b8457609c61625ceb"
+ },
+ {
+  "car": "Mazerati MC20",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7d8f1c2a3b3b4809bdd85f2eb8b23ff5"
+ },
+ {
+  "car": "Mazerati Levante",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-bc38f72b3ac14acc9e435c99d18abf0c"
+ },
+ {
+  "car": "Mazerati Quattroporte",
+  "author": "Maroi Mister Let Me Think Official 3D Studio",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3ffafe70c9254255b241f9e86e4fe8e6"
+ },
+ {
+  "car": "Lanchia Delta Integrale",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7646bb58555a4b0896b64b34312ea901"
+ },
+ {
+  "car": "Alpha Romio 4C",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-93da1386a94744c5bd8a676a09f9d4e9"
+ },
+ {
+  "car": "Alpha Romio Stelvio Quadrifoglio",
+  "author": "ijiklvn",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7a5e219a35ed49e99b91fb1a085d8528"
+ },
+ {
+  "car": "Alpha Romio 8C Competizione",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b61bf1eb18f840be9143bf8d3baa4dbc"
+ },
+ {
+  "car": "Lanchia 037 Stradale",
+  "author": "vecarz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-36f1c5964de14e0088d828e88a3749b9"
+ },
+ {
+  "car": "Lamborgini Urus",
+  "author": "Kai Xiang",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-32964087f5d24c3e90482724ddfc2fef"
+ },
+ {
+  "car": "Ferari California T",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9f110e246c194c6fb3583d07bb54ba22"
+ },
+ {
+  "car": "Ferari Portofino",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9cd72d98f5ab4bc69f6de850d8eda514"
+ },
+ {
+  "car": "Mazerati GranTurismo",
+  "author": "Marcos Gigena",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c4aa1cf6461048e3b75a77ff027f90c6"
+ },
+ {
+  "car": "Ferari Roma",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-cbc0c13c0fb54fc8bbfa79a9ff99e3aa"
+ },
+ {
+  "car": "Ferari 488 GTB",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6ba24a73f3544957af9e117a4f492b37"
+ },
+ {
+  "car": "Lamborgini Huracan",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9b9305754f644509ac7d8913fc5707a3"
+ },
+ {
+  "car": "Lamborgini Aventador SVJ",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-89258ec08a6c4e9dbc4194cf71c0aa08"
+ },
+ {
+  "car": "Ferari SF90 Stradale",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2c80c667232544649328cf3589921bcd"
+ },
+ {
+  "car": "Ferari LaFerrari",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4a129721f8174c27ba0083f892913a51"
+ },
+ {
+  "car": "Pagany Huayra",
+  "author": "vecarz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-dee0c9fd1ba344c8a39d1fdb6cba3f6d"
  }
 ];
