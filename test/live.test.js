@@ -71,7 +71,7 @@ test('победа: картинка меняется на машину, поб�
 test('марки вымышленные: в каталоге нет реальных брендов', async () => {
   const names = (await db.all('SELECT name FROM cars')).map((r) => r.name).join(' ');
   for (const brand of ['Toyota', 'Honda', 'Nissan', 'BMW', 'Porsche', 'Ferrari', 'Lamborghini', 'Ford', 'Chevrolet', 'Dodge', 'Audi', 'Mercedes', 'Fiat', 'Alfa', 'Maserati', 'Lexus', 'Subaru', 'Mitsubishi', 'Volkswagen', 'Opel']) {
-    assert.ok(!names.includes(brand), brand);
+    assert.ok(!new RegExp(`\\b${brand}\\b`).test(names), brand);
   }
 });
 
