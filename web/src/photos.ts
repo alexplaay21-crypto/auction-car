@@ -1,5 +1,5 @@
 // Создано сборкой графики: машины, отрисованные по 3D-моделям (id → версия файла).
-export const PHOTOS: Record<number, string> = {"9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf"};
+export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -300,5 +300,305 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "author": "vecarz",
   "license": "CC Attribution",
   "page": "https://sketchfab.com/3d-models/none-9fb9a088d0704a06ba69a8a6de100f10"
+ },
+ {
+  "car": "Toyoda Corolla",
+  "author": "ItsDiyor",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6d7d34ee42734d1ab28a6b1f1c5fc4fc"
+ },
+ {
+  "car": "Hondo Civic",
+  "author": "Jumping Jax",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c36abddc783445fbb00f72356c576fca"
+ },
+ {
+  "car": "Nisan Micra",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4920e8c5856848afb577d8a022fe5980"
+ },
+ {
+  "car": "Toyoda Camry",
+  "author": "ItsDiyor",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-236a5a6e2fa6420fbdf641f4800cd544"
+ },
+ {
+  "car": "Toyoda RAV4",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-34645485dd284ac1b473b52f8a74da6b"
+ },
+ {
+  "car": "Toyoda Yaris",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-44cb958908b94aa5aad0d856994f35a3"
+ },
+ {
+  "car": "Toyoda C-HR",
+  "author": "ItsDiyor",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-bc9bf0f48e174e918a5187dd1de019f8"
+ },
+ {
+  "car": "Toyoda Prius",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-90e9f77205014ecc8e3e08dd27dc4d52"
+ },
+ {
+  "car": "Toyoda Hilux",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-82bd37c5065040098fb0b86e07fcb959"
+ },
+ {
+  "car": "Hondo Accord",
+  "author": "Bobby the TCF and FSP and TCS and SML fan",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f973338c77ce4618b941612241d53f6a"
+ },
+ {
+  "car": "Hondo CR-V",
+  "author": "Palma123 JAAT",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-91c6673859444597bf006a0ef8570005"
+ },
+ {
+  "car": "Hondo Jazz",
+  "author": "Car Simulator 2-Preview",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-795c9d1e12d9410c83caf0301271febc"
+ },
+ {
+  "car": "Hondo HR-V",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e9128a46adc34e5e995ab7e8ad36339c"
+ },
+ {
+  "car": "Nisan Qashqai",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3c7f36f8e67d43b7b26e901880806503"
+ },
+ {
+  "car": "Nisan X-Trail",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f9f2cbdacac74ee7acfe1c731195ccaa"
+ },
+ {
+  "car": "Nisan Leaf",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d78bc26f1f9c41be8b6162423d51b13a"
+ },
+ {
+  "car": "Nisan Juke",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-bb5dc85faab04c44a8786b81c1c19e29"
+ },
+ {
+  "car": "Matsda 3",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7e2ef9be2dd74cf4b980d068d272dfff"
+ },
+ {
+  "car": "Matsda CX-5",
+  "author": "ItsDiyor",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ea176c6ebe814be3b06641bf038f8642"
+ },
+ {
+  "car": "Matsda 6",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-5283be51d5594d1fb030e6538808cbe7"
+ },
+ {
+  "car": "Mitsubisi Outlander",
+  "author": "twr422",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6347047d7187409aa85df73559f5298e"
+ },
+ {
+  "car": "Mitsubisi Lancer",
+  "author": "vecarz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c3d5dcd8ff724bc88c46760d92fc5188"
+ },
+ {
+  "car": "Mitsubisi Lancer Evolution IX",
+  "author": "Asadawut.Kaewma",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-cac5584656b54560bf111d0a792a2458"
+ },
+ {
+  "car": "Subara Impreza",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-065804733fa245c6b1b10ca2de44099d"
+ },
+ {
+  "car": "Subara Forester",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-611ae23685c14134b5a4f3decde248e9"
+ },
+ {
+  "car": "Subara Outback",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a44abee6689e429881209fc6299f505c"
+ },
+ {
+  "car": "Suzuky Swift",
+  "author": "BHP3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-95451c00cb2d48778f67d798167e7237"
+ },
+ {
+  "car": "Suzuky Jimny",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8b7c4d136f6742e180faf654d874f14a"
+ },
+ {
+  "car": "Lexxus IS",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-be1c96a927f345e59d41577f4fa16978"
+ },
+ {
+  "car": "Lexxus RX",
+  "author": "menarzuw",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6b9a1994b2dd445c8248270c81eead6b"
+ },
+ {
+  "car": "Subara WRX STI",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b61292f5b9d2416990aa5bd502555f3a"
+ },
+ {
+  "car": "Mitsubisi Lancer Evolution X",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-07045cf6d8e049eb809aadba5b32a245"
+ },
+ {
+  "car": "Toyoda GR86",
+  "author": "Maroi Mister Let Me Think Official 3D Studio",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ffa77c13d09f4e58b69c2964b3941d79"
+ },
+ {
+  "car": "Toyoda GR Yaris",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-721482e4ac044f41942815ac98eb7924"
+ },
+ {
+  "car": "Toyoda Land Cruiser 300",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-4bdf91eb400746e597b0be07ed193bfa"
+ },
+ {
+  "car": "Hondo Civic Type R",
+  "author": "tiedtke",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b9604dd71c6546ec842702682019492a"
+ },
+ {
+  "car": "Matsda MX-5",
+  "author": "Black Snow",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e074e29ccc3847dca74ed5e9cb92d3e7"
+ },
+ {
+  "car": "Nisan 370Z",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ae35b6bf30114fdfbbbce5b53abe5253"
+ },
+ {
+  "car": "Nisan Z",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-17668144004c4e7d96bcee3e418d1b66"
+ },
+ {
+  "car": "Subara BRZ",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a36828aecd7b40709d9a4f57b09fe54a"
+ },
+ {
+  "car": "Lexxus RC F",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1e3a80ea410343cc8bdb836b15bfcb6f"
+ },
+ {
+  "car": "Nisan Patrol",
+  "author": "DR1KING100K",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d36a29d57bba4eb1a09077030e7dafa3"
+ },
+ {
+  "car": "Toyoda GR Supra",
+  "author": "thelightning",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9231f2d5e71a43dd87603dc0b339d99d"
+ },
+ {
+  "car": "Hondo S2000",
+  "author": "DRIVER-FIRE",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c8f87ba8790d4154929103e4012d1e66"
+ },
+ {
+  "car": "Toyoda Supra MK4",
+  "author": "Black Snow",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8bebdee25b774067929bb33e648533ac"
+ },
+ {
+  "car": "Nisan GT-R R35",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8b77c313ab7946688cca2ade5c19a664"
+ },
+ {
+  "car": "Lexxus LC 500",
+  "author": "Socksthecat",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3f6118da005a457a9ce6d737e5d1e37d"
+ },
+ {
+  "car": "Hondo NSX",
+  "author": "Lexyc16",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1cc15628a00a4739a6b6c01128927c8d"
+ },
+ {
+  "car": "Nisan Skyline GT-R R34",
+  "author": "Lexyc16",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ff8fb2251dfa4bb9979e7022c5a6666c"
+ },
+ {
+  "car": "Lexxus LFA",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-05900382647c42d19ab925f23eabca62"
  }
 ];

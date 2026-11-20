@@ -44,3 +44,27 @@ export const MIGRATION_13 = upsertGerman();
 export const MIGRATION_14 = upsertGerman();
 // 15: модели под 3D-рендер (часть машин заменена на те, для которых есть хорошие 3D-модели).
 export const MIGRATION_15 = upsertGerman();
+
+// ---------- остальные страны ----------
+import { WORLD, buildCountry } from './catalog_world.js';
+export function worldIds(cid) {
+  let next = WORLD[cid].base;
+  return WORLD[cid].cars.map((c) => c[4] ?? next++);
+}
+// Машины страны: старые (keep) обновляются на месте, новые добавляются и попадают в пул контейнера.
+export function upsertWorld(cid) {
+  const W = WORLD[cid], ids = worldIds(cid), rows = buildCountry(cid);
+  const out = [];
+  rows.forEach(([name, , rarity, speed, accel, power, handling, reliability, price, body, color], i) => {
+    out.push(`INSERT INTO cars (id, name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body)
+     VALUES (${ids[i]}, ${q(name)}, ${q(W.country)}, '${rarity}', ${speed}, ${Math.round(accel * 100)}, ${power}, ${handling}, ${reliability}, ${price}, ${q(color)}, ${q(body)})
+     ON CONFLICT (id) DO UPDATE SET name = excluded.name, country = excluded.country, rarity = excluded.rarity, max_speed = excluded.max_speed,
+       accel_x100 = excluded.accel_x100, power = excluded.power, handling = excluded.handling, reliability = excluded.reliability,
+       price = excluded.price, color = excluded.color, body = excluded.body`);
+    out.push(`INSERT INTO container_cars (container_id, car_id, weight) VALUES (${cid}, ${ids[i]}, 1) ON CONFLICT DO NOTHING`);
+  });
+  return out;
+}
+
+// 16: японский контейнер — 50 машин по 3D-моделям.
+export const MIGRATION_16 = upsertWorld(1);
