@@ -1,5 +1,5 @@
 // Создано сборкой графики: машины, отрисованные по 3D-моделям (id → версия файла).
-export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04"};
+export const PHOTOS: Record<number, string> = {"1":"31a21a61","2":"ddf5a3cc","3":"0a8c6a67","4":"c33c61c0","5":"00307d68","6":"6d7819a1","7":"384059a9","8":"205ae8f2","9":"26c13628","10":"e64861d3","11":"ca0f4456","12":"63c27894","13":"eb178836","14":"6b74fb48","15":"ea5110a8","16":"5ebf6528","17":"5e9dfb48","18":"8aa9fa15","19":"b2c8937d","20":"97d9044f","21":"f9594e42","22":"ccc6ad2c","23":"0a1bddf7","24":"ea6daa3c","49":"03191b88","50":"404c053f","51":"10f01c42","52":"ad67bac3","53":"cc343459","54":"5a19461b","55":"4c0a028b","56":"1183be5e","101":"d2549777","102":"054eb747","103":"ce6706e8","104":"24b2db0d","105":"aca77a30","106":"cae010b4","107":"9aa67bfd","108":"154e1e9c","109":"c70063cf","110":"40cb7a96","111":"7c040750","112":"c390d9f7","113":"37993c94","114":"5220dea7","115":"dcc4e22c","116":"c0dcd710","117":"9dee6dfe","118":"3686e9c5","119":"f411faff","120":"e720bc65","121":"4bc4ca15","122":"40f18d93","123":"b2cc9658","124":"8c995fc1","125":"154e0eef","126":"975d3584","127":"42b2ea8d","128":"2efbc580","129":"1ac7ef2e","130":"ea2022c1","131":"683624f2","132":"1f2c841b","133":"6d4b9740","134":"88e26c0b","135":"19a0e262","136":"7334c256","137":"120bd2df","138":"0bf521e8","139":"29f53a9f","140":"22012e36","141":"20fbc914","142":"753a78bf","200":"2ed91807","201":"4ce18f62","202":"d35c23d5","203":"577f6fe0","204":"18556e4c","205":"657d0da2","206":"d12a1ee5","207":"0d1fd3f9","208":"4f900ce6","209":"3db16370","210":"5696fe0a","211":"65e84e6e","212":"dabaf168","213":"46cdd7db","214":"97a7a704","215":"735a3512","216":"f8cb82ca","217":"f0647c4c","218":"e7a56ce5","219":"e4d7e702","220":"f4f02c62","221":"1a8127a0","222":"d7a5df12","223":"1b6307e0","224":"267a54b9","225":"daabe2c0","226":"7af690de","227":"670f982c","228":"75d3632a","229":"a31697d6","230":"1bc99b09","231":"959788ef","232":"c3389993","233":"af99ecdc","234":"3cede07c","235":"b40b5ea6","236":"53095db7","237":"f879ed46","238":"105f1738","239":"796b0765","240":"4f7beeb8","241":"5c3e7323","300":"f3c3731d","301":"4c06d9bb","302":"cfdf7958","303":"bf6c8229","304":"9fb9a1a4","305":"e6b67892","306":"67a4cadf","307":"e9fde840","308":"c41d90b3","309":"6e1110ce","310":"2bc64065","311":"a8dc51cb","312":"47c2ccf3","313":"3f9ecebf","314":"72743655","315":"310e80ba","316":"5d81460d","317":"eed6ea89","318":"98b8d716","319":"cdd0debd","320":"b989c7a7","321":"f3917ec2","322":"3bf260d8","323":"2e636844","324":"f431bae5","325":"855f1224","326":"bdc18905","327":"c89a41ee","328":"ef2178fa","329":"49a024af","330":"f4591efe","331":"d7a59ef8","332":"a00cc459","333":"a44c5a8d","334":"b9f668fb","335":"4fc0cacb","336":"87d49986","337":"7a3f8bbd","338":"780dc4f5","339":"f6a19487","340":"054af1b8","341":"1067bc04","700":"31a68f45","701":"9b230a19","702":"cd8306b1","703":"b99aa00e","704":"f56edf78","705":"f781c3fd","706":"09cac881","707":"db836ec6","708":"3bf466ce","709":"34f8ca20","710":"08086589","711":"68ccf5ff","712":"0c1b7409","713":"9d827381","714":"e7ba9db0","715":"80089712","716":"d007244d","717":"2854e867","718":"34ee0074","719":"dff59aa5","720":"98c857f1","721":"81e6322a","722":"42914d7c","723":"93338e0a","724":"d222cdd8","725":"ef870c9d","726":"014be448","727":"5f4e0a4a","728":"f4426c57","729":"9a1c38b7","730":"bb41fdc2","731":"0d98c7e8","732":"0ae0a6af","733":"1c1938b6","734":"9b7c95c9","735":"461fe329","736":"6a1c078b","737":"2f20419c","738":"388a88a4","739":"ffd53e58","740":"8d3439a9","741":"4386aed5"};
 export const CREDITS: { car: string; author: string; license: string; page: string }[] = [
  {
   "car": "Folkswagen Pollo VI",
@@ -900,5 +900,305 @@ export const CREDITS: { car: string; author: string; license: string; page: stri
   "author": "kevin (ケビン)",
   "license": "CC Attribution",
   "page": "https://sketchfab.com/3d-models/none-a56829ea807b4124ae6be0596adeaeba"
+ },
+ {
+  "car": "Pejo 208",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-c3a458884cf7434fa99b2172c96061a4"
+ },
+ {
+  "car": "Reno Clio",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1dad7e4438c74f3b8bac1ab72acd78ed"
+ },
+ {
+  "car": "Pejo 308",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0d9c9c265bec42678bfc269c1a8cebc3"
+ },
+ {
+  "car": "Pejo 2008",
+  "author": "David_Holiday",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-93efd164d3374295a8ac04c36e329429"
+ },
+ {
+  "car": "Pejo 3008",
+  "author": "David_Holiday",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3e5e14fdb1f94f25a5b572caf518f55d"
+ },
+ {
+  "car": "Pejo 5008",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1346a6178efa4b8dbc97b4d086c76186"
+ },
+ {
+  "car": "Pejo 508",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1770104e89f84a8f9ce4a0fd9ae131ac"
+ },
+ {
+  "car": "Pejo 405",
+  "author": "DR1KING100K",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-602dbd0634754339b47de7b1d18bf143"
+ },
+ {
+  "car": "Pejo 206",
+  "author": "zairiq zairiq",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0729c9e28c1d4e03935e9d0a8da0f064"
+ },
+ {
+  "car": "Reno Captur",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b3f0670163ba4c9d906b891181122e1c"
+ },
+ {
+  "car": "Reno Megane",
+  "author": "Galaxy Car Showroom",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-9bce63693bc2458ab8b3a9170f1718f7"
+ },
+ {
+  "car": "Reno Kadjar",
+  "author": "franklinogrt",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-53c5d59768854b2084814aed7b405699"
+ },
+ {
+  "car": "Reno Austral",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0e25e7fc073444ea9485f1fae903a0db"
+ },
+ {
+  "car": "Reno Arkana",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b28e3bd3a038423b9d1a5c27cc45087f"
+ },
+ {
+  "car": "Reno Koleos",
+  "author": "teenlin3",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a8297395783f40249c84a44fbf7d3f15"
+ },
+ {
+  "car": "Reno Scenic",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d33b4426c088419aabbc7a25f3bca8e3"
+ },
+ {
+  "car": "Reno Zoe",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-37af15ff66514c19a778a299ca1b2ebe"
+ },
+ {
+  "car": "Reno Twingo",
+  "author": "saidiishaq4",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-91f48fd2417b4c538d392e4ff50c9542"
+ },
+ {
+  "car": "Reno Logan",
+  "author": "solid3DDD",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-207a863cfaed40b39bbf7dbcabe6b4cc"
+ },
+ {
+  "car": "Reno Espace",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-93123de44afc41beb9698e33c81f6ead"
+ },
+ {
+  "car": "Pejo 406",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-a45880cd207343aea45cd160efefeb81"
+ },
+ {
+  "car": "Sitroen C3",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-0761dead5baf4775ac929ec0bf4c8708"
+ },
+ {
+  "car": "Pejo 407",
+  "author": "FreshCanidae1571",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-f88cfe1c126e46b39622c065cbb8b5e1"
+ },
+ {
+  "car": "Sitroen C4",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-e330880f272449709c36050a393e1574"
+ },
+ {
+  "car": "Reno Duster",
+  "author": "no_lo_seXD",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-70085280588b440f8e9d6fcff9211c42"
+ },
+ {
+  "car": "Pejo 207",
+  "author": "DR1KING100K",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-ef5d59b78b96496fab2731b138820ea2"
+ },
+ {
+  "car": "Reno Laguna",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-1dac193d33fb4eb795834d69baba462a"
+ },
+ {
+  "car": "Sitroen Ami",
+  "author": "klaxoneer",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-7d85987842af4ed58a192c0c91b1a89b"
+ },
+ {
+  "car": "Reno 4",
+  "author": "Configcars : maxipano360@gmail.com",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-67571a45cc874876892e938ad7e2a089"
+ },
+ {
+  "car": "Sitroen Saxo",
+  "author": "DR1KING100K",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-3fe3d59ae9b3442d8378e7eb1d126aa4"
+ },
+ {
+  "car": "Reno Megane RS",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-07be4c5f006441a4bccd6d3e0caae418"
+ },
+ {
+  "car": "Alpin A110",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-d0d6c2b3cfa04aca843cf551f8017926"
+ },
+ {
+  "car": "Pejo 208 GTi",
+  "author": "victor.r.art",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-53f6d81a51c84a9598b2853bb8ab5456"
+ },
+ {
+  "car": "Reno Clio V6",
+  "author": "007",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8c1a78acc9854080bf8e6933a0a420dd"
+ },
+ {
+  "car": "Pejo 508 PSE",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8192f18de3d2431197c9e707666212c7"
+ },
+ {
+  "car": "Reno Clio RS",
+  "author": "Nieve5677",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-2f280af8bd504371ac57d5d7d727c095"
+ },
+ {
+  "car": "Sitroen SM",
+  "author": "ImperialBlue3D",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-79e918d6273945baa704aae53cad0dcf"
+ },
+ {
+  "car": "Pejo 106 Rallye",
+  "author": "Ricy",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-30aac6cc818745878a5b5a0054264c5b"
+ },
+ {
+  "car": "Pejo 205 GTI",
+  "author": "la_freizz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b52c8e5e8070463ab1485039246f527c"
+ },
+ {
+  "car": "Reno 5 Alpine",
+  "author": "41iveR",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8e1b46fcc3144809b3aec69028eb1811"
+ },
+ {
+  "car": "Sitroen 2CV",
+  "author": "3DDomino",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6da92f7b78414f5a89bccabdb7830a93"
+ },
+ {
+  "car": "Alpin A310",
+  "author": "tonielpro520",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-816693bb4b3f4f47929b7bad45eed810"
+ },
+ {
+  "car": "Reno 5 Turbo",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-135951658a014f0fb9d05fcbcd2a957d"
+ },
+ {
+  "car": "Pejo RCZ",
+  "author": "amogusstrikesback2",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8bebeef582074a62990282d41b5093a3"
+ },
+ {
+  "car": "Bugati EB110",
+  "author": "kevin (ケビン)",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-985da5f81629443c95e8a10f9303fb2c"
+ },
+ {
+  "car": "Alpin A110 R",
+  "author": "Mona x Supercars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8036744fe1134c718fe0b86e9a089369"
+ },
+ {
+  "car": "Bugati Veyron",
+  "author": "Ddiaz Design",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-b2eecbbc2dcd41e68494e33af6882e00"
+ },
+ {
+  "car": "Reno 5 Turbo 3E",
+  "author": "boitaloran",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6a984d7ebad3463d82312882fb4e6f1f"
+ },
+ {
+  "car": "Bugati Chiron",
+  "author": "DisneyCars",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-6da5092ee455446cb050e4c6b4a3ac05"
+ },
+ {
+  "car": "Bugati Bolide",
+  "author": "vecarz",
+  "license": "CC Attribution",
+  "page": "https://sketchfab.com/3d-models/none-8a0b3352bacd494d82927aad5ddd05b6"
  }
 ];

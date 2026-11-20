@@ -116,7 +116,7 @@ export const WORLD = {
     ['Peugeot 405', 'common', 110, 'sedan'], ['Peugeot 206', 'common', 75, 'hatch'], ['Renault Captur', 'common', 140, 'suv'], ['Renault Megane', 'common', 140, 'hatch'],
     ['Renault Kadjar', 'common', 140, 'suv'], ['Renault Austral', 'common', 160, 'suv'], ['Renault Arkana', 'common', 160, 'suv'], ['Renault Koleos', 'common', 175, 'suv'],
     ['Renault Scenic', 'common', 140, 'van'], ['Renault Zoe', 'common', 135, 'hatch'], ['Renault Twingo', 'common', 75, 'hatch'], ['Renault Logan', 'common', 90, 'sedan'],
-    ['Renault Espace', 'common', 200, 'suv'], ['Peugeot 406', 'common', 135, 'sedan'], ['Citroen C3', 'common', 110, 'hatch'], ['Citroen C3 Aircross', 'common', 110, 'suv'],
+    ['Renault Espace', 'common', 200, 'suv'], ['Peugeot 406', 'common', 135, 'sedan'], ['Citroen C3', 'common', 110, 'hatch'], ['Peugeot 407', 'common', 140, 'sedan'],
     ['Citroen C4', 'common', 130, 'hatch'], ['Renault Duster', 'common', 114, 'suv'], ['Peugeot 207', 'common', 95, 'hatch'], ['Renault Laguna', 'common', 150, 'sedan'],
     ['Citroen Ami', 'common', 8, 'hatch'], ['Renault 4', 'common', 34, 'hatch'], ['Citroen Saxo', 'common', 75, 'hatch'],
     ['Renault Megane RS', 'rare', 300, 'hatch', 52], ['Alpine A110', 'rare', 252, 'coupe', 53], ['Peugeot 208 GTi', 'rare', 208, 'hatch'],
