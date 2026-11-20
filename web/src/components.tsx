@@ -100,10 +100,17 @@ export function Avatar({ u, size = 32 }: { u: any; size?: number }) {
 }
 
 export function Sheet({ open, onClose, children, title }: { open: boolean; onClose: () => void; children: ReactNode; title?: ReactNode }) {
+  // свайп вниз закрывает шторку (когда она прокручена к началу)
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ y: number; dy: number } | null>(null);
   if (!open) return null;
+  const set = (dy: number, anim = false) => { const el = ref.current; if (!el) return; el.style.transition = anim ? 'transform .22s ease' : 'none'; el.style.transform = dy ? `translateY(${dy}px)` : ''; };
   return (
     <div className="sheet-bg" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="sheet" onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => { if ((ref.current?.scrollTop ?? 0) <= 0) drag.current = { y: e.touches[0].clientY, dy: 0 }; }}
+        onTouchMove={(e) => { const d = drag.current; if (!d) return; d.dy = Math.max(0, e.touches[0].clientY - d.y); if (d.dy > 0) set(d.dy); }}
+        onTouchEnd={() => { const d = drag.current; drag.current = null; if (!d) return; if (d.dy > 110) onClose(); else set(0, true); }}>
         <div className="grip" />
         {title && <div className="h3">{title}</div>}
         {children}

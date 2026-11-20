@@ -300,7 +300,7 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
 .switch.on { background: var(--orange); } .switch.on::after { transform: translateX(18px); background: #fff; }
 .statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .statgrid > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px; text-align: center; }
-.statgrid b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.statgrid b { display: block; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .statgrid span { font-size: 10.5px; color: var(--muted); }
 
 /* магазин: пакеты валюты за звёзды */
@@ -594,3 +594,103 @@ h3 { font-weight: 800; font-size: 14px; margin: 10px 0 4px; }
 /* скидка в магазине */
 .btn s.was { opacity: .6; font-weight: 700; margin: 0 2px; }
 .btn .sale { margin-left: 6px; font-size: 12px; font-weight: 900; padding: 2px 7px; border-radius: 8px; background: #ff3b5c; color: #fff; }
+
+/* ====================================================================================
+   Тема «Жидкое стекло»: мягкий цветной фон, полупрозрачные карточки со световой кромкой,
+   плавающее меню-островок, шторки и панели с размытием того, что под ними.
+   Карточки без backdrop-filter (фон и так размыт) — чтобы прокрутка не тормозила на телефонах.
+   ==================================================================================== */
+:root {
+  --bg: #07080d; --bg-2: rgba(0, 0, 0, .28);
+  --card: rgba(255, 255, 255, .045); --card-2: rgba(255, 255, 255, .075); --card-3: rgba(255, 255, 255, .11);
+  --line: rgba(255, 255, 255, .09);
+  --glass-edge: rgba(255, 255, 255, .14);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(255, 255, 255, .03);
+  --glass-bg: linear-gradient(155deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .035) 42%, rgba(255, 255, 255, .055));
+  --blur: blur(24px) saturate(185%);
+  --r: 20px; --r-s: 14px;
+}
+html { background: var(--bg); } body { background: transparent !important; }
+body { background-image: none; }
+.lg-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: radial-gradient(140% 80% at 50% 0%, #121522, #07080d 70%); }
+.lg-bg i { position: absolute; width: 75vmax; height: 75vmax; border-radius: 50%; opacity: .85; will-change: transform; animation: orb 26s ease-in-out infinite alternate; }
+.lg-bg i:nth-child(1) { left: -30vmax; top: -28vmax; background: radial-gradient(closest-side, rgba(255, 107, 44, .5), rgba(255, 107, 44, .12) 55%, transparent); }
+.lg-bg i:nth-child(2) { right: -34vmax; top: 18vh; background: radial-gradient(closest-side, rgba(47, 140, 255, .48), rgba(47, 140, 255, .1) 55%, transparent); animation-duration: 32s; animation-delay: -8s; }
+.lg-bg i:nth-child(3) { left: -10vmax; bottom: -40vmax; background: radial-gradient(closest-side, rgba(180, 107, 255, .45), rgba(180, 107, 255, .1) 55%, transparent); animation-duration: 38s; animation-delay: -16s; }
+@keyframes orb { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8vmax, 6vmax) scale(1.12); } 100% { transform: translate(-6vmax, 10vmax) scale(.95); } }
+@media (prefers-reduced-motion: reduce) { .lg-bg i { animation: none; } }
+
+/* стеклянные поверхности */
+.card, .carcard, .bp-cell, .style-item, .trk, .stake-btn, .stake-val, .chip, .seg, .back, .money-pill, .btn.ghost, .btn.info, .btn.ok, .btn.bad, .race-result {
+  border: 1px solid var(--glass-edge); box-shadow: var(--glass-hi);
+}
+.card { background: var(--glass-bg); border-radius: var(--r); box-shadow: var(--glass-hi), 0 10px 30px rgba(0, 0, 0, .22); }
+.card.accent { background: linear-gradient(155deg, rgba(255, 107, 44, .24), rgba(255, 255, 255, .04) 55%); border-color: rgba(255, 140, 80, .38); }
+.card.blue { background: linear-gradient(155deg, rgba(47, 140, 255, .22), rgba(255, 255, 255, .04) 55%); border-color: rgba(110, 175, 255, .36); }
+.card.gold { background: linear-gradient(155deg, rgba(255, 194, 61, .22), rgba(255, 255, 255, .04) 55%); border-color: rgba(255, 210, 110, .38); }
+.carcard { background: var(--glass-bg); }
+.li + .li { border-top-color: rgba(255, 255, 255, .07); }
+.sep { background: rgba(255, 255, 255, .08); }
+
+/* верхняя панель */
+.appbar { background: linear-gradient(180deg, rgba(7, 8, 13, .72), rgba(7, 8, 13, .38)); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.money-pill, .back { background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.money-pill { height: 36px; border-radius: 18px; }
+.back { border-radius: 14px; }
+
+/* кнопки */
+.btn { border-radius: 16px; }
+.btn.go { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 6px rgba(160, 40, 0, .25), 0 8px 24px rgba(255, 107, 44, .35); }
+.btn.go::after { content: ''; position: absolute; inset: 1px 1px 50% 1px; border-radius: 15px 15px 40% 40% / 15px 15px 12px 12px; background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); pointer-events: none; }
+.btn { position: relative; overflow: hidden; }
+.btn.ghost { background: var(--glass-bg); }
+.btn.info { background: linear-gradient(155deg, rgba(47, 140, 255, .26), rgba(47, 140, 255, .1)); color: #8cc2ff; border-color: rgba(110, 175, 255, .32); }
+.btn.ok { background: linear-gradient(155deg, rgba(46, 212, 122, .24), rgba(46, 212, 122, .08)); border-color: rgba(100, 230, 160, .3); }
+.btn.bad { background: linear-gradient(155deg, rgba(255, 77, 94, .22), rgba(255, 77, 94, .08)); border-color: rgba(255, 130, 140, .3); }
+.btn.xl { border-radius: 18px; }
+.chip { background: var(--glass-bg); }
+.chip.on { background: linear-gradient(135deg, var(--orange-2), var(--orange)); border-color: rgba(255, 170, 120, .6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+.stake-btn, .stake-val { background: var(--glass-bg); border-radius: 16px; }
+.ic { border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
+
+/* переключатель с плавающим «бегунком» */
+.seg { position: relative; gap: 0; padding: 4px; border-radius: 18px; background: rgba(0, 0, 0, .28); }
+.seg-thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n)); transform: translateX(calc(var(--i) * 100%));
+  border-radius: 14px; background: linear-gradient(180deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .08)); border: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 4px 12px rgba(0, 0, 0, .3); transition: transform .38s cubic-bezier(.3, 1.35, .5, 1); }
+.seg button { position: relative; z-index: 1; border-radius: 14px; transition: color .2s; }
+.seg button.on { background: none; box-shadow: none; color: var(--text); }
+
+/* шторка */
+.sheet-bg { background: rgba(0, 0, 0, .42); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.sheet { background: linear-gradient(180deg, rgba(34, 38, 52, .82), rgba(16, 18, 26, .9)); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid rgba(255, 255, 255, .14); border-bottom: 0; border-radius: 28px 28px 0 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 -10px 40px rgba(0, 0, 0, .45); }
+.grip { width: 44px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .28); }
+
+/* уведомления */
+.toast { background: rgba(40, 44, 60, .72); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 10px 30px rgba(0, 0, 0, .45); }
+
+/* меню-островок */
+.page { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+.tabbar { left: 0; right: 0; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 0 12px; background: none; border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; pointer-events: none; }
+.tabbar .in { position: relative; pointer-events: auto; max-width: 520px; height: 66px; padding: 6px; align-items: center; border-radius: 33px;
+  background: linear-gradient(180deg, rgba(90, 98, 124, .38), rgba(40, 44, 60, .42)); border: 1px solid rgba(255, 255, 255, .2);
+  backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 -1px 0 rgba(255, 255, 255, .06), 0 16px 40px rgba(0, 0, 0, .55); }
+.tabbar .in::before { content: ''; position: absolute; inset: 1px; border-radius: 32px; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, .10), transparent 55%); }
+.tab-pill { position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 5); transform: translateX(calc(var(--i) * 100%)); border-radius: 27px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .07)); border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3); transition: transform .42s cubic-bezier(.3, 1.35, .5, 1), opacity .2s; }
+.tabbar button { position: relative; z-index: 1; height: 54px; justify-content: center; padding: 0; color: rgba(255, 255, 255, .55); font-size: 10.5px; transition: color .2s, transform .15s; }
+.tabbar button:active { transform: scale(.92); }
+.tabbar button.on { color: #fff; }
+.tabbar button.on svg { color: var(--orange-2); filter: drop-shadow(0 0 6px rgba(255, 140, 60, .5)); }
+.tabbar .mid { margin-top: -30px; height: auto; }
+.tabbar .mid .fab { width: 60px; height: 60px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .45), inset 0 -3px 8px rgba(150, 40, 0, .35), 0 10px 26px rgba(255, 107, 44, .5), 0 0 0 4px rgba(255, 255, 255, .08); }
+.tabbar .mid .fab::after { content: ''; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 0 0; background: linear-gradient(180deg, rgba(255, 255, 255, .3), transparent); pointer-events: none; }
+.tabbar .mid .fab { position: relative; }
+.tabbar .badge-dot { box-shadow: 0 0 0 2px rgba(20, 22, 30, .9); }
+
+.carcard .price { white-space: nowrap; }

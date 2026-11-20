@@ -57,7 +57,7 @@ export function App() {
   }, []);
   useEffect(() => {
     tg?.ready?.(); tg?.expand?.();
-    try { tg?.setHeaderColor?.('#0d0f14'); tg?.setBackgroundColor?.('#0d0f14'); tg?.setBottomBarColor?.('#11141b'); } catch { /* старый клиент */ }
+    try { tg?.setHeaderColor?.('#07080d'); tg?.setBackgroundColor?.('#07080d'); tg?.setBottomBarColor?.('#07080d'); } catch { /* старый клиент */ }
     reload();
   }, [reload]);
 
@@ -72,6 +72,7 @@ export function App() {
   const top = stack[stack.length - 1];
   return (
     <AppCtx.Provider value={{ me, reload, tab, setTab, push, pop, open, scope: s0.scope }}>
+      <div className="lg-bg" aria-hidden><i /><i /><i /></div>
       <div className="app">
         {top ? <Page r={top} /> : (
           <>
@@ -84,6 +85,7 @@ export function App() {
         )}
         <nav className="tabbar">
           <div className="in">
+            <span className="tab-pill" style={{ ['--i' as any]: TABS.findIndex(([k]) => k === tab), opacity: top || tab === 'auction' ? 0 : 1 }} />
             {TABS.map(([k, I, label]) => (
               <button key={k} className={`${k === 'auction' ? 'mid ' : ''}${!top && tab === k ? 'on' : ''}`} onClick={() => setTab(k)}>
                 {k === 'auction' ? <span className="fab"><I size={26} strokeWidth={2.4} /></span> : <I size={22} strokeWidth={2.2} />}

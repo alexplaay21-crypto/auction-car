@@ -37,7 +37,13 @@ export function Kv({ k, v, c }: { k: ReactNode; v: ReactNode; c?: string }) {
 }
 
 export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
-  return <div className="seg">{options.map(([k, l]) => <button key={k} className={value === k ? 'on' : ''} onClick={() => { onChange(k); tg?.HapticFeedback?.selectionChanged?.(); }}>{l}</button>)}</div>;
+  const i = Math.max(0, options.findIndex(([k]) => k === value));
+  return (
+    <div className="seg" style={{ ['--n' as any]: options.length, ['--i' as any]: i }}>
+      <span className="seg-thumb" />
+      {options.map(([k, l]) => <button key={k} className={value === k ? 'on' : ''} onClick={() => { onChange(k); tg?.HapticFeedback?.selectionChanged?.(); }}>{l}</button>)}
+    </div>
+  );
 }
 
 export function Empty({ icon: I, title, text, action, onAction }: { icon: LucideIcon; title: string; text?: string; action?: string; onAction?: () => void }) {
@@ -114,9 +120,11 @@ export function FriendPicker({ value, onPick }: { value: string; onPick: (ref: s
 }
 
 // Выбор своей машины (гонка, рынок).
-export function CarPicker({ value, onPick, exclude = [] as number[], only }: { value: number | null; onPick: (c: any) => void; exclude?: number[]; only?: string[] }) {
+export function CarPicker({ value, onPick, exclude = [] as number[], only, auto }: { value: number | null; onPick: (c: any) => void; exclude?: number[]; only?: string[]; auto?: boolean }) {
   const [cars, setCars] = useState<any[] | null>(null);
   useEffect(() => { call('app_garage', { action: 'list' }).then((g) => setCars(g.cars), () => setCars([])); }, []);
+  // auto — сразу выбрать первую (самую дорогую) машину, чтобы не нажимать лишний раз
+  useEffect(() => { if (auto && value == null && cars?.length) { const c = cars.find((x) => !exclude.includes(x.user_car_id) && (!only || only.includes(x.rarity))); if (c) onPick(c); } }, [cars]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!cars) return <div className="sm muted">{t('Загрузка гаража…')}</div>;
   const list = cars.filter((c) => !exclude.includes(c.user_car_id) && (!only || only.includes(c.rarity)));
   if (!list.length) return <div className="sm muted">{t('В гараже нет машин — выиграй контейнер на аукционе.')}</div>;

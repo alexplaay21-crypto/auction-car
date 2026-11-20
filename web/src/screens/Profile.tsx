@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown, Share2, CarFront, Gauge, Flag, Store, UserPlus, UserCheck, ShoppingBag, Settings, BarChart3, MessageSquareWarning, Bug, Lightbulb, Palette } from 'lucide-react';
 import { call, clientId, errorText, haptic, share, toast } from '../tg';
-import { money, who, ago, LEDGER, RARITY, RARITIES } from '../format';
+import { short, money, who, ago, LEDGER, RARITY, RARITIES } from '../format';
 import { t } from '../i18n';
 import { Avatar, CarArt, CarCard, RarityTag, Sheet, Stat, Money, ProfileBg } from '../components';
 import { AppBar, Sect, Li, Seg, Empty, Ic, Nick, Kv, FriendPicker } from '../ui';
@@ -50,7 +50,7 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
         </div>
 
         <div className="statgrid">
-          <div><b>{money(p.garage.value)}</b><span>{t('гараж')}</span></div>
+          <div><b>{short(p.garage.value)}</b><span>{t('гараж')}</span></div>
           <div><b>{s.wins}</b><span>{t('аукцион')}</span></div>
           <div><b>{s.race_wins}/{s.races}</b><span>{t('гонки')}</span></div>
           <div><b>{p.skill.level}</b><span>{t('навык')}</span></div>

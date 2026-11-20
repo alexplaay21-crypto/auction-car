@@ -105,7 +105,7 @@ export function Race() {
 
             <div className="card col g8">
               <div className="row between"><b>{t('Машина')}</b>{car && <span className="xs muted ell">{car.name}</span>}</div>
-              <CarPicker value={car?.user_car_id ?? null} onPick={setCar} />
+              <CarPicker value={car?.user_car_id ?? null} onPick={setCar} auto />
               {car && (
                 <div className="spec-chips">
                   <span><b>{car.max_speed}</b> {t('км/ч')}</span>
@@ -187,7 +187,7 @@ export function Race() {
             <div className="sm muted">{trackName(accept.track)} · {t('ставка {m}', { m: money(accept.stake) })}</div>
             <div className="row g8"><Nick u={accept.host} size={20} /><span className="sm">{accept.host_car_info?.name} · <b>{sec(accept.host_ms)}</b></span></div>
             <div className="xs faint">{t('Поедешь против его «призрака». Обгони — и банк твой.')}</div>
-            <CarPicker value={car?.user_car_id ?? null} onPick={setCar} />
+            <CarPicker value={car?.user_car_id ?? null} onPick={setCar} auto />
             <button className="btn go xl w" disabled={busy || !car || accept.stake > me.balance} onClick={async () => { const r = accept; setAccept(null); await start({ mode: 'guest', raceId: r.id, carId: car.user_car_id }); }}>{t('Гонка на {m}', { m: money(accept.stake) })}</button>
           </>
         )}
