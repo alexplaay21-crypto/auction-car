@@ -29,7 +29,7 @@ test('оплата валюты зачисляется один раз', async (
   await pay(2, 'm250', 250, 'c1');
   const again = await pay(2, 'm250', 250, 'c1');
   assert.equal(again.duplicate, true);
-  assert.equal(await bal(2), b0 + 350_000);
+  assert.equal(await bal(2), b0 + 1_750_000);
   await ok();
 });
 

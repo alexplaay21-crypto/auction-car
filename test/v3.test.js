@@ -38,7 +38,7 @@ test('динамическая цена: дорогие торги подним�
   const p0 = a.initial_bid;
   await E.adminAdjust(db, 2, 2, 0 + 1, 'x', op()).catch(() => {});
   await db.run('UPDATE users SET is_admin = 1 WHERE id = 3');
-  await E.adminAdjust(db, 3, 2, 200_000, 'x', op());
+  await E.adminAdjust(db, 3, 2, 2_000_000, 'x', op());
   await E.bid(db, 2, room, { amount: p0 * 6, opId: op() });
   await tick(31); await E.tick(db);
   const p1 = (await db.get('SELECT price FROM containers WHERE id = :c', { ':c': a.container_id })).price;
@@ -50,15 +50,15 @@ test('динамическая цена: дорогие торги подним�
 
 test('рынок: выставить, купить (деньги и машина одной операцией), снять', async () => {
   const uc = await give(2, 8);
-  const l = await G.listCar(db, 2, uc, 50_000);
-  await assert.rejects(G.listCar(db, 2, uc, 40_000), /UNIQUE|uq_listing/i);
+  const l = await G.listCar(db, 2, uc, 250_000);
+  await assert.rejects(G.listCar(db, 2, uc, 200_000), /UNIQUE|uq_listing/i);
   await assert.rejects(G.buyListing(db, 2, l.id), { code: 'SELF_BUY' });
   await assert.rejects(G.buyListing(db, 3, l.id), { code: 'INSUFFICIENT_FUNDS' });
   await db.run('UPDATE users SET is_admin = 1 WHERE id = 4');
-  await E.adminAdjust(db, 4, 3, 50_000, 'x', op());
+  await E.adminAdjust(db, 4, 3, 250_000, 'x', op());
   await G.buyListing(db, 3, l.id);
   assert.equal((await db.get('SELECT user_id FROM user_cars WHERE id = :i', { ':i': uc })).user_id, 3);
-  assert.equal(await bal(2), 15_000 + 37_500, 'комиссия 25%');
+  assert.equal(await bal(2), 75_000 + 187_500, 'комиссия 25%');
   await assert.rejects(G.listCar(db, 2, await give(2, 1), 2_000), { code: 'MARKET_RARITY' }, 'обычные машины на рынок нельзя');
   const uc2 = await give(2, 6);
   const l2 = await G.listCar(db, 2, uc2, 9_999);
@@ -67,11 +67,11 @@ test('рынок: выставить, купить (деньги и машина
   await ok();
 });
 
-test('навык гонщика: 210 улучшений за $2 000 000, показатель 0,98 → 0,20', async () => {
+test('навык гонщика: 210 улучшений за $10 000 000, показатель 0,98 → 0,20', async () => {
   const v = await G.buySkill(db, 2, 10, op());
   assert.equal(v.purchases, 10);
-  assert.equal(await bal(2), 15_000 - Array.from({ length: 10 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b));
-  assert.equal(Array.from({ length: 210 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b), 2_000_000);
+  assert.equal(await bal(2), 75_000 - Array.from({ length: 10 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b));
+  assert.equal(Array.from({ length: 210 }, (_, i) => skillPrice(i + 1)).reduce((a, b) => a + b), 10_000_000);
   assert.ok(Math.abs(reaction(0) - 0.98) < 1e-9 && reaction(210) === 0.2 && reaction(209) > reaction(210));
   assert.equal(v.level, 4);
   await db.run('UPDATE racer_skill SET purchases = 205 WHERE user_id = 2');

@@ -20,11 +20,11 @@ test('нельзя купить без денег', async () => {
 });
 
 test('покупка и надевание', async () => {
-  await E.adminAdjust(db, 1, 2, 500_000, 'test', 'a1');
+  await E.adminAdjust(db, 1, 2, 2_500_000, 'test', 'a1');
   const b0 = (await E.getUser(db, 2)).balance;
   let v = await C.buyCosmetic(db, 2, 'neon');
   assert.equal(v.bg, 'neon');
-  assert.equal(v.balance, b0 - 75_000);
+  assert.equal(v.balance, b0 - 375_000);
   await assert.rejects(C.buyCosmetic(db, 2, 'neon'), { code: 'ALREADY_OWNED' });
   v = await C.buyCosmetic(db, 2, 'fire');
   assert.equal(v.frame, 'fire');

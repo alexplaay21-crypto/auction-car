@@ -50,7 +50,7 @@ test('симулятор: повтор по нажатиям даёт то же 
 test('заезд с ботом: залог при старте, итог по пересчёту сервера, выплата', async () => {
   const uc = await give(2, 8);
   const d = await R.driveStart(db, 2, { mode: 'bot', carId: uc, track: 'drag', stake: 1000, opId: op() });
-  assert.equal(await bal(2), 15_000 - 1000, 'ставка в залоге');
+  assert.equal(await bal(2), 75_000 - 1000, 'ставка в залоге');
   const p = play(d);
   await assert.rejects(R.driveFinish(db, 2, { driveId: d.id, inputs: p.inputs }), { code: 'TOO_FAST' });
   await tick(30);
@@ -58,7 +58,7 @@ test('заезд с ботом: залог при старте, итог по п
   const f = await R.driveFinish(db, 2, { driveId: d.id, inputs: p.inputs });
   assert.equal(f.race.host_ms, p.ms, 'время — пересчёт сервера');
   const won = f.race.winner_id === 2;
-  assert.equal(await bal(2), 15_000 + (won ? 900 : -1000));
+  assert.equal(await bal(2), 75_000 + (won ? 900 : -1000));
   const again = await R.driveFinish(db, 2, { driveId: d.id, inputs: [] });
   assert.equal(again.race.id, f.race.id, 'повторная отправка ничего не меняет');
   const rp = await R.raceReplay(db, f.race.id);
@@ -71,12 +71,12 @@ test('брошенный заезд: ставка сгорает, новый с�
   const uc = await give(2, 8);
   await R.driveStart(db, 2, { mode: 'bot', carId: uc, track: 'circuit', stake: 2000, opId: op() });
   const d2 = await R.driveStart(db, 2, { mode: 'bot', carId: uc, track: 'circuit', stake: 1000, opId: op() });
-  assert.equal(await bal(2), 15_000 - 3000);
+  assert.equal(await bal(2), 75_000 - 3000);
   assert.equal((await db.get("SELECT count(*) AS n FROM drives WHERE status = 'expired'")).n, 1);
   await tick(700); await R.driveSweep(db, 2);
   const x = await R.driveFinish(db, 2, { driveId: d2.id, inputs: [] });
   assert.equal(x.drive.status, 'expired'); assert.equal(x.race, null);
-  assert.equal(await bal(2), 15_000 - 3000);
+  assert.equal(await bal(2), 75_000 - 3000);
   await ok();
 });
 
@@ -86,7 +86,7 @@ test('вызов: автор едет первым, соперник — про�
   await tick(60);
   const hf = await R.driveFinish(db, 2, { driveId: h.id, inputs: play(h).inputs });
   assert.equal(hf.race.status, 'open');
-  assert.equal(await bal(2), 13_000);
+  assert.equal(await bal(2), 73_000);
   const g = await R.driveStart(db, 3, { mode: 'guest', carId: uc3, raceId: hf.race.id, opId: op() });
   assert.equal(g.seed, h.seed, 'та же трасса');
   assert.equal(g.rival.kind, 'player');
@@ -97,10 +97,10 @@ test('вызов: автор едет первым, соперник — про�
   const gf = await R.driveFinish(db, 3, { driveId: g.id, inputs: play(g, 0.6).inputs });
   assert.equal(gf.race.status, 'done');
   const w = gf.race.winner_id;
-  assert.equal(await bal(w), (w === 2 ? 13_000 : 13_000) + 3800, 'банк 4000 минус 5%');
+  assert.equal(await bal(w), (w === 2 ? 73_000 : 73_000) + 3800, 'банк 4000 минус 5%');
   const f4 = await R.driveFinish(db, 4, { driveId: g4.id, inputs: play(g4).inputs });
   assert.equal(f4.race, null);
-  assert.equal(await bal(4), 15_000, 'вызов уже принят — залог вернулся');
+  assert.equal(await bal(4), 75_000, 'вызов уже принят — залог вернулся');
   const c = await R.driveStart(db, 2, { mode: 'host', carId: uc, track: 'drag', stake: 500, opId: op() });
   await tick(60);
   const cf = await R.driveFinish(db, 2, { driveId: c.id, inputs: play(c).inputs });
