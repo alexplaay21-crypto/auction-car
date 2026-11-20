@@ -34,6 +34,7 @@ window.renderCar = async (url, yawDeg, opt = {}) => {
     const BADGE = /logo|emblem|badge|insignia_logo|plate|licen|kennz|number_?plate|nummer|marque|brand|lettering|script|propeller/i;
     if (BADGE.test(o.name || '') || [].concat(o.material).some((m) => m && BADGE.test(m.name || ''))) { o.visible = false; return; }
     for (const m of [].concat(o.material)) { if (!m) continue;
+      if (opt.paintNames && opt.paintNames.includes(m.name)) { m.color.set(opt.paintColor); m.map = null; m.metalness = 0.6; m.roughness = 0.28; m.needsUpdate = true; o.userData.painted = true; }
       if (opt.paint && /paint|body|lack|carpaint|exterior|ext_?col|color|colour|main/i.test(m.name || '') && !/glass|black|plastic|chrome|rubber|tire|tyre|rim|interior|int_/i.test(m.name || '')) {
         m.color && m.color.set(opt.paint); if (m.map) m.map = null; m.metalness = 0.6; m.roughness = 0.28; m.needsUpdate = true; o.userData.painted = true; }
       if (m.transparent && m.opacity < 0.05) o.visible = false;
