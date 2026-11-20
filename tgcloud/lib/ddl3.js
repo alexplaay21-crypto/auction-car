@@ -18,7 +18,7 @@ export const SETTINGS_3 = {
 // Цена n-го улучшения = 1000 + K·n⁴; последняя цена подогнана, чтобы сумма была точной.
 export const SKILL_MAX = 210;
 export const SKILL_LEVELS = 100;
-const SKILL_BASE = 1000, SKILL_TOTAL = 2_000_000;
+const SKILL_BASE = 5_000, SKILL_TOTAL = 10_000_000; // ×5 с миграции 25 (экономика под заводские цены)
 const K = (SKILL_TOTAL - SKILL_BASE * SKILL_MAX) / Array.from({ length: SKILL_MAX }, (_, i) => (i + 1) ** 4).reduce((a, b) => a + b, 0);
 const PRICES = Array.from({ length: SKILL_MAX }, (_, i) => Math.round(SKILL_BASE + K * (i + 1) ** 4));
 PRICES[SKILL_MAX - 1] += SKILL_TOTAL - PRICES.reduce((a, b) => a + b, 0);
@@ -355,7 +355,7 @@ void DAY; void giveCar; void RARITY_OF;
 // редкие эпические и легендарные машины, рынок только для них, сезоны Battle Pass по 21 дню,
 // настройки игрока. Триггеры с опытом и сезоном пересоздаются по новым определениям.
 const RECREATE = ['listings_bi', 'listings_sold', 'races_ai', 'races_done', 'bids_xp', 'auctions_xp', 'opens_xp', 'bp_buy_bi', 'bp_claim_bi', 'bonus4_bi', 'bonus4_ai'];
-const findT = (name) => { const x = triggers.find((t) => t.startsWith(`CREATE TRIGGER IF NOT EXISTS ${name} `)); if (!x) throw new Error('ddl3: ' + name); return x; };
+export const findT = (name) => { const x = triggers.find((t) => t.startsWith(`CREATE TRIGGER IF NOT EXISTS ${name} `)); if (!x) throw new Error('ddl3: ' + name); return x; };
 export const MIGRATION_5 = [
   ...tables.slice(0, 4),
   ...Object.entries({ daily_bonus: 5_000, daily_bonus_vip: 10_000, bonus_period_s: 14_400, bonus_cap: 50_000, bonus_cap_vip: 100_000,

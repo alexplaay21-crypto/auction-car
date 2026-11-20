@@ -8,6 +8,7 @@ import { MIGRATION_3, MIGRATION_4, MIGRATION_5 } from './ddl3.js';
 import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
+import { MIGRATION_25 } from './ddl10.js';
 import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24 } from './ddl8.js';
 
 export const SETTINGS = {
@@ -619,4 +620,6 @@ export const MIGRATIONS = [
   // 23–24: российский и китайский контейнеры — по 50 машин.
   { id: 23, statements: MIGRATION_23 },
   { id: 24, statements: MIGRATION_24 },
+  // 25: экономика ×5 под заводские цены машин (балансы через журнал, бонусы, пакеты, награды, навык…).
+  { id: 25, statements: MIGRATION_25 },
 ];

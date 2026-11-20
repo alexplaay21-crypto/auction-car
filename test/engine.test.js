@@ -20,13 +20,13 @@ beforeEach(async () => {
 });
 
 test('регистрация: стартовые $15 000, гараж на 15 мест, реферальные бонусы', async () => {
-  assert.equal(await bal(2), 15_000);
+  assert.equal(await bal(2), 75_000);
   assert.equal((await E.getUser(db, 2)).garage_capacity, 15);
   await E.ensureUser(db, { id: 10, username: 'inv' }, { ref: 2 });
-  assert.equal(await bal(2), 25_000);
-  assert.equal(await bal(10), 20_000);
+  assert.equal(await bal(2), 125_000);
+  assert.equal(await bal(10), 100_000);
   await E.ensureUser(db, { id: 11 }, { ref: 999 }); // несуществующий пригласивший — просто регистрация
-  assert.equal(await bal(11), 15_000);
+  assert.equal(await bal(11), 75_000);
   await ok();
 });
 
@@ -36,14 +36,14 @@ test('аукцион: залог, возврат перебитому, тайм�
   const a = await active(room);
   assert.ok(a, 'контейнер запущен');
   await assert.rejects(E.bid(db, 2, room, { amount: a.initial_bid, opId: op() }), { code: 'BID_TOO_LOW' });
-  await E.bid(db, 2, room, { amount: a.initial_bid + 500, opId: op() });
-  assert.equal(await bal(2), 15_000 - a.initial_bid - 500);
+  await E.bid(db, 2, room, { amount: a.initial_bid + 2500, opId: op() });
+  assert.equal(await bal(2), 75_000 - a.initial_bid - 2500);
   await tick(20);
-  await E.bid(db, 3, room, { raise: 1000, opId: op() });
-  assert.equal(await bal(2), 15_000, 'перебитому вернули залог');
-  assert.equal(await bal(3), 15_000 - a.initial_bid - 1500);
-  await E.bid(db, 3, room, { raise: 500, opId: op() }); // лидер повышает — доплачивает разницу
-  assert.equal(await bal(3), 15_000 - a.initial_bid - 2000);
+  await E.bid(db, 3, room, { raise: 5000, opId: op() });
+  assert.equal(await bal(2), 75_000, 'перебитому вернули залог');
+  assert.equal(await bal(3), 75_000 - a.initial_bid - 7500);
+  await E.bid(db, 3, room, { raise: 2500, opId: op() }); // лидер повышает — доплачивает разницу
+  assert.equal(await bal(3), 75_000 - a.initial_bid - 10000);
   await tick(20);
   assert.equal(await E.tick(db), 0, 'таймер сбросился после ставки: ещё рано');
   await tick(11);
@@ -55,7 +55,7 @@ test('аукцион: залог, возврат перебитому, тайм�
   assert.equal(car.user_id, 3);
   assert.equal(car.status, 'owned');
   assert.equal((await E.getUser(db, 3)).wins, 1);
-  await assert.rejects(E.bid(db, 2, room, { raise: 500, opId: op() }), { code: 'AUCTION_OVER' }, 'пауза между контейнерами');
+  await assert.rejects(E.bid(db, 2, room, { raise: 2500, opId: op() }), { code: 'AUCTION_OVER' }, 'пауза между контейнерами');
   await tick(5);
   await E.tick(db);
   assert.ok(await active(room), 'после паузы — следующий контейнер');
@@ -72,7 +72,7 @@ test('кик после двух контейнеров без ставок, п�
   const m = await db.get('SELECT * FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room });
   assert.ok(m.left_at && m.kicked === 1);
   assert.equal((await db.get('SELECT status FROM rooms WHERE id = :r', { ':r': room })).status, 'closed');
-  assert.equal(await bal(2), 15_000);
+  assert.equal(await bal(2), 75_000);
   await ok();
 });
 
@@ -97,7 +97,7 @@ test('полный гараж: машина продаётся сразу; пр�
   await E.sellCar(db, 2, c1.id);
   await assert.rejects(E.sellCar(db, 2, c1.id), { code: 'CAR_NOT_FOUND' });
   await db.run('UPDATE users SET garage_capacity = 15, balance = balance WHERE id = 2');
-  await E.adminAdjust(db, 1, 2, 100_000, 'test', op());
+  await E.adminAdjust(db, 1, 2, 500_000, 'test', op());
   const t = await E.upgradeGarage(db, 2);
   assert.equal(t.capacity, 20);
   assert.equal((await E.getUser(db, 2)).garage_capacity, 20);
@@ -112,12 +112,12 @@ test('VIP: +10 мест, меньше комиссии, двойной бону�
   assert.equal(u.garage_capacity, 25);
   await assert.rejects(S.invoiceParams(db, 2, 'vip'), { code: 'ALREADY_VIP' });
   const b = await E.claimBonus(db, 2);
-  assert.equal(b.amount, 10_000, 'VIP: $10 000 раз в 4 часа');
+  assert.equal(b.amount, 50_000, 'VIP: $50 000 раз в 4 часа');
   await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_TOO_EARLY' });
-  await E.adminAdjust(db, 1, 2, 100_000, 'rich', 'r1');
+  await E.adminAdjust(db, 1, 2, 500_000, 'rich', 'r1');
   await setClock(db, 14_400);
-  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_RICH' }, 'при балансе от $100 000 у VIP бонуса нет');
-  assert.equal((await E.claimBonus(db, 3)).amount, 5_000);
+  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_RICH' }, 'при балансе от $500 000 у VIP бонуса нет');
+  assert.equal((await E.claimBonus(db, 3)).amount, 25_000);
   const t1 = await E.transfer(db, 3, '@u4', 1000, op());
   assert.equal(t1.net, 900, 'обычный игрок — комиссия 10%');
   const t2 = await E.transfer(db, 2, '4', 1000, op());
@@ -134,8 +134,8 @@ test('продажа машины игроку: деньги и машина м�
   await assert.rejects(E.answerOffer(db, 4, o.id, true), { code: 'OFFER_NOT_FOUND' });
   await E.answerOffer(db, 3, o.id, true);
   assert.equal((await db.get('SELECT user_id FROM user_cars WHERE id = :i', { ':i': uc.id })).user_id, 3);
-  assert.equal(await bal(3), 5_000);
-  assert.equal(await bal(2), 15_000 + 7_500, 'комиссия 25%');
+  assert.equal(await bal(3), 65_000);
+  assert.equal(await bal(2), 75_000 + 7_500, 'комиссия 25%');
   await assert.rejects(db.run('UPDATE user_cars SET user_id = 4 WHERE id = :i', { ':i': uc.id }), /BAD_CAR_UPDATE/);
   await ok();
 });
@@ -143,26 +143,26 @@ test('продажа машины игроку: деньги и машина м�
 test('промокод и магазин', async () => {
   await db.run(`INSERT INTO promo_codes (code, money, container_id, container_qty, max_uses, created_by, created_at) VALUES ('START', 2000, 2, 1, 1, 1, 0)`);
   await E.redeemPromo(db, 2, 'start');
-  assert.equal(await bal(2), 17_000);
+  assert.equal(await bal(2), 77_000);
   await assert.rejects(E.redeemPromo(db, 2, 'START'), { code: 'PROMO_LIMIT' });
   await assert.rejects(E.redeemPromo(db, 3, 'START'), { code: 'PROMO_LIMIT' });
   assert.equal((await db.get('SELECT qty FROM user_containers WHERE user_id = 2 AND container_id = 2')).qty, 1);
   await db.run(`INSERT INTO shop_lots (title, price, container_id, container_qty) VALUES ('3 немецких', 12000, 2, 3)`);
   await E.buyLot(db, 3, 1, op());
-  assert.equal(await bal(3), 3_000);
+  assert.equal(await bal(3), 63_000);
   assert.equal((await db.get('SELECT qty FROM user_containers WHERE user_id = 3 AND container_id = 2')).qty, 3);
   await ok();
 });
 
 test('нельзя ставить, не войдя в комнату, и нельзя завершить контейнер раньше времени', async () => {
   const room = await E.joinRoom(db, 2);
-  await assert.rejects(E.bid(db, 3, room, { raise: 500, opId: op() }), { code: 'NOT_IN_ROOM' });
+  await assert.rejects(E.bid(db, 3, room, { raise: 2500, opId: op() }), { code: 'NOT_IN_ROOM' });
   const a = await active(room);
   await assert.rejects(db.run(`UPDATE auctions SET status = 'no_bids', ended_at = (SELECT now FROM v_now) WHERE id = :a`, { ':a': a.id }), /NOT_FINISHED/);
   const same = op();
-  await E.bid(db, 2, room, { raise: 500, opId: same });
-  const r = await E.bid(db, 2, room, { raise: 500, opId: same });
+  await E.bid(db, 2, room, { raise: 2500, opId: same });
+  const r = await E.bid(db, 2, room, { raise: 2500, opId: same });
   assert.equal(r.replay, true, 'повтор того же нажатия не списывает дважды');
-  assert.equal(await bal(2), 15_000 - a.initial_bid - 500);
+  assert.equal(await bal(2), 75_000 - a.initial_bid - 2500);
   await ok();
 });

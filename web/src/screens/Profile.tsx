@@ -247,7 +247,7 @@ export function TransferPage({ to: initial = '' }: { to?: string }) {
         <FriendPicker value={to} onPick={setTo} />
         <input className="inp" placeholder={t('@username или ID')} value={to} onChange={(e) => setTo(e.target.value)} />
         <input className="inp big" inputMode="numeric" placeholder="$0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} />
-        <div className="chips">{[1000, 5000, 10000, 50000].map((v) => <button key={v} className="chip" onClick={() => setAmount(String(v))}>{money(v)}</button>)}</div>
+        <div className="chips">{[5000, 25000, 50000, 250000].map((v) => <button key={v} className="chip" onClick={() => setAmount(String(v))}>{money(v)}</button>)}</div>
         <div className="card">
           <Kv k={t('Комиссия')} v={`${me.fees.transfer / 100}%`} />
           <Kv k={t('Получит')} v={money(net)} c="var(--green)" />

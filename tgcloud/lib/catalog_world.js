@@ -1,8 +1,8 @@
-// catalog_world.js — остальные 7 контейнеров по 50 узнаваемых машин (30 обычных, 14 редких,
+// catalog_world.js — 8 контейнеров по 50 новых популярных машин (30 обычных, 14 редких,
 // 4 эпических, 2 легендарные). Марка в названии чуть изменена, модель узнаётся.
-// Строка: [реальная модель (для поиска 3D), редкость, л.с., кузов, keep?]
+// Строка: [реальная модель (для поиска 3D), редкость, л.с., кузов, заводская цена $, keep?]
+// Цена машины — заводская (MSRP); цена контейнера — такая, что 18 из 30 обычных дешевле него.
 // keep — id машины старого каталога, которая становится этой моделью (у игроков она остаётся).
-// Характеристики и цены считаются из мощности, редкости и цены контейнера (см. buildCountry).
 
 const BRAND = {
   Toyota: 'Toyoda', Honda: 'Hondo', Nissan: 'Nisan', Mazda: 'Matsda', Mitsubishi: 'Mitsubisi', Subaru: 'Subara', Suzuki: 'Suzuky', Lexus: 'Lexxus',
@@ -16,7 +16,11 @@ const BRAND = {
   Peugeot: 'Pejo', Renault: 'Reno', Citroen: 'Sitroen', DS: 'D.S.', Alpine: 'Alpin', Bugatti: 'Bugati',
   Kia: 'Kiya', Hyundai: 'Hyundei', Skoda: 'Shkoda', Seat: 'Siat', Cupra: 'Kupra', Volvo: 'Volva', Mini: 'Minny', 'Land Rover': 'Land Rovar',
   'Range Rover': 'Range Rovar', Jaguar: 'Jaguarr', Dacia: 'Dachia', Polestar: 'Polstar', Genesis: 'Jenesis', Lotus: 'Lotos', 'Aston Martin': 'Aston Martyn',
-  Bentley: 'Bentli', 'Rolls-Royce': 'Rols-Rois', McLaren: 'McLaran', Koenigsegg: 'Konigseg',
+  Bentley: 'Bentli', 'Rolls-Royce': 'Rols-Rois', McLaren: 'McLaran', Koenigsegg: 'Konigseg', Rimac: 'Rimak',
+  Volkswagen: 'Folkswagen', Audi: 'Audy', BMW: 'BMV', 'Mercedes-Benz': 'Mersedes-Bens', 'Mercedes-AMG': 'Mersedes-AMX',
+  'Mercedes-Maybach': 'Mersedes-Maibax', Porsche: 'Porshe', Opel: 'Opal', Lucid: 'Lusid', Rivian: 'Rivyan', SSC: 'S.S.C.', Czinger: 'Tsinger',
+  Saleen: 'Salin', Evolute: 'Evolut', Tenet: 'Tennet', Solaris: 'Solarys', Neta: 'Netta', GAC: 'G.A.C.', Avatr: 'Avatar', Dongfeng: 'Dongfen',
+  Leapmotor: 'Lipmotor', Ora: 'Orra', BAIC: 'Baik', Lynk: 'Link', Aito: 'Ayto', Voyah: 'Voyya', IZh: 'IJ', LuAZ: 'LUAS',
 };
 export function gameName(model) {
   for (const [b, f] of Object.entries(BRAND).sort((a, c) => c[0].length - a[0].length)) if (model.startsWith(b + ' ')) return f + model.slice(b.length);
@@ -145,31 +149,22 @@ export const WORLD = {
 };
 
 const COLORS = ['#c4161c', '#1f4fa8', '#e8e8e8', '#202428', '#8c96a3', '#2e7d4f', '#e8742c', '#f2c230', '#5b2a86', '#2a8f9a', '#7a1218', '#c9ccd1'];
-const MULT = {
-  // доли цены контейнера: 18 обычных дешевле, 12 немного дороже; редкие 1,4–3,2×; эпические 9–16×; легендарные ~70×
-  common: [0.4, 0.45, 0.5, 0.55, 0.6, 0.62, 0.65, 0.68, 0.7, 0.72, 0.75, 0.78, 0.8, 0.83, 0.86, 0.9, 0.93, 0.96,
-    1.04, 1.06, 1.08, 1.1, 1.12, 1.15, 1.18, 1.2, 1.24, 1.28, 1.32, 1.36],
-  rare: [1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2], epic: [9, 11, 13, 16], mythic: [70, 76],
-};
 const round = (x) => Math.max(100, Math.round(x / 100) * 100);
 
-// Строки в формате немецкого каталога: [название, реальная модель, редкость, км/ч, 0-100, л.с., управление, надёжность, цена, кузов, цвет, keep]
 export function buildCountry(cid) {
   const W = WORLD[cid];
-  const byR = { common: [], rare: [], epic: [], mythic: [] };
-  W.cars.forEach((c, i) => byR[c[1]].push(i));
-  // внутри редкости дороже те, у кого больше мощности
-  const price = new Array(W.cars.length);
-  for (const [r, idx] of Object.entries(byR)) {
-    const sorted = [...idx].sort((a, b) => W.cars[a][2] - W.cars[b][2]);
-    sorted.forEach((i, j) => { price[i] = round(W.price * MULT[r][Math.min(j, MULT[r].length - 1)]); });
-  }
-  return W.cars.map(([model, rarity, hp, body, keep], i) => {
+  return W.cars.map(([model, rarity, hp, body, price, keep], i) => {
     const sport = { common: 0, rare: 1, epic: 2, mythic: 3 }[rarity];
     const accel = Math.max(2.0, Math.min(25, +(14 - Math.log2(hp / 60) * 2.9 - sport * 0.4).toFixed(1)));
     const speed = Math.round(Math.min(420, 110 + Math.sqrt(hp) * 8 + sport * 6));
     const handling = Math.min(98, 52 + sport * 10 + (body === 'super' || body === 'coupe' ? 8 : body === 'suv' || body === 'van' ? -6 : 0) + (i % 5));
-    const reliability = Math.max(55, Math.min(95, 88 - sport * 3 - (cid === 5 ? 12 : cid === 4 ? 6 : 0) + (i % 4)));
-    return [gameName(model), model, rarity, speed, accel, hp, handling, reliability, price[i], body, COLORS[i % COLORS.length], keep];
+    const reliability = Math.max(55, Math.min(95, 88 - sport * 3 - (cid == 5 ? 12 : cid == 4 ? 6 : 0) + (i % 4)));
+    return [gameName(model), model, rarity, speed, accel, hp, handling, reliability, round(price), body, COLORS[i % COLORS.length], keep];
   });
+}
+
+// Цена контейнера: между 18-й и 19-й по цене обычной машиной (60 % обычных дешевле, 40 % дороже), кратно $500.
+export function containerPrice(cid) {
+  const commons = WORLD[cid].cars.filter((c) => c[1] === 'common').map((c) => c[4]).sort((a, b) => a - b);
+  return Math.round((commons[17] + commons[18]) / 2 / 500) * 500;
 }

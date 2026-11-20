@@ -46,10 +46,10 @@ export const MIGRATION_14 = upsertGerman();
 export const MIGRATION_15 = upsertGerman();
 
 // ---------- остальные страны ----------
-import { WORLD, buildCountry } from './catalog_world.js';
+import { WORLD, buildCountry, containerPrice } from './catalog_world.js';
 export function worldIds(cid) {
   let next = WORLD[cid].base;
-  return WORLD[cid].cars.map((c) => c[4] ?? next++);
+  return WORLD[cid].cars.map((c) => c[5] ?? next++);
 }
 // Машины страны: старые (keep) обновляются на месте, новые добавляются и попадают в пул контейнера.
 export function upsertWorld(cid) {
@@ -83,3 +83,10 @@ export const MIGRATION_22 = upsertWorld(4);
 export const MIGRATION_23 = upsertWorld(5);
 // 24: китайский контейнер — 50 машин.
 export const MIGRATION_24 = upsertWorld(6);
+
+// 26: все 8 контейнеров заново — новые популярные машины, заводские цены, цена контейнера по ним.
+export const MIGRATION_26 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
+  ...upsertWorld(cid),
+  `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
+  `UPDATE container_meta SET base_price = ${containerPrice(cid)}, market = ${Math.round(containerPrice(cid) * 100 / 55)}, prev_price = ${containerPrice(cid)} WHERE container_id = ${cid}`,
+]);

@@ -26,7 +26,7 @@ export function Race() {
   const [tab, setTab] = useState<'go' | 'pvp' | 'history'>('go');
   const [car, setCar] = useState<any>(null);
   const [track, setTrack] = useState('drag');
-  const [stake, setStake] = useState(1000);
+  const [stake, setStake] = useState(5000);
   const [busy, setBusy] = useState(false);
   const [accept, setAccept] = useState<any>(null);
   const [play, setPlay] = useState<Play | null>(null);
@@ -78,7 +78,7 @@ export function Race() {
   };
 
   const lim = d?.limits ?? { min: 100, max: 100000, bot_win_bps: 9000, fee_bps: 500 };
-  const step = stake >= 10000 ? 5000 : stake >= 2000 ? 1000 : 500;
+  const step = stake >= 50000 ? 25000 : stake >= 10000 ? 5000 : 2500;
   const setS = (v: number) => setStake(Math.max(lim.min, Math.min(lim.max, v)));
   const win = Math.floor(stake * lim.bot_win_bps / 10000);
   const canGo = !busy && car && stake <= me.balance;
@@ -124,7 +124,7 @@ export function Race() {
                 <input className="stake-val num" inputMode="numeric" value={money(stake)} onChange={(e) => setStake(Number(e.target.value.replace(/\D/g, '')) || 0)} onBlur={() => setS(stake)} />
                 <button className="stake-btn press" onClick={() => setS(stake + step)} aria-label="+"><Plus size={20} /></button>
               </div>
-              <div className="chips">{[1000, 5000, 10000, 25000, 50000].filter((v) => v <= lim.max).map((v) => <button key={v} className={`chip${stake === v ? ' on' : ''}`} onClick={() => setS(v)}>{money(v)}</button>)}</div>
+              <div className="chips">{[5000, 25000, 50000, 100000, 250000].filter((v) => v <= lim.max).map((v) => <button key={v} className={`chip${stake === v ? ' on' : ''}`} onClick={() => setS(v)}>{money(v)}</button>)}</div>
               <button className="btn go xl w" disabled={!canGo} onClick={() => start({ mode: 'bot', carId: car.user_car_id, track, stake })}>
                 <Bot size={19} /> {t('Гонка с ботом')} <span className="btn-sub">+{money(win)}</span>
               </button>
