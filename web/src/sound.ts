@@ -49,6 +49,23 @@ export const fx = {
   },
 };
 
+// Звук мотора на время заезда: set(0..1) — обороты, stop() — заглушить.
+export function engineLoop(): { set(r: number): void; stop(): void } | null {
+  if (!soundOn) return null;
+  try {
+    ctx ??= new (window.AudioContext || (window as any).webkitAudioContext)();
+    const c = ctx, o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 650;
+    g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(0.03, c.currentTime + 0.3);
+    o.connect(f); o2.connect(f); f.connect(g).connect(c.destination); o.start(); o2.start();
+    let stopped = false;
+    return {
+      set(r) { if (stopped) return; const fr = 42 + r * 150; o.frequency.setTargetAtTime(fr, c.currentTime, 0.04); o2.frequency.setTargetAtTime(fr / 2, c.currentTime, 0.04); f.frequency.setTargetAtTime(400 + r * 900, c.currentTime, 0.05); },
+      stop() { if (stopped) return; stopped = true; g.gain.setTargetAtTime(0, c.currentTime, 0.12); setTimeout(() => { try { o.stop(); o2.stop(); } catch { /* уже остановлен */ } }, 700); },
+    };
+  } catch { return null; }
+}
+
 function vibrate(kind: 'light' | 'medium' | 'heavy') { if (hapticsOn) tg?.HapticFeedback?.impactOccurred?.(kind); }
 function notify(kind: 'success' | 'error') { if (hapticsOn) tg?.HapticFeedback?.notificationOccurred?.(kind); }
 export function select() { if (hapticsOn) tg?.HapticFeedback?.selectionChanged?.(); }

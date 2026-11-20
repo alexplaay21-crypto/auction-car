@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Flag, Swords, Timer as TimerIcon, Gauge, Trophy, X, Zap, RotateCw, Mountain, Minus, Plus, CarFront } from 'lucide-react';
+import { Flag, Swords, Timer as TimerIcon, Gauge, Trophy, X, Zap, RotateCw, Mountain, Minus, Plus, CarFront, RotateCcw } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money } from '../format';
 import { CarArt, Sheet, RarityTag } from '../components';
 import { AppBar, Sect, Li, Nick, Seg, CarPicker, Ic, Empty } from '../ui';
 import { useApp } from '../App';
 import { t } from '../i18n';
+import { RaceScene } from '../RaceScene';
+import { fx } from '../sound';
 
 const TRACK_HINT: Record<string, string> = {
   drag: 'Решают разгон и мощность', circuit: 'Решают скорость и управляемость', rally: 'Решают управляемость и надёжность',
@@ -181,38 +183,19 @@ export function Race() {
   );
 }
 
-// Заезд: светофор 3-2-1, машины едут к финишу за время, пропорциональное результату.
+// Заезд: сцена с видом сзади (RaceScene), после финиша — итог и кнопка «Повтор».
 function RaceReplay({ r, meId }: { r: any; meId: number }) {
-  const [light, setLight] = useState(0); // 0..3 красные, 4 — зелёный
+  const [run, setRun] = useState(0);
   const [done, setDone] = useState(false);
-  useEffect(() => {
-    const ts = [1, 2, 3, 4].map((n) => setTimeout(() => setLight(n), n * 450));
-    const f = setTimeout(() => setDone(true), 1800 + 2600);
-    return () => { ts.forEach(clearTimeout); clearTimeout(f); };
-  }, []);
-  const go = light >= 4;
-  const fast = Math.min(r.host_ms, r.guest_ms);
-  const dur = (ms: number) => 2.4 * (ms / fast);
   const meHost = r.host_id === meId;
   const won = r.winner_id === meId;
   const myMs = meHost ? r.host_ms : r.guest_ms, theirMs = meHost ? r.guest_ms : r.host_ms;
-  const lane = (car: any, ms: number, label: string, mine: boolean) => (
-    <div className={`lane${mine ? ' mine' : ''}`}>
-      <span className="who">{label}</span>
-      <div className="car" style={{ left: go ? 'calc(100% - 128px)' : '4px', transitionProperty: 'left', transitionDuration: `${dur(ms)}s` }}>
-        <CarArt car={car} height={50} />
-      </div>
-    </div>
-  );
+  const rival = r.kind === 'bot' ? t('Бот') : ((meHost ? r.guest : r.host)?.first_name || (meHost ? r.guest : r.host)?.username || t('Соперник'));
   return (
     <div className="col g12">
-      <div className="row between"><div className="h3">{t(r.track_name)}</div>
-        <div className="lights">{[1, 2, 3].map((n) => <i key={n} className={go ? 'g' : light >= n ? 'r' : ''} />)}</div></div>
-      <div className={`track${go && !done ? ' moving' : ''}`}>
-        <div className="finish" />
-        {lane(r.host_car_info, r.host_ms, meHost ? t('Ты') : t('Соперник'), meHost)}
-        {lane(r.guest_car_info, r.guest_ms, r.kind === 'bot' ? t('Бот') : meHost ? t('Соперник') : t('Ты'), !meHost)}
-      </div>
+      <div className="row between"><div className="h3">{t(r.track_name)}</div><span className="xs muted ell" style={{ maxWidth: '55%' }}>{(meHost ? r.host_car_info : r.guest_car_info)?.name}</span></div>
+      <RaceScene key={run} track={r.track} me={meHost ? r.host_car_info : r.guest_car_info} rival={meHost ? r.guest_car_info : r.host_car_info}
+        meMs={myMs} rivalMs={theirMs} rivalName={String(rival).slice(0, 14)} onEnd={() => { setDone(true); won ? fx.win() : fx.error(); }} />
       {done ? (
         <div className={`race-result ${won ? 'win' : 'lose'}`}>
           <div className="result">{won ? t('Победа!') : t('Поражение')}</div>
@@ -222,8 +205,9 @@ function RaceReplay({ r, meId }: { r: any; meId: number }) {
           </div>
           <div className="sm muted">{won ? t('быстрее на {s}', { s: sec(theirMs - myMs) }) : t('медленнее на {s}', { s: sec(myMs - theirMs) })}</div>
           <div className={`h2 num ${won ? 'c-green' : 'c-red'}`}>{won ? `+${money(r.kind === 'bot' ? r.payout : r.payout - r.stake)}` : `−${money(r.stake)}`}</div>
+          <button className="btn ghost w" onClick={() => { setDone(false); setRun((n) => n + 1); }}><RotateCcw size={16} /> {t('Повтор')}</button>
         </div>
-      ) : <div className="center sm muted">{go ? t('Едем…') : t('На старт…')}</div>}
+      ) : <div className="center xs muted">{t('нажми на трассу, чтобы пропустить')}</div>}
     </div>
   );
 }

@@ -27,7 +27,7 @@ export const EN: Record<string, string> = {
   'Машина': 'Car', 'Трасса': 'Track', 'Ставка': 'Bid', 'Старт': 'Start', 'Вызов': 'Challenge', 'Вызов отменён, ставка вернулась': 'Challenge cancelled, stake refunded',
   'Принять': 'Accept', 'Вызовов пока нет': 'No challenges yet', 'Создай свой во вкладке «Заезд» — его увидят все игроки.': 'Create one in the “Race” tab — every player will see it.',
   'заездов': 'races', 'побед': 'wins', 'ждёт соперника': 'waiting for opponent', 'отменён': 'cancelled', 'победа': 'win', 'поражение': 'loss', 'против': 'vs', 'бот': 'bot',
-  'Заездов ещё не было': 'No races yet', 'Принять вызов': 'Accept challenge', 'Соперник': 'Opponent', 'Бот': 'Bot', 'Победа!': 'Victory!', 'Поражение': 'Defeat', 'Едем…': 'Racing…',
+  'Заездов ещё не было': 'No races yet', 'Принять вызов': 'Accept challenge', 'Соперник': 'Opponent', 'Бот': 'Bot', 'Победа!': 'Victory!', 'Поражение': 'Defeat', 'Едем…': 'Racing…', 'ФИНИШ': 'FINISH', 'ФИНИШ!': 'FINISH!', 'ФОТОФИНИШ!': 'PHOTO FINISH!', 'СТАРТ!': 'GO!', 'км/ч': 'km/h', 'м': 'm', 'Повтор': 'Replay', 'нажми на трассу, чтобы пропустить': 'tap the track to skip',
   'Япония': 'Japan', 'Торгуйся за контейнеры': 'Bid for containers', 'Ставь выше других': 'Outbid the others',
   'После каждой ставки 30 секунд таймера начинаются заново': 'Every bid restarts the 30-second timer', 'Последняя ставка — твой контейнер': 'The last bid wins the container',
   'Внутри случайная машина одной из четырёх редкостей': 'Inside is a random car of one of four rarities', 'Перебили — деньги вернутся': 'Outbid? You get your money back',
