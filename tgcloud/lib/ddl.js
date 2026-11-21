@@ -9,7 +9,7 @@ import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
-import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26 } from './ddl8.js';
+import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27 } from './ddl8.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -624,4 +624,6 @@ export const MIGRATIONS = [
   { id: 25, statements: MIGRATION_25 },
   // 26: все 8 контейнеров заново — новые популярные машины по заводским ценам, цены контейнеров по ним.
   { id: 26, statements: MIGRATION_26 },
+  // 27: редкость по цене внутри страны, замены машин после проверки.
+  { id: 27, statements: MIGRATION_27 },
 ];

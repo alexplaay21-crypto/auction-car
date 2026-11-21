@@ -113,13 +113,13 @@ export const WORLD = {
     ['Lada 2104', 'common', 72, 'wagon', 5500], ['Lada 2110', 'common', 81, 'sedan', 7000], ['Lada 2115', 'common', 81, 'sedan', 7000],
     ['Lada 4x4 Urban', 'common', 83, 'suv', 11500], ['Lada 2107', 'common', 75, 'sedan', 6000], ['Lada 2106', 'common', 75, 'sedan', 6000],
     ['Lada 2108', 'common', 75, 'hatch', 6000], ['Lada 2112', 'common', 90, 'hatch', 7000], ['Moskvich 2141', 'common', 72, 'hatch', 5000],
-    ['Lada Niva', 'common', 83, 'suv', 11000], ['VAZ 2109', 'common', 75, 'hatch', 6000], ['UAZ Hunter Expedition', 'common', 135, 'suv', 22000],
+    ['Haval F7', 'common', 150, 'suv', 25000], ['VAZ 2109', 'common', 75, 'hatch', 6000], ['Haval H6', 'common', 150, 'suv', 23000],
     ['ZAZ 968', 'common', 40, 'coupe', 3000], ['Moskvich 2140', 'common', 75, 'sedan', 5000], ['VAZ 2106', 'common', 75, 'sedan', 6000],
     ['GAZ 3102', 'common', 100, 'sedan', 10000], ['UAZ Buhanka', 'common', 112, 'van', 14000], ['Lada Samara Cross', 'common', 75, 'hatch', 9000],
-    ['Tenet T8', 'rare', 186, 'suv', 32000, 36], ['GAZ 21 Volga', 'rare', 70, 'sedan', 40000, 37], ['GAZ 24 Volga', 'rare', 95, 'sedan', 30000],
-    ['Moskvich 412', 'rare', 75, 'sedan', 20000], ['Moskvich 407', 'rare', 45, 'sedan', 25000], ['Moskvich 401', 'rare', 23, 'sedan', 25000],
+    ['Tenet T8', 'rare', 186, 'suv', 32000, 36], ['Kia Rio', 'rare', 123, 'sedan', 15000, 37], ['GAZ 24 Volga', 'rare', 95, 'sedan', 30000],
+    ['Renault Duster', 'rare', 114, 'suv', 15000], ['Moskvich 407', 'rare', 45, 'sedan', 25000], ['Moskvich 401', 'rare', 23, 'sedan', 25000],
     ['Moskvich 408', 'rare', 50, 'sedan', 20000], ['Lada 2103', 'rare', 71, 'sedan', 15000], ['UAZ 469', 'rare', 75, 'suv', 18000],
-    ['ZAZ 965', 'rare', 23, 'coupe', 15000], ['Lada Samara T3', 'rare', 300, 'hatch', 90000], ['VAZ 2102', 'rare', 64, 'wagon', 5000],
+    ['Toyota Camry', 'rare', 200, 'sedan', 35000], ['Kia Sportage', 'rare', 150, 'suv', 27000], ['VAZ 2102', 'rare', 64, 'wagon', 5000],
     ['Moskvich 400', 'rare', 23, 'sedan', 30000], ['GAZ M20 Pobeda', 'rare', 52, 'sedan', 35000], ['GAZ 13 Chaika', 'epic', 195, 'sedan', 150000, 38],
     ['ZIS 101', 'epic', 110, 'sedan', 120000, 39], ['Marussia B1', 'epic', 300, 'super', 130000], ['ZIL 111', 'epic', 200, 'sedan', 250000],
     ['Aurus Senat', 'mythic', 598, 'sedan', 330000, 40], ['Marussia B2', 'mythic', 420, 'super', 180000],
@@ -186,9 +186,27 @@ export const WORLD = {
 const COLORS = ['#c4161c', '#1f4fa8', '#e8e8e8', '#202428', '#8c96a3', '#2e7d4f', '#e8742c', '#f2c230', '#5b2a86', '#2a8f9a', '#7a1218', '#c9ccd1'];
 const round = (x) => Math.max(100, Math.round(x / 100) * 100);
 
+// Редкость — по цене внутри страны: 30 самых дешёвых обычные, дальше 14 редких, 4 эпических, 2 легендарные.
+// Так эпическая никогда не дороже легендарной, а редкая — эпической. FORCE — машины с закреплённой редкостью
+// (BMW M5 — подарок VIP, обещана эпической).
+const FORCE = { 14: 'epic' };
+export function rarityByPrice(cid) {
+  const cars = WORLD[cid].cars;
+  const idx = cars.map((c, i) => i).sort((a, b) => cars[a][4] - cars[b][4] || a - b);
+  const out = new Array(cars.length);
+  const forced = idx.filter((i) => FORCE[cars[i][5]]);
+  for (const i of forced) out[i] = FORCE[cars[i][5]];
+  const need = { mythic: 2, epic: 4, rare: 14, common: 30 };
+  for (const i of forced) need[out[i]]--;
+  const free = idx.filter((i) => !out[i]).reverse();
+  for (const r of ['mythic', 'epic', 'rare', 'common']) for (let n = 0; n < need[r]; n++) out[free.shift()] = r;
+  return out;
+}
 export function buildCountry(cid) {
   const W = WORLD[cid];
-  return W.cars.map(([model, rarity, hp, body, price, keep], i) => {
+  const rar = rarityByPrice(cid);
+  return W.cars.map(([model, , hp, body, price, keep], i) => {
+    const rarity = rar[i];
     const sport = { common: 0, rare: 1, epic: 2, mythic: 3 }[rarity];
     const accel = Math.max(2.0, Math.min(25, +(14 - Math.log2(hp / 60) * 2.9 - sport * 0.4).toFixed(1)));
     const speed = Math.round(Math.min(420, 110 + Math.sqrt(hp) * 8 + sport * 6));
@@ -200,6 +218,7 @@ export function buildCountry(cid) {
 
 // Цена контейнера: между 18-й и 19-й по цене обычной машиной (60 % обычных дешевле, 40 % дороже), кратно $500.
 export function containerPrice(cid) {
-  const commons = WORLD[cid].cars.filter((c) => c[1] === 'common').map((c) => c[4]).sort((a, b) => a - b);
+  const rar = rarityByPrice(cid);
+  const commons = WORLD[cid].cars.filter((c, i) => rar[i] === 'common').map((c) => c[4]).sort((a, b) => a - b);
   return Math.round((commons[17] + commons[18]) / 2 / 500) * 500;
 }

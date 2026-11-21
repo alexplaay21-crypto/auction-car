@@ -90,3 +90,18 @@ export const MIGRATION_26 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
   `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
   `UPDATE container_meta SET base_price = ${containerPrice(cid)}, market = ${Math.round(containerPrice(cid) * 100 / 55)}, prev_price = ${containerPrice(cid)} WHERE container_id = ${cid}`,
 ]);
+
+// 27: редкость по цене (эпическая не дороже легендарной), замены машин после проверки картинок.
+export const MIGRATION_27 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
+  ...upsertWorld(cid),
+  `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
+  `UPDATE container_meta SET base_price = ${containerPrice(cid)}, market = ${Math.round(containerPrice(cid) * 100 / 55)}, prev_price = ${containerPrice(cid)} WHERE container_id = ${cid}`,
+]).concat([
+  // машины сезона Battle Pass: премиум — эпическая, делюкс — легендарная (той же страны, если редкость сменилась)
+  `UPDATE bp_seasons SET dx_car_id = (SELECT c2.id FROM cars c1 JOIN cars c2 ON c2.country = c1.country AND c2.rarity = 'mythic'
+     WHERE c1.id = bp_seasons.dx_car_id ORDER BY c2.price LIMIT 1)
+   WHERE dx_car_id IS NOT NULL AND (SELECT rarity FROM cars WHERE id = dx_car_id) <> 'mythic'`,
+  `UPDATE bp_seasons SET prem_car_id = (SELECT c2.id FROM cars c1 JOIN cars c2 ON c2.country = c1.country AND c2.rarity = 'epic'
+     WHERE c1.id = bp_seasons.prem_car_id ORDER BY abs(c2.price - c1.price) LIMIT 1)
+   WHERE prem_car_id IS NOT NULL AND (SELECT rarity FROM cars WHERE id = prem_car_id) <> 'epic'`,
+]);
