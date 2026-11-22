@@ -9,7 +9,7 @@ import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
-import { migration28 } from './ddl11.js';
+import { migration28, migration31 } from './ddl11.js';
 import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30 } from './ddl8.js';
 
 export const SETTINGS = {
@@ -633,4 +633,6 @@ export const MIGRATIONS = [
   { id: 29, statements: MIGRATION_29 },
   // 30: Франция — без битых моделей (48 машин)
   { id: 30, statements: MIGRATION_30 },
+  // 31: трёхзначный номер машины для игроков
+  { id: 31, statements: [], run: migration31 },
 ];

@@ -104,6 +104,9 @@ export default endpoint(async (db, uid, input, { user }) => {
     } else {
       id = (await db.run(`INSERT INTO cars (name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body, is_active)
         VALUES (:name, :country, :rarity, :speed, :accel, :power, :handling, :rel, :price, :color, :body, :active)`, f)).lastInsertRowid;
+      // трёхзначный номер для игроков: следующий свободный 900+
+      await db.run(`UPDATE cars SET code = (SELECT max(899, COALESCE(max(code), 899)) + 1 FROM cars WHERE code >= 900)
+        WHERE id = :id AND code IS NULL AND (SELECT COALESCE(max(code), 899) FROM cars WHERE code >= 900) < 999`, { ':id': id }).catch(() => {});
     }
     await log({ id, name: f[':name'] });
     return { id };

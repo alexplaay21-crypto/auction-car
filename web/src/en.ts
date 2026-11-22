@@ -248,4 +248,5 @@ export const EN: Record<string, string> = {
   '600+ л.с.': '600+ hp',
   'Сбросить': 'Reset',
   'Показать': 'Show',
+  'Выпадает из этого контейнера': 'Drops from this container',
 };

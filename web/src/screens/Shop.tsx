@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Crown, Sparkles, Coins, Trophy, ParkingSquare, Gift, Zap, Landmark, Store, Send, CarFront } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast, tg } from '../tg';
 import { money, RARITY } from '../format';
-import { CarCard, ContainerArt, CarArt, RarityTag, ProfileBg } from '../components';
+import { CarCard, CarSheet, ContainerArt, CarArt, RarityTag, ProfileBg } from '../components';
 import { AppBar, Sect, Li, Ic, Kv } from '../ui';
 import { Chances } from './Auction';
 import { useApp } from '../App';
@@ -12,11 +12,15 @@ import { t } from '../i18n';
 const PERK_ICON: Record<string, any> = { car: CarFront, garage: ParkingSquare, bonus: Gift, quick: Zap, state: Landmark, market: Store, transfer: Send, badge: Crown };
 
 export function SeasonCar({ car, label }: { car: any; label: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className={`bp-car r-${car.rarity}`}>
+    <>
+    <CarSheet car={open ? car : null} onClose={() => setOpen(false)} />
+    <div className={`bp-car r-${car.rarity} press`} onClick={() => setOpen(true)}>
       <div className="bp-car-art"><CarArt car={car} height={84} studio /></div>
       <div className="bp-car-info"><span className="xs muted">{label}</span><b className="ell2">{car.name}</b><RarityTag r={car.rarity} /></div>
     </div>
+    </>
   );
 }
 
@@ -141,6 +145,7 @@ export function CatalogPage({ id }: { id: number }) {
   const [cat, setCat] = useState<any>(null);
   useEffect(() => { call('app_shop', { action: 'catalog' }).then(setCat, (e) => toast(errorText(e))); }, [id]);
   const [f, setF] = useState<CarF>(F0);
+  const [open, setOpen] = useState<any>(null);
   const c = cat?.containers.find((x: any) => x.id === id);
   const inside = cat ? cat.cars.filter((x: any) => x.container_id === id) : [];
   return (
@@ -157,10 +162,13 @@ export function CatalogPage({ id }: { id: number }) {
             </div>
             <Sect>{t('Машины внутри')}</Sect>
             <CarFilterBar list={inside} f={f} onChange={setF} />
-            <div className="grid2">{applyCarFilter(inside, f).map((x: any) => <CarCard key={x.id} car={x} />)}</div>
+            <div className="grid2">{applyCarFilter(inside, f).map((x: any) => <CarCard key={x.id} car={x} onClick={() => setOpen(x)} />)}</div>
           </>
         )}
       </div>
+      <CarSheet car={open} onClose={() => setOpen(null)}>
+        <div className="xs faint center">{t('Выпадает из этого контейнера')}</div>
+      </CarSheet>
     </>
   );
 }

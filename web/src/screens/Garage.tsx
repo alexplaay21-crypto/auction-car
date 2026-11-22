@@ -2,7 +2,7 @@ import { Unboxing } from '../Unboxing';
 import { useCallback, useEffect, useState } from 'react';
 import { CarFront, Handshake, Zap, Landmark, ParkingSquare, Check, X, Store } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
-import { money, who, RARITY, RARITIES } from '../format';
+import { money, who, carNo } from '../format';
 import { CarArt, CarCard, ContainerArt, RarityTag, Sheet, Stat } from '../components';
 import { AppBar, Sect, Li, Empty, Ic, FriendPicker, Kv } from '../ui';
 import { useApp } from '../App';
@@ -108,7 +108,7 @@ export function CarPage({ id }: { id: number }) {
         <div className="card pad0">
           <div className="hero-img"><CarArt car={car} height={180} studio /></div>
           <div className="col g8" style={{ padding: 14 }}>
-            <div className="row between"><RarityTag r={car.rarity} /><span className="sm muted">{car.country}</span></div>
+            <div className="row between"><RarityTag r={car.rarity} /><span className="sm muted">{carNo(car)}{car.country ? ` · ${t(car.country)}` : ''}</span></div>
             <div className="h2">{car.name}</div>
             <Kv k={t('Стоимость по каталогу')} v={money(car.price)} />
           </div>

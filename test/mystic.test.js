@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -39,4 +39,18 @@ test('миграция 28: cars пересобрана без потерь, ми
   const uc = (await db.get('SELECT id FROM user_cars WHERE user_id = 2')).id;
   const l = await G.listCar(db, 2, uc, 1000);
   assert.ok(l.id);
+});
+
+test('у каждой машины трёхзначный номер: каталог из car_codes.js, остальные 900+, номера не повторяются', async () => {
+  const { CAR_CODES } = await import('../tgcloud/lib/car_codes.js');
+  const { worldIds } = await import('../tgcloud/lib/ddl8.js');
+  for (let c = 1; c <= 8; c++) for (const id of worldIds(c)) assert.ok(CAR_CODES[id] >= c * 100 && CAR_CODES[id] < c * 100 + 100, `нет номера у машины ${id}`);
+  const db = makeDb(); E.dropSettingsCache();
+  await E.migrate(db);
+  const rows = await db.all('SELECT id, code FROM cars');
+  assert.ok(rows.every((r) => r.code >= 100 && r.code <= 999), 'все номера трёхзначные');
+  assert.equal(new Set(rows.map((r) => r.code)).size, rows.length, 'номера не повторяются');
+  for (const r of rows) if (CAR_CODES[r.id]) assert.equal(r.code, CAR_CODES[r.id]);
+  assert.ok(rows.filter((r) => !CAR_CODES[r.id]).every((r) => r.code >= 900));
+  await assert.rejects(db.run('UPDATE cars SET code = 1000 WHERE id = 1'));
 });

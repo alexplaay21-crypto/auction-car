@@ -43,7 +43,7 @@ export async function raceCancel(db, uid, raceId) {
   if (!r.rowsAffected) throw new GameError('RACE_CLOSED');
 }
 
-const CAR_COLS = 'id, name, rarity, color, body, max_speed, accel_x100, power, handling, reliability, price, country';
+const CAR_COLS = 'id, name, rarity, color, body, max_speed, accel_x100, power, handling, reliability, price, country, code';
 export async function raceView(db, id) {
   const r = await db.get('SELECT * FROM races WHERE id = :r', { ':r': id });
   if (!r) return null;

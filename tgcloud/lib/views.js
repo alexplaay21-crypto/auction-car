@@ -128,9 +128,12 @@ export async function catalogView(db) {
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 export { esc };
 
+// номер машины для игроков: трёхзначный code (id в базе — внутренний)
+export const carNo = (c) => '№' + String(c?.code ?? c?.id ?? 0).padStart(3, '0');
+
 export function carCardText(c, { sale = null, autoSold = null } = {}) {
   const r = RARITY[c.rarity] ?? RARITY.common;
-  let t = `${r.icon} <b>${esc(c.name)}</b>\n<i>${r.ru}${c.country ? ' · ' + esc(c.country) : ''}</i>\n\n`;
+  let t = `${r.icon} <b>${esc(c.name)}</b> · ${carNo(c)}\n<i>${r.ru}${c.country ? ' · ' + esc(c.country) : ''}</i>\n\n`;
   t += `🏁 ${c.max_speed} км/ч · 0–100 за ${(c.accel_x100 / 100).toFixed(1).replace('.', ',')} с\n`;
   t += `⚙️ ${c.power} л.с. · 🎯 управляемость ${c.handling} · 🛠 надёжность ${c.reliability}\n`;
   t += `💰 Стоимость: <b>${money(c.price)}</b>`;

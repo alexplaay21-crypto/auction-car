@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Store, Tag, X } from 'lucide-react';
 import { call, errorText, haptic, toast } from '../tg';
-import { money, RARITY } from '../format';
+import { money, RARITY, carNo } from '../format';
 import { CarArt, CarCard, RarityTag, Sheet, Stat } from '../components';
 import { AppBar, Sect, Nick, CarPicker, Empty, Kv } from '../ui';
 import { useApp } from '../App';
@@ -58,7 +58,8 @@ export function Market() {
         {open && (
           <div className={`col g12 r-${open.rarity}`}>
             <div className="reveal-art"><CarArt car={open} height={170} studio /></div>
-            <div className="row between g8"><div className="h2 grow">{open.name}</div><RarityTag r={open.rarity} /></div>
+            <div className="row between g8"><RarityTag r={open.rarity} /><span className="sm muted">{carNo(open)}{open.country ? ` · ${t(open.country)}` : ''}</span></div>
+            <div className="h2">{open.name}</div>
             <div className="row g6 sm muted">{t('Продаёт')} <Nick u={open.seller} /></div>
             <Kv k={t('Цена')} v={money(open.ask)} c="var(--orange)" />
             <Kv k={t('Стоимость по каталогу')} v={money(open.price)} />

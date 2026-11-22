@@ -3,7 +3,7 @@ import { Trophy, History, Users, Send, Ticket, Shield, TrendingUp, TrendingDown,
 import { call, clientId, errorText, haptic, share, toast } from '../tg';
 import { short, money, who, ago, LEDGER, RARITY, RARITIES } from '../format';
 import { t } from '../i18n';
-import { Avatar, CarArt, CarCard, RarityTag, Sheet, Stat, Money, ProfileBg } from '../components';
+import { Avatar, CarArt, CarCard, CarInfo, RarityTag, Sheet, Stat, Money, ProfileBg } from '../components';
 import { AppBar, Sect, Li, Seg, Empty, Ic, Nick, Kv, FriendPicker } from '../ui';
 import { useApp } from '../App';
 
@@ -104,13 +104,7 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
 
       <Sheet open={!!car} onClose={() => setCar(null)}>
         {car && (
-          <div className={`col g12 r-${car.rarity}`}>
-            <div className="reveal-art"><CarArt car={car} height={170} studio /></div>
-            <div className="row between"><div className="h2 ell">{car.name}</div><RarityTag r={car.rarity} /></div>
-            <Kv k={t('Стоимость')} v={money(car.price)} />
-            <Stat label={t('Скорость')} value={car.max_speed} max={420} />
-            <Stat label={t('Мощность')} value={car.power} max={1200} />
-            <Stat label={t('Управляемость')} value={car.handling} />
+          <CarInfo car={car}>
             {car.listing_id ? (
               <button className="btn go xl w" disabled={busy} onClick={async () => {
                 setBusy(true);
@@ -118,7 +112,7 @@ export function Player({ id, root = false }: { id: number; root?: boolean }) {
                 setBusy(false);
               }}><Store size={18} /> {t('Купить за {m}', { m: money(car.ask) })}</button>
             ) : <div className="sm muted center">{t('Не продаётся')}</div>}
-          </div>
+          </CarInfo>
         )}
       </Sheet>
     </>

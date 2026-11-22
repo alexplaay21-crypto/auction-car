@@ -11,7 +11,7 @@ import { raceView, skillOf } from './engine3.js';
 import * as D from './drive.js';
 
 const NOW = '(SELECT now FROM v_now)';
-const CAR_COLS = 'id, name, rarity, color, body, max_speed, accel_x100, power, handling, reliability, price, country';
+const CAR_COLS = 'id, name, rarity, color, body, max_speed, accel_x100, power, handling, reliability, price, country, code';
 async function exec(db, q, p) { try { return await db.run(q, p); } catch (e) { throw toGameError(e) ?? e; } }
 const intOf = (v, min, max) => {
   const n = Math.floor(Number(v));

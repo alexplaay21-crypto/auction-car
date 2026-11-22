@@ -69,3 +69,16 @@ export async function migration28(db) {
   await safeRun(db, "INSERT INTO settings (k, v) VALUES ('chance_mystic', 1) ON CONFLICT (k) DO NOTHING");
   await safeRun(db, "UPDATE settings SET v = 4 WHERE k = 'chance_mythic' AND v = 5");
 }
+
+// 31: трёхзначный номер машины для игроков (cars.code). id в базе не меняются — на них ссылаются гаражи,
+// сделки и неизменяемый журнал денег. Номера каталога — из car_codes.js, остальные машины — 900+ по порядку id.
+import { CAR_CODES } from './car_codes.js';
+export async function migration31(db) {
+  const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'cars'")).sql;
+  if (!/\bcode\b/.test(ct)) await db.run('ALTER TABLE cars ADD COLUMN code INTEGER CHECK (code BETWEEN 100 AND 999)');
+  await safeRun(db, 'CREATE UNIQUE INDEX IF NOT EXISTS uq_cars_code ON cars (code)');
+  for (const [id, code] of Object.entries(CAR_CODES)) await safeRun(db, `UPDATE cars SET code = ${code} WHERE id = ${Number(id)} AND code IS NOT ${code}`);
+  const rest = await db.all('SELECT id FROM cars WHERE code IS NULL ORDER BY id');
+  let next = Math.max(899, (await db.get('SELECT max(code) AS m FROM cars WHERE code >= 900')).m ?? 899) + 1;
+  for (const r of rest) { if (next > 999) throw new Error('mig31: no free codes'); await db.run(`UPDATE cars SET code = ${next++} WHERE id = ${r.id}`); }
+}

@@ -19,6 +19,8 @@ export const RARITY: Record<string, { name: string; icon: string; color: string 
   mythic: R('Легендарная', '🟡', '#ffc23d'),
   mystic: R('Мистическая', '🔴', '#ff3b4d'),
 };
+// номер машины для игроков: трёхзначный (id в базе — внутренний)
+export const carNo = (c: any) => '№' + String(c?.code ?? c?.id ?? 0).padStart(3, '0');
 export const RARITIES = ['common', 'rare', 'epic', 'mythic', 'mystic'];
 // порядок от самой ценной (для сортировки)
 export const RARITY_RANK: Record<string, number> = { mystic: 5, mythic: 4, epic: 3, rare: 2, common: 1 };
