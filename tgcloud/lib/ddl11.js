@@ -74,10 +74,20 @@ export async function migration28(db) {
 // сделки и неизменяемый журнал денег. Номера каталога — из car_codes.js, остальные машины — 900+ по порядку id.
 import { CAR_CODES } from './car_codes.js';
 export async function migration31(db) {
-  const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'cars'")).sql;
-  if (!/\bcode\b/.test(ct)) await db.run('ALTER TABLE cars ADD COLUMN code INTEGER CHECK (code BETWEEN 100 AND 999)');
-  await safeRun(db, 'CREATE UNIQUE INDEX IF NOT EXISTS uq_cars_code ON cars (code)');
-  for (const [id, code] of Object.entries(CAR_CODES)) await safeRun(db, `UPDATE cars SET code = ${code} WHERE id = ${Number(id)} AND code IS NOT ${code}`);
+  const step = async (name, f) => { try { return await f(); } catch (e) { throw new Error(`mig31 ${name}: ${e?.message ?? e}`); } };
+  return step('all', () => migration31Body(db, step));
+}
+async function migration31Body(db, step) {
+  const ct = await step('read', async () => (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'cars'")).sql);
+  if (!/\bcode\b/.test(ct)) await step('alter', () => db.run('ALTER TABLE cars ADD COLUMN code INTEGER'));
+  await step('index', () => safeRun(db, 'CREATE UNIQUE INDEX IF NOT EXISTS uq_cars_code ON cars (code)'));
+  // номер только трёхзначный (CHECK в ALTER TABLE платформа не разрешает — проверка триггерами)
+  for (const op of ['INSERT', 'UPDATE OF code']) {
+    const name = op === 'INSERT' ? 'cars_code_bi' : 'cars_code_bu';
+    await step(name, () => safeRun(db, `CREATE TRIGGER IF NOT EXISTS ${name} BEFORE ${op} ON cars WHEN NEW.code IS NOT NULL AND (NEW.code < 100 OR NEW.code > 999)
+      BEGIN SELECT RAISE(ABORT, 'BAD_CAR_CODE'); END`));
+  }
+  await step('codes', async () => { for (const [id, code] of Object.entries(CAR_CODES)) await safeRun(db, `UPDATE cars SET code = ${code} WHERE id = ${Number(id)} AND code IS NOT ${code}`); });
   const rest = await db.all('SELECT id FROM cars WHERE code IS NULL ORDER BY id');
   let next = Math.max(899, (await db.get('SELECT max(code) AS m FROM cars WHERE code >= 900')).m ?? 899) + 1;
   for (const r of rest) { if (next > 999) throw new Error('mig31: no free codes'); await db.run(`UPDATE cars SET code = ${next++} WHERE id = ${r.id}`); }
