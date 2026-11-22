@@ -107,5 +107,5 @@ export const SPECS = {
   'Genesis GV80': [375, 240, 5.5], 'Genesis G90': [409, 250, 5.5], 'Jaguar F-Type': [575, 300, 3.7], 'Aston Martin Vantage': [656, 325, 3.5],
   'Bentley Continental GT': [650, 335, 3.6], 'Mini John Cooper Works': [228, 246, 6.1], 'Lotus Emira': [400, 290, 4.3], 'Hyundai i30 N': [280, 250, 5.9],
   'Rolls-Royce Phantom': [563, 250, 5.4], 'Rolls-Royce Cullinan': [563, 250, 5.2], 'Aston Martin DBS': [715, 340, 3.4], 'McLaren 720S': [710, 341, 2.9],
-  'Koenigsegg Jesko': [1600, 480, 2.5], 'McLaren P1': [903, 350, 2.8],
+  'Koenigsegg Jesko': [1600, 480, 2.5], 'McLaren P1': [903, 350, 2.8], 'Bentley Bentayga': [542, 290, 4.5],
 };

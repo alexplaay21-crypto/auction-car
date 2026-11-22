@@ -22,26 +22,33 @@ beforeEach(async () => {
   for (const n of [2, 3, 4]) await E.ensureUser(db, { id: n, username: 'u' + n });
 });
 
-test('8 стран, у каждого контейнера флаг; редкость общая по цене, цена по силе, в России 35 машин, «Неизвестный» — 85', async () => {
-  assert.equal((await db.get('SELECT count(*) AS n FROM containers')).n, 8);
-  // 64 старых + новые; убранные из России машины не создаются (кроме старых id 36, 37 — они остаются у владельцев)
+test('9 контейнеров (с британским), у каждого флаг; редкость своя в каждом контейнере, цена по силе', async () => {
+  assert.equal((await db.get('SELECT count(*) AS n FROM containers')).n, 9);
+  // 64 старых + новые; убранные машины не создаются (кроме старых id 36, 37 — они остаются у владельцев)
   assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 6 + 29 + 40);
   assert.equal((await db.get('SELECT count(*) AS n FROM cars WHERE is_active = 1 AND id IN (36, 37)')).n, 0, 'вне контейнеров — не выпадают');
-  // редкость — общая по всем странам: 5 мистических, 15 легендарных, 40 эпических, 100 редких
-  const all = await db.all("SELECT c.rarity, count(*) AS n FROM cars c WHERE c.id IN (SELECT car_id FROM container_cars) GROUP BY c.rarity");
-  assert.deepEqual(Object.fromEntries(all.map((r) => [r.rarity, r.n])), { common: 223, rare: 100, epic: 40, mythic: 15, mystic: 5 });
+  // в каждом контейнере, кроме «Неизвестного» (8) и выключенной России (5): 1 мистическая, 1–2 легендарные, 6–10 эпических
+  for (const c of [1, 2, 3, 4, 6, 7, 9]) {
+    const r = Object.fromEntries((await db.all('SELECT c.rarity, count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = :c GROUP BY c.rarity', { ':c': c })).map((x) => [x.rarity, x.n]));
+    assert.equal(r.mystic, 1, `контейнер ${c}: мистическая`);
+    assert.ok(r.mythic >= 1 && r.mythic <= 2, `контейнер ${c}: легендарных ${r.mythic}`);
+    assert.ok(r.epic >= 6 && r.epic <= 10, `контейнер ${c}: эпических ${r.epic}`);
+  }
   // сильная машина не дешевле слабой: цена растёт вместе с силой (мощность, разгон, макс. скорость)
   const cars = await db.all('SELECT power, accel_x100, max_speed, price FROM cars WHERE id IN (SELECT car_id FROM container_cars)');
   const st = (c) => 0.5 * Math.log(c.power) + 0.3 * Math.log(1000 / c.accel_x100) + 0.2 * Math.log(c.max_speed);
   cars.sort((a, b) => st(a) - st(b) || a.price - b.price);
   for (let i = 1; i < cars.length; i++) assert.ok(cars[i].price >= cars[i - 1].price - 100, 'цена не падает с ростом силы');
   const flags = (await db.all('SELECT flag FROM container_meta ORDER BY container_id')).map((r) => r.flag);
-  assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world']);
-  for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, c === 5 ? 35 : c === 7 ? 48 : c === 8 ? 85 : 50);
-  // российский контейнер убран с аукциона, его машины — в «Неизвестном»
+  assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world', 'uk']);
+  const size = { 5: 35, 6: 48, 7: 48, 8: 68, 9: 19 };
+  for (let c = 1; c <= 9; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, size[c] ?? 50, `контейнер ${c}`);
+  // российский контейнер убран с аукциона, его машины — в «Неизвестном»; британские машины — в своём контейнере
   assert.equal((await db.get('SELECT is_enabled FROM containers WHERE id = 5')).is_enabled, 0);
   assert.equal((await db.get('SELECT name FROM containers WHERE id = 8')).name, 'Контейнер «Неизвестный»');
   assert.equal((await db.get("SELECT count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 8 AND c.country = 'Россия'")).n, 35);
+  assert.equal((await db.get("SELECT count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 8 AND c.country = 'Великобритания'")).n, 0);
+  assert.equal((await db.get("SELECT count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 9 AND c.country = 'Великобритания'")).n, 19);
 });
 
 test('динамическая цена: не выше базовой ($24 000 максимум), без ставок снижается, но не ниже 90 %', async () => {

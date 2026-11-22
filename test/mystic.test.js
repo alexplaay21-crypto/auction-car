@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0), (36, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0), (36, 0), (37, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -28,12 +28,12 @@ test('миграция 28: cars пересобрана без потерь, ми
   assert.deepEqual(await db.all('SELECT * FROM user_cars ORDER BY id'), gBefore, 'гаражи не изменились');
   assert.deepEqual(await E.audit(db), []);
   await db.run('DELETE FROM schema_migrations WHERE id >= 30');
-  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34, 35, 36]);
+  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34, 35, 36, 37]);
   // мистическая: записывается, падает из контейнера с шансом, выставляется на рынок
   await db.run("UPDATE cars SET rarity = 'epic' WHERE rarity = 'mystic'");
   await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57"); // единственная мистическая в контейнере
   const ch = await E.chances(db, 8);
-  assert.equal(ch.mystic, 1); assert.equal(ch.mythic, 4);
+  assert.equal(ch.mystic, 1); // в «Неизвестном» легендарных нет — их шанс 0
   await db.run('UPDATE containers SET chance_common = 0, chance_rare = 0, chance_epic = 0, chance_mythic = 0, chance_mystic = 1000 WHERE id = 8');
   assert.equal(await E.rollCar(db, 8), 57);
   const uc = (await db.get('SELECT id FROM user_cars WHERE user_id = 2')).id;
@@ -83,7 +83,7 @@ test('экономика: контейнер не «печатает» день�
   const db = makeDb(); E.dropSettingsCache();
   await E.migrate(db);
   const { buildCountry, CONTAINER_EXTRA, CHANCES } = await import('../tgcloud/lib/catalog_world.js');
-  for (const c of [1, 2, 3, 4, 6, 7, 8]) {
+  for (const c of [1, 2, 3, 4, 6, 7, 8, 9]) {
     const cars = [c, ...(CONTAINER_EXTRA[c] ?? [])].flatMap((x) => buildCountry(x));
     const by = {}; for (const x of cars) (by[x[2]] ??= []).push(x[8]);
     const tot = Object.keys(by).reduce((s, r) => s + CHANCES[r], 0);

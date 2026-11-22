@@ -10,7 +10,7 @@ import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
 import { migration28, migration31, migration32, migration34, migration36 } from './ddl11.js';
-import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30, MIGRATION_33, MIGRATION_35 } from './ddl8.js';
+import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30, MIGRATION_33, MIGRATION_35, MIGRATION_37 } from './ddl8.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -645,4 +645,6 @@ export const MIGRATIONS = [
   { id: 35, statements: MIGRATION_35 },
   // 36: цены машин ×0,385, контейнер ≤ $24 000, бонус в 00:00 и 12:00 МСК ($25 000 / VIP $50 000, лимит $100 000 / $200 000)
   { id: 36, statements: [], run: migration36 },
+  // 37: британский контейнер; редкость внутри каждого контейнера (кроме «Неизвестного»)
+  { id: 37, statements: MIGRATION_37 },
 ];

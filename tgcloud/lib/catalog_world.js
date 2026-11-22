@@ -121,23 +121,23 @@ export const WORLD = {
     ['Aurus Senat', 'mythic', 598, 'sedan', 330000, 40], ['Marussia B2', 'mythic', 420, 'super', 180000, 541],
   ] },
   6: { flag: 'cn', country: 'Китай', base: 600, cars: [
+    // id закреплены: перенесённые и убранные машины остаются у владельцев, их id не переиспользуются
     ['BYD Seagull', 'common', 101, 'hatch', 10000, 41], ['BYD Dolphin', 'common', 201, 'hatch', 17000, 42], ['BYD Atto 3', 'common', 201, 'suv', 21000, 43],
-    ['BYD Seal', 'common', 308, 'sedan', 26000], ['BYD Han', 'common', 241, 'sedan', 30000], ['Geely Emgrand', 'common', 122, 'sedan', 11000],
-    ['Chery Tiggo 7 Pro', 'common', 147, 'suv', 18000], ['Chery Tiggo 4', 'common', 147, 'suv', 14000], ['Chery Tiggo 9', 'common', 254, 'suv', 30000],
-    ['Haval H6', 'common', 201, 'suv', 19000], ['Changan CS55 Plus', 'common', 188, 'suv', 16000], ['Changan CS75 Plus', 'common', 233, 'suv', 19000],
-    ['Changan UNI-K', 'common', 233, 'suv', 25000], ['Changan UNI-V', 'common', 188, 'sedan', 17000], ['Chery Jaecoo J7', 'common', 147, 'suv', 22000],
-    ['MG4', 'common', 201, 'hatch', 20000], ['Chery Arrizo 5', 'common', 116, 'sedan', 9000], ['Wuling Hongguang Mini EV', 'common', 40, 'hatch', 5000],
-    ['Hongqi H5', 'common', 169, 'sedan', 22000], ['Hongqi HS5', 'common', 224, 'suv', 27000], ['Neta V', 'common', 94, 'suv', 11000],
-    ['GAC Trumpchi GS4', 'common', 151, 'suv', 15000], ['Chery QQ', 'common', 68, 'hatch', 6000], ['Geely Binyue', 'common', 177, 'suv', 13000],
-    ['Geely Galaxy', 'common', 218, 'suv', 18000], ['Lynk Co 01', 'common', 254, 'suv', 25000], ['Haval H9', 'common', 218, 'suv', 30000],
-    ['Chery Tiggo 8 Pro', 'common', 197, 'suv', 24000], ['BYD e6', 'common', 218, 'van', 25000], ['Jetour Dashing', 'common', 197, 'suv', 15000],
-    ['Tank 300', 'rare', 227, 'suv', 35000, 44], ['Zeekr 001', 'rare', 536, 'hatch', 42000, 45], ['Xiaomi YU7', 'rare', 690, 'suv', 35000],
-    ['Xiaomi SU7', 'rare', 664, 'sedan', 30000], ['Xpeng P7', 'rare', 473, 'sedan', 32000], ['Hongqi H9', 'rare', 360, 'sedan', 50000],
-    ['Avatr 11', 'rare', 578, 'suv', 42000], ['Zeekr X', 'rare', 428, 'suv', 28000], ['Lotus Eletre', 'rare', 603, 'suv', 110000],
-    ['Zeekr 7X', 'rare', 637, 'suv', 32000], ['MG Cyberster', 'rare', 536, 'roadster', 45000], ['Lotus Emeya', 'rare', 905, 'sedan', 105000],
-    ['Voyah Courage', 'rare', 435, 'suv', 35000], ['Wuling Hongguang S', 'rare', 99, 'van', 8000], ['Xiaomi SU7 Ultra', 'epic', 1548, 'sedan', 74000, 46],
-    ['BYD Yangwang U8', 'epic', 1180, 'suv', 150000, 47], ['GAC Aion Hyper SSR', 'epic', 1225, 'super', 175000], ['Hongqi S9', 'epic', 1400, 'super', 1400000],
-    ['BYD Yangwang U9', 'mythic', 1287, 'super', 230000, 48], ['NIO EP9', 'mythic', 1341, 'super', 1480000],
+    ['BYD Seal', 'common', 308, 'sedan', 26000, 600], ['BYD Han', 'common', 241, 'sedan', 30000, 601], ['Geely Emgrand', 'common', 122, 'sedan', 11000, 602],
+    ['Chery Tiggo 7 Pro', 'common', 147, 'suv', 18000, 603], ['Chery Tiggo 4', 'common', 147, 'suv', 14000, 604], ['Chery Tiggo 9', 'common', 254, 'suv', 30000, 605],
+    ['Haval H6', 'common', 201, 'suv', 19000, 606], ['Changan CS55 Plus', 'common', 188, 'suv', 16000, 607], ['Changan CS75 Plus', 'common', 233, 'suv', 19000, 608],
+    ['Changan UNI-K', 'common', 233, 'suv', 25000, 609], ['Changan UNI-V', 'common', 188, 'sedan', 17000, 610], ['Chery Jaecoo J7', 'common', 147, 'suv', 22000, 611],
+    ['MG4', 'common', 201, 'hatch', 20000, 612], ['Chery Arrizo 5', 'common', 116, 'sedan', 9000, 613], ['Wuling Hongguang Mini EV', 'common', 40, 'hatch', 5000, 614],
+    ['Hongqi H5', 'common', 169, 'sedan', 22000, 615], ['Hongqi HS5', 'common', 224, 'suv', 27000, 616], ['Neta V', 'common', 94, 'suv', 11000, 617],
+    ['GAC Trumpchi GS4', 'common', 151, 'suv', 15000, 618], ['Chery QQ', 'common', 68, 'hatch', 6000, 619], ['Geely Binyue', 'common', 177, 'suv', 13000, 620],
+    ['Geely Galaxy', 'common', 218, 'suv', 18000, 621], ['Lynk Co 01', 'common', 254, 'suv', 25000, 622], ['Haval H9', 'common', 218, 'suv', 30000, 623],
+    ['Chery Tiggo 8 Pro', 'common', 197, 'suv', 24000, 624], ['BYD e6', 'common', 218, 'van', 25000, 625], ['Jetour Dashing', 'common', 197, 'suv', 15000, 626],
+    ['Tank 300', 'rare', 227, 'suv', 35000, 44], ['Zeekr 001', 'rare', 536, 'hatch', 42000, 45], ['Xiaomi YU7', 'rare', 690, 'suv', 35000, 627],
+    ['Xiaomi SU7', 'rare', 664, 'sedan', 30000, 628], ['Xpeng P7', 'rare', 473, 'sedan', 32000, 629], ['Hongqi H9', 'rare', 360, 'sedan', 50000, 630],
+    ['Avatr 11', 'rare', 578, 'suv', 42000, 631], ['Zeekr X', 'rare', 428, 'suv', 28000, 632], ['Zeekr 7X', 'rare', 637, 'suv', 32000, 634],
+    ['MG Cyberster', 'rare', 536, 'roadster', 45000, 635], ['Voyah Courage', 'rare', 435, 'suv', 35000, 637], ['Wuling Hongguang S', 'rare', 99, 'van', 8000, 638],
+    ['Xiaomi SU7 Ultra', 'epic', 1548, 'sedan', 74000, 46], ['BYD Yangwang U8', 'epic', 1180, 'suv', 150000, 47], ['GAC Aion Hyper SSR', 'epic', 1225, 'super', 175000, 639],
+    ['Hongqi S9', 'epic', 1400, 'super', 1400000, 640], ['BYD Yangwang U9', 'mythic', 1287, 'super', 230000, 48], ['NIO EP9', 'mythic', 1341, 'super', 1480000, 641],
   ] },
   7: { flag: 'fr', country: 'Франция', base: 700, cars: [
     // id закреплены: убранные из контейнера машины остаются у владельцев, их id не переиспользуются
@@ -159,23 +159,28 @@ export const WORLD = {
     ['Bugatti EB110', 'epic', 553, 'super', 2000000, 740], ['Bugatti Chiron', 'mythic', 1500, 'super', 3000000, 56], ['Bugatti Tourbillon', 'mythic', 1800, 'super', 4000000, 741],
   ] },
   8: { flag: 'world', country: 'Другие страны', base: 800, cars: [
+    // id закреплены: перенесённые и убранные машины остаются у владельцев, их id не переиспользуются
     ['Kia Sportage', 'common', 187, 'suv', 27990, 57], ['Hyundai Tucson', 'common', 187, 'suv', 28705, 58], ['Kia Rio', 'common', 120, 'sedan', 17000, 59],
-    ['Hyundai Elantra', 'common', 147, 'sedan', 21625], ['Kia K5', 'common', 191, 'sedan', 26690], ['Hyundai Sonata', 'common', 191, 'sedan', 26900],
-    ['Kia Sorento', 'common', 191, 'suv', 31990], ['Hyundai Santa Fe', 'common', 277, 'suv', 33950], ['Kia Picanto', 'common', 84, 'hatch', 14000],
-    ['Hyundai Creta', 'common', 123, 'suv', 18000], ['Hyundai Ioniq 5', 'common', 225, 'suv', 42500], ['Kia EV6', 'common', 225, 'suv', 42600],
-    ['Skoda Octavia', 'common', 150, 'sedan', 27000], ['Skoda Kodiaq', 'common', 190, 'suv', 38000], ['Skoda Superb', 'common', 190, 'sedan', 36000],
-    ['Skoda Kamiq', 'common', 150, 'suv', 25000], ['Skoda Karoq', 'common', 150, 'suv', 29000], ['Volvo XC60', 'common', 247, 'suv', 44450],
-    ['Volvo XC90', 'common', 247, 'suv', 57000], ['Mini Cooper', 'common', 134, 'hatch', 28750], ['Mini Countryman', 'common', 241, 'suv', 39000],
-    ['Kia Telluride', 'common', 291, 'suv', 36190], ['Hyundai Palisade', 'common', 291, 'suv', 37200], ['Kia Carnival', 'common', 287, 'van', 36700],
-    ['Hyundai Kona', 'common', 147, 'suv', 24550], ['Range Rover Evoque', 'common', 246, 'suv', 50350], ['Land Rover Discovery', 'common', 355, 'suv', 60000],
-    ['Polestar 2', 'common', 299, 'sedan', 49900], ['Kia Seltos', 'common', 147, 'suv', 24690], ['Hyundai i20', 'common', 100, 'hatch', 20000],
-    ['Land Rover Defender', 'rare', 395, 'suv', 57000, 60], ['Range Rover', 'rare', 395, 'suv', 107000, 61], ['Range Rover Sport', 'rare', 395, 'suv', 84000],
-    ['Kia Stinger', 'rare', 368, 'sedan', 51000], ['Hyundai Ioniq 5 N', 'rare', 641, 'suv', 66100], ['Kia EV9', 'rare', 379, 'suv', 54900],
-    ['Genesis GV80', 'rare', 375, 'suv', 58000], ['Genesis G90', 'rare', 409, 'sedan', 90000], ['Jaguar F-Type', 'rare', 575, 'coupe', 79000],
-    ['Aston Martin Vantage', 'rare', 656, 'coupe', 191000], ['Bentley Continental GT', 'rare', 650, 'coupe', 240000], ['Mini John Cooper Works', 'rare', 228, 'hatch', 36000],
-    ['Lotus Emira', 'rare', 400, 'coupe', 99900], ['Hyundai i30 N', 'rare', 280, 'hatch', 36000], ['Rolls-Royce Phantom', 'epic', 563, 'sedan', 470000, 62],
-    ['Rolls-Royce Cullinan', 'epic', 563, 'suv', 400000, 63], ['Aston Martin DBS', 'epic', 715, 'coupe', 330000], ['McLaren 720S', 'epic', 710, 'super', 310000],
-    ['Koenigsegg Jesko', 'mythic', 1600, 'super', 3000000, 64], ['McLaren P1', 'mythic', 903, 'super', 1150000],
+    ['Hyundai Elantra', 'common', 147, 'sedan', 21625, 800], ['Kia K5', 'common', 191, 'sedan', 26690, 801], ['Hyundai Sonata', 'common', 191, 'sedan', 26900, 802],
+    ['Kia Sorento', 'common', 191, 'suv', 31990, 803], ['Hyundai Santa Fe', 'common', 277, 'suv', 33950, 804], ['Kia Picanto', 'common', 84, 'hatch', 14000, 805],
+    ['Hyundai Creta', 'common', 123, 'suv', 18000, 806], ['Hyundai Ioniq 5', 'common', 225, 'suv', 42500, 807], ['Kia EV6', 'common', 225, 'suv', 42600, 808],
+    ['Skoda Octavia', 'common', 150, 'sedan', 27000, 809], ['Skoda Kodiaq', 'common', 190, 'suv', 38000, 810], ['Skoda Superb', 'common', 190, 'sedan', 36000, 811],
+    ['Skoda Kamiq', 'common', 150, 'suv', 25000, 812], ['Skoda Karoq', 'common', 150, 'suv', 29000, 813], ['Volvo XC60', 'common', 247, 'suv', 44450, 814],
+    ['Volvo XC90', 'common', 247, 'suv', 57000, 815], ['Kia Telluride', 'common', 291, 'suv', 36190, 818], ['Hyundai Palisade', 'common', 291, 'suv', 37200, 819],
+    ['Kia Carnival', 'common', 287, 'van', 36700, 820], ['Hyundai Kona', 'common', 147, 'suv', 24550, 821], ['Polestar 2', 'common', 299, 'sedan', 49900, 824],
+    ['Kia Seltos', 'common', 147, 'suv', 24690, 825], ['Hyundai i20', 'common', 100, 'hatch', 20000, 826], ['Kia Stinger', 'rare', 368, 'sedan', 51000, 828],
+    ['Hyundai Ioniq 5 N', 'rare', 641, 'suv', 66100, 829], ['Kia EV9', 'rare', 379, 'suv', 54900, 830], ['Genesis GV80', 'rare', 375, 'suv', 58000, 831],
+    ['Genesis G90', 'rare', 409, 'sedan', 90000, 832], ['Hyundai i30 N', 'rare', 280, 'hatch', 36000, 838], ['Koenigsegg Jesko', 'mythic', 1600, 'super', 3000000, 64],
+  ] },
+  9: { flag: 'uk', country: 'Великобритания', base: 900, cars: [
+    // id закреплены: перенесённые и убранные машины остаются у владельцев, их id не переиспользуются
+    ['Mini Cooper', 'common', 134, 'hatch', 28750, 816], ['Mini Countryman', 'common', 241, 'suv', 39000, 817], ['Mini John Cooper Works', 'rare', 228, 'hatch', 36000, 836],
+    ['Range Rover Evoque', 'common', 246, 'suv', 50350, 822], ['Land Rover Discovery', 'common', 355, 'suv', 60000, 823], ['Land Rover Defender', 'rare', 395, 'suv', 57000, 60],
+    ['Range Rover', 'rare', 395, 'suv', 107000, 61], ['Range Rover Sport', 'rare', 395, 'suv', 84000, 827], ['Jaguar F-Type', 'rare', 575, 'coupe', 79000, 833],
+    ['Aston Martin Vantage', 'rare', 656, 'coupe', 191000, 834], ['Aston Martin DBS', 'epic', 715, 'coupe', 330000, 839], ['Bentley Continental GT', 'rare', 650, 'coupe', 240000, 835],
+    ['Lotus Emira', 'rare', 400, 'coupe', 99900, 837], ['Rolls-Royce Phantom', 'epic', 563, 'sedan', 470000, 62], ['Rolls-Royce Cullinan', 'epic', 563, 'suv', 400000, 63],
+    ['McLaren 720S', 'epic', 710, 'super', 310000, 840], ['McLaren P1', 'mythic', 903, 'super', 1150000, 841], ['Lotus Eletre', 'rare', 603, 'suv', 110000, 633],
+    ['Lotus Emeya', 'rare', 905, 'sedan', 105000, 636],
   ] },
 };
 
@@ -221,7 +226,7 @@ export const EXCLUSIVE = {
 // поэтому сильная машина никогда не дешевле слабой, а общий уровень цен не меняется.
 // Редкость — по месту в общем списке: 5 мистических, 15 легендарных, 40 эпических, 100 редких, остальные обычные.
 import { SPECS } from './car_specs.js';
-export const PRICE_SCALE = 0.385, CONTAINER_MAX = 24_000;
+export const PRICE_SCALE = 0.36, CONTAINER_MAX = 24_000;
 const TIERS = [['mystic', 5], ['mythic', 15], ['epic', 40], ['rare', 100]];
 // оценка, если завод не публикует: по мощности
 const estAccel = (hp) => Math.max(2.0, Math.min(30, +(14 - Math.log2(hp / 60) * 2.9).toFixed(1)));
@@ -245,6 +250,14 @@ export function globalTable() {
   let n = 0; const top = [...order].reverse();
   for (const [r, k] of TIERS) for (let j = 0; j < k && n < top.length; j++) top[n++].rarity = r;
   for (; n < top.length; n++) top[n].rarity = 'common';
+  // в каждом контейнере (кроме «Неизвестного» и выключенных) — своя редкость по силе машин внутри:
+  // 1 мистическая, 1–2 легендарные, 6–10 эпических, ≈28 % редких, остальные обычные. Цены остаются общими.
+  for (const cid of Object.keys(WORLD).map(Number)) {
+    if (OWN_SCALE_EXCLUDED.includes(cid)) continue;
+    const list = all.filter((x) => x.cid === cid).sort((a, b) => b.st - a.st || b.price - a.price);
+    const N = list.length, epic = Math.max(6, Math.min(10, Math.round(N * 0.16))), leg = N >= 15 ? 2 : 1, rare = Math.round(N * 0.28);
+    list.forEach((x, i) => { x.rarity = i < 1 ? 'mystic' : i < 1 + leg ? 'mythic' : i < 1 + leg + epic ? 'epic' : i < 1 + leg + epic + rare ? 'rare' : 'common'; });
+  }
   TABLE = {};
   for (const x of all) (TABLE[x.cid] ??= [])[x.i] = x;
   return TABLE;
@@ -264,8 +277,12 @@ export function buildCountry(cid) {
 // Состав контейнеров: контейнер 8 «Неизвестный» — свои машины и все российские; российский контейнер (5)
 // убран с аукциона (уже полученные игроками российские контейнеры открываются как раньше).
 export const CONTAINER_EXTRA = { 8: [5] };
+// своя шкала редкости не действует в «Неизвестном» (8) и в выключенной России (5): там общая шкала по всей игре
+export const OWN_SCALE_EXCLUDED = [5, 8];
 export const DISABLED_CONTAINERS = [5];
 export const RENAMED_CONTAINERS = { 8: { name: 'Контейнер «Неизвестный»', country: 'Неизвестный', emoji: '❓' } };
+// новые контейнеры: создаются миграцией
+export const NEW_CONTAINERS = { 9: { name: 'Британский контейнер', country: 'Великобритания', emoji: '🇬🇧', flag: 'uk' } };
 
 // Цена контейнера = средняя цена машины внутри с учётом шансов редкостей (кратно $500), не больше $24 000.
 // Быстрая продажа возвращает 90 % цены машины, поэтому в среднем контейнер чуть в минус,

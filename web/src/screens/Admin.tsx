@@ -175,7 +175,7 @@ function Catalog({ mode }: { mode: string }) {
             <F label="Название" v={ct.name} on={(v) => setCt({ ...ct, name: v })} />
             <F label="Страна" v={ct.country ?? ''} on={(v) => setCt({ ...ct, country: v })} />
             <F label="Эмодзи" v={ct.emoji ?? ''} on={(v) => setCt({ ...ct, emoji: v })} />
-            <div className="chips">{[['us', 'США'], ['ru', 'Россия'], ['jp', 'Япония'], ['cn', 'Китай'], ['de', 'Германия'], ['fr', 'Франция'], ['it', 'Италия'], ['world', 'Мир']].map(([f, l]) => (
+            <div className="chips">{[['us', 'США'], ['ru', 'Россия'], ['jp', 'Япония'], ['cn', 'Китай'], ['de', 'Германия'], ['fr', 'Франция'], ['it', 'Италия'], ['uk', 'Великобритания'], ['world', 'Мир']].map(([f, l]) => (
               <button key={f} className={`chip${ct.flag === f ? ' on' : ''}`} onClick={() => setCt({ ...ct, flag: f })}>{l}</button>))}</div>
             <F label="Стартовая цена" v={ct.price} num on={(v) => setCt({ ...ct, price: v })} />
             <div className="hint small">Свои шансы (пусто — общие из настроек):</div>

@@ -129,7 +129,7 @@ export default endpoint(async (db, uid, input, { user }) => {
         VALUES (:name, :country, :emoji, :price, :en, :cc, :cr, :ce, :cm, :cy)`, f)).lastInsertRowid;
     }
     // цена из админки становится базовой для динамики
-    const flag = ['us', 'ru', 'jp', 'cn', 'de', 'fr', 'it', 'world'].includes(c.flag) ? c.flag : null;
+    const flag = ['us', 'ru', 'jp', 'cn', 'de', 'fr', 'it', 'uk', 'world'].includes(c.flag) ? c.flag : null;
     await db.run(`INSERT INTO container_meta (container_id, flag, base_price, market, prev_price, updated_at) VALUES (:c, :f, :p, :m, :p, (SELECT now FROM v_now))
       ON CONFLICT (container_id) DO UPDATE SET flag = COALESCE(excluded.flag, flag), base_price = excluded.base_price, market = excluded.market, prev_price = excluded.prev_price`,
       { ':c': id, ':f': flag, ':p': f[':price'], ':m': Math.round((f[':price'] * 100) / 55) });

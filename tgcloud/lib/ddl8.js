@@ -112,7 +112,7 @@ export const MIGRATION_27 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
 // российских и советских марок. Убранные машины остаются у владельцев как есть, но больше не выпадают:
 // они выходят из контейнера и из наград (is_active = 0 для машин вне всех контейнеров).
 // Синхронизация каталога с catalog_world.js: машины, состав контейнеров, цены контейнеров, машины сезона BP.
-export const catalogSync = (o = {}) => [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
+export const catalogSync = (o = {}) => Object.keys(WORLD).map(Number).flatMap((cid) => [
   ...upsertWorld(cid, { legacy: false, ...o }),
   // машины других стран в этом контейнере (контейнер «Неизвестный» — ещё и российские)
   ...(CONTAINER_EXTRA[cid] ?? []).flatMap((x) => worldIds(x)).map((id) => `INSERT INTO container_cars (container_id, car_id, weight) VALUES (${cid}, ${id}, 1) ON CONFLICT DO NOTHING`),
@@ -155,4 +155,12 @@ export const MIGRATION_35 = catalogSync().concat([
   "UPDATE settings SET v = 90 WHERE k = 'price_floor_pct' AND v < 90",
   ...Object.entries(STAR_MONEY_35).map(([id, m]) => `UPDATE star_products SET money = ${m} WHERE id = '${id}' AND kind = 'money'`),
 ]);
+
+// 37: британский контейнер (машины Великобритании из «Неизвестного» и Lotus из Китая), цены машин ×0,36;
+// редкость внутри каждого контейнера (кроме «Неизвестного»): 1 мистическая, 1–2 легендарные, 6–10 эпических.
+import { NEW_CONTAINERS } from './catalog_world.js';
+export const MIGRATION_37 = Object.entries(NEW_CONTAINERS).flatMap(([id, c]) => [
+  `INSERT INTO containers (id, name, country, emoji, price, is_enabled) VALUES (${id}, ${q(c.name)}, ${q(c.country)}, ${q(c.emoji)}, ${containerPrice(+id)}, 1) ON CONFLICT (id) DO NOTHING`,
+  `INSERT INTO container_meta (container_id, flag, base_price, market, prev_price, updated_at) VALUES (${id}, '${c.flag}', ${containerPrice(+id)}, ${Math.round(containerPrice(+id) * 100 / 55)}, ${containerPrice(+id)}, (SELECT now FROM v_now)) ON CONFLICT (container_id) DO NOTHING`,
+]).concat(catalogSync());
 

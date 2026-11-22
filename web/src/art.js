@@ -158,8 +158,8 @@ export function carSvg(car, { studio = false, w = 400, h = 180 } = {}) {
 // Аксонометрия: длинный борт уходит влево, справа двери. Каждая грань рисуется в своих
 // «настоящих» координатах (борт 600×260, двери 244×259) и переносится на грань матрицей,
 // поэтому флаг, гофра и надписи ложатся ровно, без перекосов.
-const FLAG_MAIN = { us: '#1f3a8a', ru: '#d52b1e', jp: '#efefef', cn: '#de2910', de: '#2a2a2a', fr: '#0055a4', it: '#009246', world: '#17324f' };
-const FLAG_BY_COUNTRY = { 'США': 'us', 'Россия': 'ru', 'Япония': 'jp', 'Китай': 'cn', 'Германия': 'de', 'Франция': 'fr', 'Италия': 'it' };
+const FLAG_MAIN = { us: '#1f3a8a', ru: '#d52b1e', jp: '#efefef', cn: '#de2910', de: '#2a2a2a', fr: '#0055a4', it: '#009246', uk: '#012169', world: '#17324f' };
+const FLAG_BY_COUNTRY = { 'США': 'us', 'Россия': 'ru', 'Япония': 'jp', 'Китай': 'cn', 'Германия': 'de', 'Франция': 'fr', 'Италия': 'it', 'Великобритания': 'uk' };
 
 function star(cx, cy, r, fill, rot = -90) {
   let d = '';
@@ -183,6 +183,11 @@ function flagArt(f) {
       for (let r = 0; r < 5; r++) for (let c = 0; c < 6; c++) s += star(22 + c * 39 + (r % 2) * 18, 18 + r * 26, 7, '#fff');
       return s;
     }
+    case 'uk': return `<rect width="${W}" height="${H}" fill="#012169"/>
+      <path d="M0 0 L${W} ${H} M${W} 0 L0 ${H}" stroke="#fff" stroke-width="52"/>
+      <path d="M0 0 L${W} ${H} M${W} 0 L0 ${H}" stroke="#c8102e" stroke-width="18"/>
+      <path d="M${W / 2} 0 V${H} M0 ${H / 2} H${W}" stroke="#fff" stroke-width="86"/>
+      <path d="M${W / 2} 0 V${H} M0 ${H / 2} H${W}" stroke="#c8102e" stroke-width="52"/>`;
     case 'ru': return hb(['#ffffff', '#0039a6', '#d52b1e']);
     case 'de': return hb(['#1b1b1b', '#dd0000', '#ffce00']);
     case 'fr': return vb(['#0055a4', '#ffffff', '#ef4135']);
