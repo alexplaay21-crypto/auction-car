@@ -92,3 +92,13 @@ async function migration31Body(db, step) {
   let next = Math.max(899, (await db.get('SELECT max(code) AS m FROM cars WHERE code >= 900')).m ?? 899) + 1;
   for (const r of rest) { if (next > 999) throw new Error('mig31: no free codes'); await db.run(`UPDATE cars SET code = ${next++} WHERE id = ${r.id}`); }
 }
+
+// 32: заводские характеристики (factory: 1 — макс. скорость, 2 — разгон с завода), цены по силе машины,
+// общая редкость; эксклюзивные машины (exclusive) с необязательным тиражом (edition — сколько штук всего).
+import { catalogSync } from './ddl8.js';
+export async function migration32(db) {
+  const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'cars'")).sql;
+  for (const [col, def] of [['factory', 'INTEGER NOT NULL DEFAULT 0'], ['exclusive', 'INTEGER NOT NULL DEFAULT 0'], ['edition', 'INTEGER']])
+    if (!new RegExp(`\\b${col}\\b`).test(ct)) await db.run(`ALTER TABLE cars ADD COLUMN ${col} ${def}`);
+  for (const q of catalogSync({ specs: true })) await safeRun(db, q);
+}

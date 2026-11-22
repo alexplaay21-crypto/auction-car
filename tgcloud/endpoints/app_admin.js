@@ -81,7 +81,7 @@ export default endpoint(async (db, uid, input, { user }) => {
   // ---------- каталог ----------
   if (a === 'catalog') {
     return {
-      cars: await db.all('SELECT * FROM cars ORDER BY rarity, price'),
+      cars: await db.all('SELECT c.*, (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) AS issued FROM cars c ORDER BY c.price DESC'),
       containers: await db.all('SELECT c.*, m.flag, m.base_price FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id ORDER BY c.id'),
       pools: await db.all('SELECT * FROM container_cars'),
       images: await db.all('SELECT kind, ref_id, v FROM images'),
@@ -95,15 +95,17 @@ export default endpoint(async (db, uid, input, { user }) => {
       ':handling': int(c.handling, 0, 100), ':rel': int(c.reliability, 0, 100), ':price': int(c.price, 1),
       ':color': opt(c.color, (x) => (/^#[0-9a-f]{6}$/i.test(x) ? x : null)), ':body': ['sedan', 'hatch', 'coupe', 'super', 'wagon', 'suv'].includes(c.body) ? c.body : 'sedan',
       ':active': c.is_active === 0 ? 0 : 1,
+      ':excl': c.exclusive ? 1 : 0, ':edition': c.exclusive && c.edition ? int(c.edition, 1, 1_000_000) : null,
     };
     if (!f[':rarity']) throw new GameError('BAD_INPUT');
     let id = c.id ? int(c.id, 1) : null;
     if (id) {
       await db.run(`UPDATE cars SET name = :name, country = :country, rarity = :rarity, max_speed = :speed, accel_x100 = :accel, power = :power,
-        handling = :handling, reliability = :rel, price = :price, color = :color, body = :body, is_active = :active WHERE id = :id`, { ...f, ':id': id });
+        handling = :handling, reliability = :rel, price = :price, color = :color, body = :body, is_active = :active,
+        exclusive = :excl, edition = :edition WHERE id = :id`, { ...f, ':id': id });
     } else {
-      id = (await db.run(`INSERT INTO cars (name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body, is_active)
-        VALUES (:name, :country, :rarity, :speed, :accel, :power, :handling, :rel, :price, :color, :body, :active)`, f)).lastInsertRowid;
+      id = (await db.run(`INSERT INTO cars (name, country, rarity, max_speed, accel_x100, power, handling, reliability, price, color, body, is_active, exclusive, edition)
+        VALUES (:name, :country, :rarity, :speed, :accel, :power, :handling, :rel, :price, :color, :body, :active, :excl, :edition)`, f)).lastInsertRowid;
       // трёхзначный номер для игроков: следующий свободный 900+
       await db.run(`UPDATE cars SET code = (SELECT max(899, COALESCE(max(code), 899)) + 1 FROM cars WHERE code >= 900)
         WHERE id = :id AND code IS NULL AND (SELECT COALESCE(max(code), 899) FROM cars WHERE code >= 900) < 999`, { ':id': id }).catch(() => {});

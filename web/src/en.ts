@@ -249,4 +249,8 @@ export const EN: Record<string, string> = {
   'Сбросить': 'Reset',
   'Показать': 'Show',
   'Выпадает из этого контейнера': 'Drops from this container',
+  'Эксклюзив': 'Exclusive',
+  'тираж {n} шт.': 'limited to {n}',
+  'выдано {n}': '{n} issued',
+  '≈ — производитель не публикует, значение оценено по мощности': '≈ — not published by the maker, estimated from power',
 };

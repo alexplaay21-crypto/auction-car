@@ -22,13 +22,19 @@ beforeEach(async () => {
   for (const n of [2, 3, 4]) await E.ensureUser(db, { id: n, username: 'u' + n });
 });
 
-test('8 стран, у каждого контейнера флаг; редкость по эксклюзивности, в России 35 машин', async () => {
+test('8 стран, у каждого контейнера флаг; редкость общая по цене, цена по силе, в России 35 машин', async () => {
   assert.equal((await db.get('SELECT count(*) AS n FROM containers')).n, 8);
   // 64 старых + новые; убранные из России машины не создаются (кроме старых id 36, 37 — они остаются у владельцев)
   assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 6 + 29 + 40);
   assert.equal((await db.get('SELECT count(*) AS n FROM cars WHERE is_active = 1 AND id IN (36, 37)')).n, 0, 'вне контейнеров — не выпадают');
-  const de = await db.all("SELECT c.rarity, count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 2 GROUP BY c.rarity ORDER BY c.rarity");
-  assert.deepEqual(Object.fromEntries(de.map((r) => [r.rarity, r.n])), { common: 30, epic: 4, mythic: 1, mystic: 1, rare: 14 });
+  // редкость — общая по всем странам: 5 мистических, 15 легендарных, 40 эпических, 100 редких
+  const all = await db.all("SELECT c.rarity, count(*) AS n FROM cars c WHERE c.id IN (SELECT car_id FROM container_cars) GROUP BY c.rarity");
+  assert.deepEqual(Object.fromEntries(all.map((r) => [r.rarity, r.n])), { common: 223, rare: 100, epic: 40, mythic: 15, mystic: 5 });
+  // сильная машина не дешевле слабой: цена растёт вместе с силой (мощность, разгон, макс. скорость)
+  const cars = await db.all('SELECT power, accel_x100, max_speed, price FROM cars WHERE id IN (SELECT car_id FROM container_cars)');
+  const st = (c) => 0.5 * Math.log(c.power) + 0.3 * Math.log(1000 / c.accel_x100) + 0.2 * Math.log(c.max_speed);
+  cars.sort((a, b) => st(a) - st(b) || a.price - b.price);
+  for (let i = 1; i < cars.length; i++) assert.ok(cars[i].price >= cars[i - 1].price - 100, 'цена не падает с ростом силы');
   const flags = (await db.all('SELECT flag FROM container_meta ORDER BY container_id')).map((r) => r.flag);
   assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world']);
   for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, c === 5 ? 35 : c === 7 ? 48 : 50);
@@ -51,7 +57,8 @@ test('динамическая цена: дорогие торги подним�
 });
 
 test('рынок: выставить, купить (деньги и машина одной операцией), снять', async () => {
-  const uc = await give(2, 8);
+  const [e1, e2] = (await db.all("SELECT id FROM cars WHERE rarity IN ('epic', 'mythic') AND is_active = 1 ORDER BY id LIMIT 2")).map((r) => r.id);
+  const uc = await give(2, e1);
   const l = await G.listCar(db, 2, uc, 250_000);
   await assert.rejects(G.listCar(db, 2, uc, 200_000), /UNIQUE|uq_listing/i);
   await assert.rejects(G.buyListing(db, 2, l.id), { code: 'SELF_BUY' });
@@ -61,8 +68,8 @@ test('рынок: выставить, купить (деньги и машина
   await G.buyListing(db, 3, l.id);
   assert.equal((await db.get('SELECT user_id FROM user_cars WHERE id = :i', { ':i': uc })).user_id, 3);
   assert.equal(await bal(2), 75_000 + 187_500, 'комиссия 25%');
-  await assert.rejects(G.listCar(db, 2, await give(2, 1), 2_000), { code: 'MARKET_RARITY' }, 'обычные машины на рынок нельзя');
-  const uc2 = await give(2, 7);
+  await assert.rejects(G.listCar(db, 2, await give(2, (await db.get("SELECT id FROM cars WHERE rarity = 'common' LIMIT 1")).id), 2_000), { code: 'MARKET_RARITY' }, 'обычные машины на рынок нельзя');
+  const uc2 = await give(2, e2);
   const l2 = await G.listCar(db, 2, uc2, 9_999);
   await E.sellCar(db, 2, uc2);
   assert.equal((await db.get('SELECT status FROM market_listings WHERE id = :l', { ':l': l2.id })).status, 'cancelled', 'проданная государству снимается с рынка');

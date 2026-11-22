@@ -168,6 +168,7 @@ export function CarCard({ car, onClick, ribbon }: { car: any; onClick?: () => vo
     <button className={`carcard press r-${car.rarity}`} onClick={onClick}>
       {ribbon && <span className="ribbon">{ribbon}</span>}
       <span className="carno">{carNo(car)}</span>
+      {!!car.exclusive && <span className="excl">💎</span>}
       <CarArt car={car} height={72} />
       <div className="sb l2" style={{ fontSize: 14 }}>{car.name}</div>
       <div className="row between g6"><RarityTag r={car.rarity} /><span className="price sm">{money(car.price)}</span></div>
@@ -187,12 +188,14 @@ export function CarInfo({ car, priceLabel, children }: { car: any; priceLabel?: 
       <div className="reveal-art"><CarArt car={car} height={170} studio /></div>
       <div className="row between g8"><RarityTag r={car.rarity} /><span className="sm muted">{carNo(car)}{car.country ? ` · ${t(car.country)}` : ''}</span></div>
       <div className="h2">{car.name}</div>
+      {!!car.exclusive && <div className="excl-tag">💎 {t('Эксклюзив')}{car.edition ? ` · ${t('тираж {n} шт.', { n: car.edition })}${car.issued != null ? ` · ${t('выдано {n}', { n: car.issued })}` : ''}` : ''}</div>}
       <div className="kv"><span>{priceLabel ?? t('Стоимость по каталогу')}</span><b>{money(car.price)}</b></div>
-      <Stat label={t('Скорость, км/ч')} value={car.max_speed} max={420} />
-      <Stat label={t('Мощность, л.с.')} value={car.power} max={1200} />
+      <Stat label={t('Скорость, км/ч') + (car.factory != null && !(car.factory & 1) ? ' ≈' : '')} value={car.max_speed} max={500} />
+      <Stat label={t('Мощность, л.с.')} value={car.power} max={1800} />
       <Stat label={t('Управляемость')} value={car.handling} />
       {car.reliability != null && <Stat label={t('Надёжность')} value={car.reliability} />}
-      {car.accel_x100 != null && <div className="kv"><span>{t('Разгон 0–100 км/ч')}</span><b>{t('{n} с', { n: (car.accel_x100 / 100).toFixed(1).replace('.', ',') })}</b></div>}
+      {car.accel_x100 != null && <div className="kv"><span>{t('Разгон 0–100 км/ч')}</span><b>{car.factory != null && !(car.factory & 2) ? '≈ ' : ''}{t('{n} с', { n: (car.accel_x100 / 100).toFixed(1).replace('.', ',') })}</b></div>}
+      {car.factory != null && car.factory !== 3 && <div className="xs faint">{t('≈ — производитель не публикует, значение оценено по мощности')}</div>}
       {children}
     </div>
   );

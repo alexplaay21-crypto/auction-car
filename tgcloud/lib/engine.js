@@ -124,7 +124,8 @@ export async function chances(db, containerId) {
   const c = await db.get('SELECT * FROM containers WHERE id = :c', { ':c': containerId });
   // редкости, которых нет в контейнере, не выпадают — их шанс 0 (иначе витрина обещала бы невозможное)
   const have = new Set((await db.all(`SELECT DISTINCT c.rarity FROM container_cars cc JOIN cars c ON c.id = cc.car_id
-     WHERE cc.container_id = :c AND c.is_active = 1 AND cc.weight > 0`, { ':c': containerId })).map((r) => r.rarity));
+     WHERE cc.container_id = :c AND c.is_active = 1 AND cc.weight > 0
+       AND (c.edition IS NULL OR (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) < c.edition)`, { ':c': containerId })).map((r) => r.rarity));
   const pick = (r) => (have.size && !have.has(r) ? 0 : c?.['chance_' + r] ?? st['chance_' + r] ?? 0);
   return { common: pick('common'), rare: pick('rare'), epic: pick('epic'), mythic: pick('mythic'), mystic: pick('mystic') };
 }
@@ -132,7 +133,8 @@ export async function chances(db, containerId) {
 export async function rollCar(db, containerId) {
   const pool = await db.all(
     `SELECT c.id, c.rarity, cc.weight FROM container_cars cc JOIN cars c ON c.id = cc.car_id
-     WHERE cc.container_id = :c AND c.is_active = 1`, { ':c': containerId });
+     WHERE cc.container_id = :c AND c.is_active = 1
+       AND (c.edition IS NULL OR (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) < c.edition)`, { ':c': containerId });
   if (!pool.length) throw new GameError('CONTAINER_EMPTY');
   const ch = await chances(db, containerId);
   const rarities = [...new Set(pool.map((p) => p.rarity))];

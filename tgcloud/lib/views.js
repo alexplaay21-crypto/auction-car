@@ -119,7 +119,8 @@ export async function topView(db, kind = 'balance') {
 export async function catalogView(db) {
   const containers = await db.all('SELECT c.*, m.flag FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1 ORDER BY c.price, c.id');
   const cars = await db.all(
-    `SELECT c.*, cc.container_id, cc.weight FROM cars c JOIN container_cars cc ON cc.car_id = c.id WHERE c.is_active = 1 ORDER BY c.price`);
+    `SELECT c.*, cc.container_id, cc.weight, CASE WHEN c.exclusive = 1 THEN (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) END AS issued
+     FROM cars c JOIN container_cars cc ON cc.car_id = c.id WHERE c.is_active = 1 ORDER BY c.price DESC`);
   for (const c of containers) c.chances = await chances(db, c.id);
   return { containers, cars };
 }
@@ -133,7 +134,7 @@ export const carNo = (c) => '№' + String(c?.code ?? c?.id ?? 0).padStart(3, '0
 
 export function carCardText(c, { sale = null, autoSold = null } = {}) {
   const r = RARITY[c.rarity] ?? RARITY.common;
-  let t = `${r.icon} <b>${esc(c.name)}</b> · ${carNo(c)}\n<i>${r.ru}${c.country ? ' · ' + esc(c.country) : ''}</i>\n\n`;
+  let t = `${r.icon} <b>${esc(c.name)}</b> · ${carNo(c)}${c.exclusive ? ' · 💎 ЭКСКЛЮЗИВ' : ''}\n<i>${r.ru}${c.country ? ' · ' + esc(c.country) : ''}</i>\n\n`;
   t += `🏁 ${c.max_speed} км/ч · 0–100 за ${(c.accel_x100 / 100).toFixed(1).replace('.', ',')} с\n`;
   t += `⚙️ ${c.power} л.с. · 🎯 управляемость ${c.handling} · 🛠 надёжность ${c.reliability}\n`;
   t += `💰 Стоимость: <b>${money(c.price)}</b>`;

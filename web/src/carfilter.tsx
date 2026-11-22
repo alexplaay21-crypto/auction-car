@@ -12,7 +12,7 @@ export const brandOf = (name: string) => TWO.find((b) => name.startsWith(b + ' '
 
 export type CarSort = 'cheap' | 'expensive' | 'rarity' | 'power';
 export type CarF = { rarity: string | null; brand: string | null; country: string | null; price: number | null; power: number | null; sort: CarSort | string };
-export const F0: CarF = { rarity: null, brand: null, country: null, price: null, power: null, sort: 'rarity' };
+export const F0: CarF = { rarity: null, brand: null, country: null, price: null, power: null, sort: 'expensive' };
 
 const PRICE: [number, string, number, number][] = [
   [1, 'до $25K', 0, 25_000], [2, '$25–100K', 25_000, 100_000], [3, '$100K–1M', 100_000, 1_000_000], [4, 'больше $1M', 1_000_000, Infinity],

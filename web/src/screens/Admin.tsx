@@ -126,7 +126,7 @@ function Catalog({ mode }: { mode: string }) {
       <div className="glass list">
         {c.cars.map((x: any) => (
           <button key={x.id} className="top-row btn-reset" onClick={() => setCar({ ...x })}>
-            <span>{RARITY[x.rarity]?.icon}</span><span className="grow">{x.name}{x.is_active ? '' : ' (выкл)'}</span><b>{money(x.price)}</b>
+            <span>{RARITY[x.rarity]?.icon}</span><span className="grow">{x.exclusive ? '💎 ' : ''}{x.name}{x.is_active ? '' : ' (выкл)'}<span className="hint small"> №{String(x.code ?? x.id).padStart(3, '0')}{x.edition ? ` · ${x.issued}/${x.edition}` : ''}</span></span><b>{money(x.price)}</b>
           </button>
         ))}
       </div>
@@ -147,6 +147,11 @@ function Catalog({ mode }: { mode: string }) {
             <F label="Надёжность 0–100" v={car.reliability} num on={(v) => setCar({ ...car, reliability: v })} />
             <label className="frow"><span>Цвет</span><input type="color" value={car.color ?? '#888888'} onChange={(e) => setCar({ ...car, color: e.target.value })} /></label>
             <label className="frow"><span>Активна (выпадает)</span><input type="checkbox" checked={car.is_active !== 0} onChange={(e) => setCar({ ...car, is_active: e.target.checked ? 1 : 0 })} /></label>
+            <button className={`btn wide ${car.exclusive ? 'excl-on' : 'ghost'}`} onClick={() => setCar({ ...car, exclusive: car.exclusive ? 0 : 1 })}>
+              💎 Эксклюзив: {car.exclusive ? 'ВКЛ' : 'выкл'}
+            </button>
+            {!!car.exclusive && <F label="Тираж, шт. (пусто — без ограничения)" v={car.edition ?? ''} num on={(v) => setCar({ ...car, edition: v === '' ? null : v })} />}
+            {!!car.exclusive && car.id && <div className="hint small">Выдано: {car.issued ?? 0}{car.edition ? ` из ${car.edition} — когда тираж закончится, машина перестанет выпадать` : ''}</div>}
             <button className="btn primary wide" onClick={async () => { if (await doAdm({ action: 'save_car', car })) { setCar(null); load(); } }}>Сохранить</button>
           </div>
         )}

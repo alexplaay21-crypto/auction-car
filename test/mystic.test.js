@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -27,11 +27,11 @@ test('миграция 28: cars пересобрана без потерь, ми
   assert.deepEqual(await db.all('SELECT * FROM cars ORDER BY id'), carsBefore, 'машины не изменились');
   assert.deepEqual(await db.all('SELECT * FROM user_cars ORDER BY id'), gBefore, 'гаражи не изменились');
   assert.deepEqual(await E.audit(db), []);
-  await db.run('DELETE FROM schema_migrations WHERE id = 30');
-  assert.deepEqual(await E.migrate(db), [29, 30]);
-  assert.equal((await db.get('SELECT rarity FROM cars WHERE id = 16')).rarity, 'mystic', 'Mercedes-AMG One — мистическая');
+  await db.run('DELETE FROM schema_migrations WHERE id >= 30');
+  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32]);
   // мистическая: записывается, падает из контейнера с шансом, выставляется на рынок
-  await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57");
+  await db.run("UPDATE cars SET rarity = 'epic' WHERE rarity = 'mystic'");
+  await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57"); // единственная мистическая в контейнере
   const ch = await E.chances(db, 8);
   assert.equal(ch.mystic, 1); assert.equal(ch.mythic, 4);
   await db.run('UPDATE containers SET chance_common = 0, chance_rare = 0, chance_epic = 0, chance_mythic = 0, chance_mystic = 1000 WHERE id = 8');
@@ -53,4 +53,28 @@ test('у каждой машины трёхзначный номер: катал
   for (const r of rows) if (CAR_CODES[r.id]) assert.equal(r.code, CAR_CODES[r.id]);
   assert.ok(rows.filter((r) => !CAR_CODES[r.id]).every((r) => r.code >= 900));
   await assert.rejects(db.run('UPDATE cars SET code = 1000 WHERE id = 1'));
+});
+
+test('эксклюзив с тиражом: когда выдан весь тираж, машина больше не выпадает', async () => {
+  const db = makeDb(); E.dropSettingsCache();
+  await E.migrate(db);
+  await E.ensureUser(db, { id: 2, username: 'u2' });
+  const car = (await db.get("SELECT c.id FROM cars c JOIN container_cars cc ON cc.car_id = c.id WHERE cc.container_id = 8 AND c.rarity = 'mystic' LIMIT 1")).id;
+  await db.run("UPDATE cars SET rarity = 'epic' WHERE rarity = 'mystic' AND id <> :c", { ':c': car });
+  await db.run('UPDATE containers SET chance_common = 0, chance_rare = 0, chance_epic = 0, chance_mythic = 0, chance_mystic = 1000 WHERE id = 8');
+  await db.run('UPDATE cars SET exclusive = 1, edition = 1 WHERE id = :c', { ':c': car });
+  assert.equal(await E.rollCar(db, 8), car);
+  await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('x1', 2, :c, 'admin', (SELECT now FROM v_now))`, { ':c': car });
+  assert.notEqual(await E.rollCar(db, 8), car, 'тираж выдан — больше не выпадает');
+  assert.equal((await E.chances(db, 8)).mystic, 0, 'и шанс мистической в контейнере теперь 0');
+});
+
+test('машины сезона Battle Pass после пересчёта: премиум — эпическая, делюкс — легендарная, не пустые', async () => {
+  const db = makeDb(); E.dropSettingsCache();
+  await E.migrate(db);
+  const s = await db.all('SELECT b.prem_car_id, b.dx_car_id, p.rarity AS pr, d.rarity AS dr FROM bp_seasons b LEFT JOIN cars p ON p.id = b.prem_car_id LEFT JOIN cars d ON d.id = b.dx_car_id');
+  for (const x of s) {
+    if (x.prem_car_id != null) assert.equal(x.pr, 'epic');
+    if (x.dx_car_id != null) assert.equal(x.dr, 'mythic');
+  }
 });

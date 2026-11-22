@@ -215,27 +215,55 @@ export const EXCLUSIVE = {
   // обычная (массовые модели)
   'Renault Kangoo': ['common'], 'Renault Talisman': ['common'], 'Wuling Hongguang S': ['common'], 'Peugeot e-208': ['common'], 'Citroen C5 Aircross': ['common'],
 };
-export function rarities(cid) {
-  return WORLD[cid].cars.map(([model, own, , , , keep]) => FORCE[keep] ?? EXCLUSIVE[model]?.[0] ?? (own === 'mythic' ? 'epic' : own));
+// ---------- сила, цена и редкость (общие для всех стран) ----------
+// Сила — из заводских характеристик: мощность 50 %, разгон 0–100 30 %, макс. скорость 20 % (по логарифмам).
+// Цены всех машин каталога переставляются по силе: самая сильная получает самую высокую из имеющихся цен,
+// поэтому сильная машина никогда не дешевле слабой, а общий уровень цен не меняется.
+// Редкость — по месту в общем списке: 5 мистических, 15 легендарных, 40 эпических, 100 редких, остальные обычные.
+import { SPECS } from './car_specs.js';
+const TIERS = [['mystic', 5], ['mythic', 15], ['epic', 40], ['rare', 100]];
+// оценка, если завод не публикует: по мощности
+const estAccel = (hp) => Math.max(2.0, Math.min(30, +(14 - Math.log2(hp / 60) * 2.9).toFixed(1)));
+const estSpeed = (hp) => Math.round(Math.min(420, 110 + Math.sqrt(hp) * 8));
+export function specsOf(model, hp0) {
+  const s = SPECS[model];
+  const hp = s?.[0] ?? hp0;
+  return { hp, speed: s?.[1] ?? estSpeed(hp), accel: s?.[2] ?? estAccel(hp), factory: (s?.[1] != null ? 1 : 0) | (s?.[2] != null ? 2 : 0) };
 }
+export const strength = ({ hp, speed, accel }) => 0.5 * Math.log(hp) + 0.3 * Math.log(10 / accel) + 0.2 * Math.log(speed);
+let TABLE = null;
+export function globalTable() {
+  if (TABLE) return TABLE;
+  const all = [];
+  for (const cid of Object.keys(WORLD).map(Number)) WORLD[cid].cars.forEach((c, i) => all.push({ cid, i, msrp: c[4], sp: specsOf(c[0], c[2]) }));
+  for (const x of all) x.st = strength(x.sp);
+  const prices = all.map((x) => x.msrp).sort((a, b) => a - b);
+  const order = [...all].sort((a, b) => a.st - b.st || a.msrp - b.msrp || a.cid - b.cid || a.i - b.i);
+  order.forEach((x, n) => { x.price = prices[n]; });
+  let n = 0; const top = [...order].reverse();
+  for (const [r, k] of TIERS) for (let j = 0; j < k && n < top.length; j++) top[n++].rarity = r;
+  for (; n < top.length; n++) top[n].rarity = 'common';
+  TABLE = {};
+  for (const x of all) (TABLE[x.cid] ??= [])[x.i] = x;
+  return TABLE;
+}
+export function rarities(cid) { return globalTable()[cid].map((x) => x.rarity); }
 export function buildCountry(cid) {
-  const W = WORLD[cid];
-  const rar = rarities(cid);
-  return W.cars.map(([model, , hp, body, price, keep], i) => {
-    const rarity = rar[i];
+  const W = WORLD[cid], T = globalTable()[cid];
+  return W.cars.map(([model, , , body, , keep], i) => {
+    const { rarity, price, sp } = T[i];
     const sport = { common: 0, rare: 1, epic: 2, mythic: 3, mystic: 4 }[rarity];
-    const accel = Math.max(2.0, Math.min(25, +(14 - Math.log2(hp / 60) * 2.9 - sport * 0.4).toFixed(1)));
-    const speed = Math.round(Math.min(420, 110 + Math.sqrt(hp) * 8 + sport * 6));
     const handling = Math.min(98, 52 + sport * 10 + (body === 'super' || body === 'coupe' ? 8 : body === 'suv' || body === 'van' ? -6 : 0) + (i % 5));
     const reliability = Math.max(55, Math.min(95, 88 - sport * 3 - (cid == 5 ? 12 : cid == 4 ? 6 : 0) + (i % 4)));
-    return [gameName(model), model, rarity, speed, accel, hp, handling, reliability, round(price), body, COLORS[i % COLORS.length], keep];
+    return [gameName(model), model, rarity, sp.speed, sp.accel, sp.hp, handling, reliability, round(price), body, COLORS[i % COLORS.length], keep, sp.factory];
   });
 }
 
 // Цена контейнера: 60 % обычных машин дешевле него, 40 % дороже; кратно $500.
 export function containerPrice(cid) {
-  const rar = rarities(cid);
-  const commons = WORLD[cid].cars.filter((c, i) => rar[i] === 'common').map((c) => c[4]).sort((a, b) => a - b);
+  const T = globalTable()[cid];
+  let commons = T.filter((x) => x.rarity === 'common').map((x) => x.price).sort((a, b) => a - b);
+  if (commons.length < 6) commons = T.map((x) => x.price).sort((a, b) => a - b); // в стране почти нет обычных — по всем машинам
   const m = commons.length * 0.6;
   return Math.round((commons[Math.floor(m) - 1] + commons[Math.floor(m)]) / 2 / 500) * 500;
 }
