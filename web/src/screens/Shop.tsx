@@ -158,6 +158,9 @@ export function CatalogPage({ id }: { id: number }) {
               <div className="hero-img"><ContainerArt c={c} size={150} studio /></div>
               <div className="col g8" style={{ padding: 14 }}>
                 <Chances ch={c.chances} />
+                {c.min_price != null && (
+                  <div className="xs muted">{t('Цена сейчас {p} (от {a} до {b}). Чем дороже контейнер, тем выше шанс редких и дорогих машин; мистическая — всегда 1 из 1000.', { p: money(c.price), a: money(c.min_price), b: money(c.max_price) })}</div>
+                )}
               </div>
             </div>
             <Sect>{t('Машины внутри')}</Sect>

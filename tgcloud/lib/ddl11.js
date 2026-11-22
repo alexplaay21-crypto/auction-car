@@ -131,3 +131,38 @@ export async function migration36(db) {
   await db.run(BONUS4_BI_V2);
   for (const q of catalogSync()) await safeRun(db, q);
 }
+
+// 38: динамическая цена контейнера в своей вилке и шансы от цены (odds.js).
+//  • вилка: от средней машины при самых слабых шансах до средней при самых сильных, но не дороже $24 000;
+//  • после торгов: цена × (0,85 + 0,15 × ставка/старт, ставка/старт не больше 2,5) × (1 + 2 % за каждого участника сверх первого, до +10 %);
+//    без ставок −8 %; за раз не больше ±15 %, округление до $100; всегда внутри вилки;
+//  • у контейнеров без вилки (созданных в админке) — прежняя формула.
+export const AUCTIONS_PRICE_V2 = `CREATE TRIGGER IF NOT EXISTS auctions_price AFTER UPDATE OF status ON auctions
+     WHEN OLD.status = 'active' AND NEW.status IN ('won', 'no_bids') BEGIN
+     UPDATE container_meta SET market = CASE WHEN NEW.status = 'won' THEN (market * 4 + NEW.current_bid) / 5 ELSE market END,
+       prev_price = (SELECT price FROM containers WHERE id = NEW.container_id), updated_at = ${NOW_SQL}
+       WHERE container_id = NEW.container_id;
+     UPDATE containers SET price = (
+       SELECT CASE WHEN m.min_price IS NULL OR m.max_price IS NULL THEN
+         max(m.base_price * ${SET('price_floor_pct')} / 100, min(m.base_price * ${SET('price_cap_pct')} / 100,
+              max(c.price * (100 - ${SET('price_step_pct')}) / 100, min(c.price * (100 + ${SET('price_step_pct')}) / 100,
+                  (CASE WHEN NEW.status = 'won' THEN m.market * 55 / 100 ELSE c.price * 93 / 100 END) / 100 * 100))))
+       ELSE
+         max(m.min_price, min(m.max_price, max(c.price * 85 / 100, min(c.price * 115 / 100,
+           (CASE WHEN NEW.status = 'won' THEN
+              c.price * (85 + 15 * min(250, NEW.current_bid * 100 / max(1, NEW.initial_bid)) / 100) / 100
+                * (100 + 2 * min(5, max(0, (SELECT count(DISTINCT user_id) FROM bids WHERE auction_id = NEW.id) - 1))) / 100
+            ELSE c.price * 92 / 100 END) / 100 * 100))))
+       END
+       FROM container_meta m, containers c WHERE m.container_id = NEW.container_id AND c.id = NEW.container_id)
+       WHERE id = NEW.container_id AND EXISTS (SELECT 1 FROM container_meta WHERE container_id = NEW.container_id);
+     INSERT INTO container_prices (container_id, price, created_at) SELECT id, price, ${NOW_SQL} FROM containers WHERE id = NEW.container_id;
+   END`;
+export async function migration38(db) {
+  const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'container_meta'")).sql;
+  for (const col of ['min_price', 'max_price', 't_top_pm']) if (!new RegExp(`\\b${col}\\b`).test(ct)) await db.run(`ALTER TABLE container_meta ADD COLUMN ${col} INTEGER`);
+  await safeRun(db, "INSERT INTO settings (k, v) VALUES ('chance_mystic', 1) ON CONFLICT (k) DO UPDATE SET v = excluded.v");
+  await safeRun(db, 'DROP TRIGGER IF EXISTS auctions_price');
+  await db.run(AUCTIONS_PRICE_V2);
+  for (const q of catalogSync({ band: true })) await safeRun(db, q);
+}

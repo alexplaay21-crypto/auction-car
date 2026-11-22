@@ -46,7 +46,7 @@ export const MIGRATION_14 = upsertGerman();
 export const MIGRATION_15 = upsertGerman();
 
 // ---------- остальные страны ----------
-import { WORLD, buildCountry, containerPrice, CONTAINER_EXTRA, DISABLED_CONTAINERS } from './catalog_world.js';
+import { WORLD, buildCountry, containerPrice, containerBand, CONTAINER_EXTRA, DISABLED_CONTAINERS } from './catalog_world.js';
 export function worldIds(cid) {
   let next = WORLD[cid].base;
   return WORLD[cid].cars.map((c) => c[5] ?? next++);
@@ -119,6 +119,8 @@ export const catalogSync = (o = {}) => Object.keys(WORLD).map(Number).flatMap((c
   `DELETE FROM container_cars WHERE container_id = ${cid} AND car_id NOT IN (${[cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((x) => worldIds(x)).join(', ')})`,
   `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
   `UPDATE container_meta SET base_price = ${containerPrice(cid)}, market = ${Math.round(containerPrice(cid) * 100 / 55)}, prev_price = ${containerPrice(cid)} WHERE container_id = ${cid}`,
+  // вилка цены (с миграции 38): цена ходит внутри неё, шансы зависят от места цены в вилке
+  ...(o.band ? [(({ lo, hi, tTop }) => `UPDATE container_meta SET min_price = ${lo}, max_price = ${hi}, t_top_pm = ${Math.round(tTop * 1000)} WHERE container_id = ${cid}`)(containerBand(cid))] : []),
 ]).concat([
   ...DISABLED_CONTAINERS.map((c) => `UPDATE containers SET is_enabled = 0 WHERE id = ${c} AND is_enabled = 1`),
   'UPDATE cars SET is_active = 0 WHERE is_active = 1 AND id NOT IN (SELECT car_id FROM container_cars)',

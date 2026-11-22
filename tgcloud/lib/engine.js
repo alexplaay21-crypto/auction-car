@@ -3,6 +3,7 @@
 // триггеры (lib/ddl.js). Таймеров на платформе нет, поэтому время «догоняется» лениво:
 // tick() вызывается при каждом обращении к боту или Mini App и завершает истёкшие
 // контейнеры, запускает следующие.
+import { rarityWeights, tilt, tOf } from './odds.js';
 import { MIGRATIONS } from './ddl.js';
 
 export class GameError extends Error {
@@ -119,27 +120,38 @@ export function weighted(items, w) {
   return items[items.length - 1];
 }
 
-export async function chances(db, containerId) {
+// price — цена, по которой контейнер выставлен (по умолчанию — текущая). У контейнеров каталога шансы
+// зависят от того, где цена в вилке (odds.js): дороже контейнер — выше шанс редких; мистическая — 1 из 1000.
+export async function chances(db, containerId, price = null) {
   const st = await settings(db);
   const c = await db.get('SELECT * FROM containers WHERE id = :c', { ':c': containerId });
+  const m = await db.get('SELECT * FROM container_meta WHERE container_id = :c', { ':c': containerId }).catch(() => null);
   // редкости, которых нет в контейнере, не выпадают — их шанс 0 (иначе витрина обещала бы невозможное)
   const have = new Set((await db.all(`SELECT DISTINCT c.rarity FROM container_cars cc JOIN cars c ON c.id = cc.car_id
      WHERE cc.container_id = :c AND c.is_active = 1 AND cc.weight > 0
        AND (c.edition IS NULL OR (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) < c.edition)`, { ':c': containerId })).map((r) => r.rarity));
+  const custom = ['common', 'rare', 'epic', 'mythic', 'mystic'].some((r) => c?.['chance_' + r] != null);
+  if (!custom && m?.min_price != null && m?.max_price != null) {
+    const t = tOf(price ?? c.price, m.min_price, m.max_price, (m.t_top_pm ?? 1000) / 1000);
+    return { ...rarityWeights(t, have.size ? have : null), t: Math.round(t * 1000) / 1000, min: m.min_price, max: m.max_price };
+  }
   const pick = (r) => (have.size && !have.has(r) ? 0 : c?.['chance_' + r] ?? st['chance_' + r] ?? 0);
   return { common: pick('common'), rare: pick('rare'), epic: pick('epic'), mythic: pick('mythic'), mystic: pick('mystic') };
 }
 
-export async function rollCar(db, containerId) {
+export async function rollCar(db, containerId, { price = null } = {}) {
   const pool = await db.all(
-    `SELECT c.id, c.rarity, cc.weight FROM container_cars cc JOIN cars c ON c.id = cc.car_id
+    `SELECT c.id, c.rarity, c.price, cc.weight FROM container_cars cc JOIN cars c ON c.id = cc.car_id
      WHERE cc.container_id = :c AND c.is_active = 1
        AND (c.edition IS NULL OR (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) < c.edition)`, { ':c': containerId });
   if (!pool.length) throw new GameError('CONTAINER_EMPTY');
-  const ch = await chances(db, containerId);
+  const ch = await chances(db, containerId, price);
   const rarities = [...new Set(pool.map((p) => p.rarity))];
   const rarity = weighted(rarities, (r) => ch[r] ?? 0);
-  return weighted(pool.filter((p) => p.rarity === rarity), (p) => p.weight).id;
+  // внутри редкости дорогие машины вероятнее у дорогого контейнера, но самая дешёвая может выпасть всегда
+  const list = pool.filter((p) => p.rarity === rarity).sort((a, b) => a.price - b.price);
+  const t = ch.t ?? 0;
+  return weighted(list.map((p, i) => ({ ...p, q: list.length > 1 ? i / (list.length - 1) : 0 })), (p) => p.weight * tilt(t, p.q)).id;
 }
 
 // ---------- комнаты ----------
@@ -242,9 +254,9 @@ export async function startNext(db, roomId) {
 export async function finalize(db, auctionId) {
   const a = await db.get(`SELECT * FROM auctions WHERE id = :a AND status = 'active' AND ends_at <= ${NOW}`, { ':a': auctionId });
   if (!a) return false;
-  const carId = a.leader_id ? await rollCar(db, a.container_id) : null;
+  const carId = a.leader_id ? await rollCar(db, a.container_id, { price: a.initial_bid }) : null;
   // без ставок машина тоже выбирается — её показывают всем («что было внутри»), но никому не выдают
-  const shown = a.leader_id ? null : await rollCar(db, a.container_id).catch(() => null);
+  const shown = a.leader_id ? null : await rollCar(db, a.container_id, { price: a.initial_bid }).catch(() => null);
   const r = await db.run(
     `UPDATE auctions SET status = :s, car_id = :car, shown_car_id = :shown, ended_at = ${NOW} WHERE id = :a AND status = 'active' AND ends_at <= ${NOW}`,
     { ':s': a.leader_id ? 'won' : 'no_bids', ':car': carId, ':shown': shown, ':a': a.id }).catch((e) => { throw toGameError(e) ?? e; });

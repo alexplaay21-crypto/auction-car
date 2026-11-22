@@ -280,4 +280,5 @@ export const EN: Record<string, string> = {
   'Только мои': 'Only mine',
   'В 00:00 и 12:00 по Москве · +100 опыта': 'At 00:00 and 12:00 Moscow time · +100 XP',
   'Бонус выдаётся в 00:00 и 12:00 по Москве': 'The bonus comes at 00:00 and 12:00 Moscow time',
+  'Цена сейчас {p} (от {a} до {b}). Чем дороже контейнер, тем выше шанс редких и дорогих машин; мистическая — всегда 1 из 1000.': 'Price now {p} (from {a} to {b}). The pricier the container, the better the odds of rare and expensive cars; mystic is always 1 in 1000.',
 };

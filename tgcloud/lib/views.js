@@ -41,7 +41,7 @@ export async function roomView(db, roomId, uid = null) {
     auction = {
       id: a.id, status: a.status, container: c, initial: a.initial_bid, current: a.current_bid, leader, bids_count: a.bids_count,
       ends_at: a.ends_at, left: Math.max(0, a.ends_at - t), min_bid: a.current_bid + st.bet_step, bids, car,
-      chances: await chances(db, a.container_id),
+      chances: await chances(db, a.container_id, a.initial_bid),
     };
   }
   const me = uid ? members.find((m) => m.id === uid) : null;
@@ -120,7 +120,7 @@ export async function topView(db, kind = 'balance') {
 }
 
 export async function catalogView(db) {
-  const containers = await db.all('SELECT c.*, m.flag FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1 ORDER BY c.price, c.id');
+  const containers = await db.all('SELECT c.*, m.flag, m.min_price, m.max_price FROM containers c LEFT JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1 ORDER BY c.price, c.id');
   const cars = await db.all(
     `SELECT c.*, cc.container_id, cc.weight, CASE WHEN c.exclusive = 1 THEN (SELECT count(*) FROM user_cars u WHERE u.car_id = c.id) END AS issued
      FROM cars c JOIN container_cars cc ON cc.car_id = c.id WHERE c.is_active = 1 ORDER BY c.price DESC`);

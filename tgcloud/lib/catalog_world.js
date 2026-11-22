@@ -226,6 +226,7 @@ export const EXCLUSIVE = {
 // поэтому сильная машина никогда не дешевле слабой, а общий уровень цен не меняется.
 // Редкость — по месту в общем списке: 5 мистических, 15 легендарных, 40 эпических, 100 редких, остальные обычные.
 import { SPECS } from './car_specs.js';
+import { priceBand } from './odds.js';
 export const PRICE_SCALE = 0.36, CONTAINER_MAX = 24_000;
 const TIERS = [['mystic', 5], ['mythic', 15], ['epic', 40], ['rare', 100]];
 // оценка, если завод не публикует: по мощности
@@ -288,11 +289,13 @@ export const NEW_CONTAINERS = { 9: { name: 'Британский контейн�
 // Быстрая продажа возвращает 90 % цены машины, поэтому в среднем контейнер чуть в минус,
 // а редкие машины дают выигрыш. (Раньше старт был ≈55 % от средней машины — контейнеры «печатали» деньги.)
 export const CHANCES = { common: 740, rare: 215, epic: 40, mythic: 4, mystic: 1 };
+// Вилка цены контейнера и стартовая цена (середина вилки): см. odds.js — цена и шансы связаны,
+// в любой точке вилки контейнер стоит примерно столько, сколько в среднем стоит машина из него.
+export function containerCars(cid) {
+  return [cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((c) => globalTable()[c].map((x) => ({ rarity: x.rarity, price: Math.max(100, Math.round(x.price / 100) * 100) })));
+}
+export function containerBand(cid) { return priceBand(containerCars(cid), CONTAINER_MAX); }
 export function containerPrice(cid) {
-  const T = [cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((c) => globalTable()[c]);
-  const by = {};
-  for (const x of T) (by[x.rarity] ??= []).push(x.price);
-  const present = Object.keys(by), tot = present.reduce((s, r) => s + CHANCES[r], 0);
-  const ev = present.reduce((s, r) => s + (CHANCES[r] / tot) * (by[r].reduce((a, b) => a + b, 0) / by[r].length), 0);
-  return Math.min(CONTAINER_MAX, Math.max(500, Math.round(ev / 500) * 500));
+  const { lo, hi } = containerBand(cid);
+  return Math.round((lo + hi) / 2 / 500) * 500;
 }

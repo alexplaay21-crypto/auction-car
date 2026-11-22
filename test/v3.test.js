@@ -51,23 +51,24 @@ test('9 контейнеров (с британским), у каждого фл
   assert.equal((await db.get("SELECT count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 9 AND c.country = 'Великобритания'")).n, 19);
 });
 
-test('динамическая цена: не выше базовой ($24 000 максимум), без ставок снижается, но не ниже 90 %', async () => {
+test('динамическая цена: торги с соперниками поднимают (до +15 %), без ставок — снижают; всегда внутри вилки', async () => {
   const room = await E.joinRoom(db, 2);
+  await E.joinRoom(db, 3);
   const a = await db.get(`SELECT * FROM auctions WHERE room_id = :r AND status = 'active'`, { ':r': room });
-  const p0 = a.initial_bid;
-  await E.adminAdjust(db, 2, 2, 0 + 1, 'x', op()).catch(() => {});
-  await db.run('UPDATE users SET is_admin = 1 WHERE id = 3');
-  await E.adminAdjust(db, 3, 2, 2_000_000, 'x', op());
-  await E.bid(db, 2, room, { amount: p0 * 6, opId: op() });
+  const p0 = (await db.get('SELECT price FROM containers WHERE id = :c', { ':c': a.container_id })).price;
+  await db.run('UPDATE users SET is_admin = 1 WHERE id = 4');
+  await E.adminAdjust(db, 4, 2, 2_000_000, 'x', op()); await E.adminAdjust(db, 4, 3, 2_000_000, 'x', op());
+  await E.bid(db, 2, room, { amount: a.initial_bid * 2, opId: op() });
+  await E.bid(db, 3, room, { amount: a.initial_bid * 3, opId: op() });
   await tick(31); await E.tick(db);
+  const m = await db.get('SELECT min_price, max_price FROM container_meta WHERE container_id = :c', { ':c': a.container_id });
   const p1 = (await db.get('SELECT price FROM containers WHERE id = :c', { ':c': a.container_id })).price;
-  // потолок — базовая цена (контейнер не дороже $24 000), даже после дорогих торгов
-  assert.ok(p1 <= p0 && p1 <= 24_000, `${p0} → ${p1}`);
-  // без ставок цена снижается, но не ниже 90 % базовой
-  for (let i = 0; i < 12; i++) { await tick(9); await E.joinRoom(db, 2); await E.tick(db); await tick(31); await E.tick(db); }
-  const rows = await db.all('SELECT c.price, m.base_price FROM containers c JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1');
-  assert.ok(rows.some((r) => r.price < r.base_price), 'хоть один контейнер подешевел');
-  for (const r of rows) assert.ok(r.price >= r.base_price * 0.9 && r.price <= r.base_price, `${r.price} в пределах 90–100 % от ${r.base_price}`);
+  assert.ok(p1 >= p0 && p1 <= Math.max(p0, Math.min(m.max_price, Math.ceil(p0 * 1.15 / 100) * 100)), `торги: ${p0} → ${p1} (вилка ${m.min_price}–${m.max_price})`);
+  // без ставок цена снижается, но не ниже нижней границы вилки
+  for (let i = 0; i < 14; i++) { await tick(9); await E.joinRoom(db, 2); await E.tick(db); await tick(31); await E.tick(db); }
+  const rows = await db.all('SELECT c.price, m.min_price, m.max_price FROM containers c JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1');
+  assert.ok(rows.some((r) => r.price < r.max_price), 'хоть один контейнер подешевел');
+  for (const r of rows) assert.ok(r.price >= r.min_price && r.price <= r.max_price && r.max_price <= 24_000, `${r.price} в вилке ${r.min_price}–${r.max_price}`);
   await ok();
 });
 
