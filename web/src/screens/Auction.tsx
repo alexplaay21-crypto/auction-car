@@ -178,7 +178,7 @@ export function Auction() {
 }
 
 export function Chances({ ch, compact = false }: { ch: any; compact?: boolean }) {
-  const R = ['common', 'rare', 'epic', 'mythic'];
+  const R = ['common', 'rare', 'epic', 'mythic', 'mystic'];
   const total = R.reduce((s, r) => s + (ch?.[r] ?? 0), 0) || 1;
   return (
     <div className="col g6" style={{ marginTop: compact ? 4 : 0 }}>

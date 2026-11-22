@@ -8,7 +8,7 @@ import { useApp } from '../App';
 const LABELS: Record<string, string> = {
   start_balance: 'Стартовый баланс', bet_step: 'Шаг ставки', auction_timer_s: 'Таймер контейнера, с', next_delay_s: 'Пауза между контейнерами, с',
   kick_after: 'Кик после N пропусков', max_players: 'Игроков в комнате', quick_sell_window_s: 'Окно быстрой продажи, с',
-  chance_common: 'Шанс ⚪ обычной', chance_rare: 'Шанс 🔵 редкой', chance_epic: 'Шанс 🟣 эпической', chance_mythic: 'Шанс 🟡 легендарной',
+  chance_common: 'Шанс ⚪ обычной', chance_rare: 'Шанс 🔵 редкой', chance_epic: 'Шанс 🟣 эпической', chance_mythic: 'Шанс 🟡 легендарной', chance_mystic: 'Шанс 🔴 мистической',
   comm_quick_bps: 'Комиссия быстрой продажи, б.п.', comm_quick_vip_bps: '…для VIP', comm_state_bps: 'Комиссия продажи государству, б.п.', comm_state_vip_bps: '…для VIP',
   comm_player_bps: 'Комиссия продажи игроку, б.п.', comm_player_vip_bps: '…для VIP', comm_transfer_bps: 'Комиссия перевода, б.п.', comm_transfer_vip_bps: '…для VIP',
   daily_bonus: 'Бонус (раз в период)', daily_bonus_vip: 'Бонус VIP', bonus_period_s: 'Период бонуса, с', bonus_cap: 'Бонус только при балансе меньше', bonus_cap_vip: '…для VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',

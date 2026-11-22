@@ -5,7 +5,8 @@ import { garageView, carView } from '../lib/views.js';
 
 export default endpoint(async (db, uid, input) => {
   const a = input.action ?? 'list';
-  if (a === 'list') return garageView(db, uid, { page: Number(input.page) || 1, rarity: input.rarity || null });
+  // Mini App фильтрует и сортирует гараж у себя — отдаём его целиком (гараж не больше нескольких сотен мест)
+  if (a === 'list') return garageView(db, uid, { page: Number(input.page) || 1, size: Math.min(500, Number(input.size) || 500), rarity: input.rarity || null });
   if (a === 'car') {
     const c = await carView(db, uid, idOf(input.id));
     if (!c) throw new GameError('CAR_NOT_FOUND');

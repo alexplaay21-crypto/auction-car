@@ -1,7 +1,7 @@
-// catalog_world.js — 8 контейнеров по 50 новых популярных машин (30 обычных, 14 редких,
-// 4 эпических, 2 легендарные). Марка в названии чуть изменена, модель узнаётся.
+// catalog_world.js — 8 контейнеров новых популярных машин (по 50, в России 35 — только российские марки).
+// Редкость — по эксклюзивности модели (см. EXCLUSIVE). Марка в названии чуть изменена, модель узнаётся.
 // Строка: [реальная модель (для поиска 3D), редкость, л.с., кузов, заводская цена $, keep?]
-// Цена машины — заводская (MSRP); цена контейнера — такая, что 18 из 30 обычных дешевле него.
+// Цена машины — заводская (MSRP); цена контейнера — такая, что 60 % обычных дешевле него.
 // keep — id машины старого каталога, которая становится этой моделью (у игроков она остаётся).
 
 const BRAND = {
@@ -106,23 +106,19 @@ export const WORLD = {
     ['Ferrari LaFerrari', 'mythic', 950, 'super', 1420000, 32], ['Pagani Huayra', 'mythic', 791, 'super', 2800000],
   ] },
   5: { flag: 'ru', country: 'Россия', base: 500, cars: [
+    // только российские и советские марки; id закреплены (часть машин убрана из контейнера, их id не переиспользуются)
     ['Lada Granta', 'common', 90, 'sedan', 9500, 33], ['Lada Vesta', 'common', 106, 'sedan', 14000, 34], ['Lada Niva Legend', 'common', 83, 'suv', 11000, 35],
-    ['Lada Largus', 'common', 90, 'wagon', 15500], ['Moskvich 3', 'common', 150, 'suv', 25000], ['Moskvich 6', 'common', 147, 'sedan', 28000],
-    ['UAZ Patriot', 'common', 150, 'suv', 21000], ['UAZ Hunter', 'common', 135, 'suv', 15500], ['Tenet T7', 'common', 147, 'suv', 26000],
-    ['Tenet T4', 'common', 147, 'suv', 21000], ['Solaris HS', 'common', 123, 'sedan', 16500], ['Lada Priora', 'common', 106, 'sedan', 8500],
-    ['Lada 2104', 'common', 72, 'wagon', 5500], ['Lada 2110', 'common', 81, 'sedan', 7000], ['Lada 2115', 'common', 81, 'sedan', 7000],
-    ['Lada 4x4 Urban', 'common', 83, 'suv', 11500], ['Lada 2107', 'common', 75, 'sedan', 6000], ['Lada 2106', 'common', 75, 'sedan', 6000],
-    ['Lada 2108', 'common', 75, 'hatch', 6000], ['Lada 2112', 'common', 90, 'hatch', 7000], ['Moskvich 2141', 'common', 72, 'hatch', 5000],
-    ['Toyota RAV4', 'common', 149, 'suv', 32000], ['VAZ 2109', 'common', 75, 'hatch', 6000], ['Haval H6', 'common', 150, 'suv', 23000],
-    ['ZAZ 968', 'common', 40, 'coupe', 3000], ['Moskvich 2140', 'common', 75, 'sedan', 5000], ['VAZ 2106', 'common', 75, 'sedan', 6000],
-    ['GAZ 3102', 'common', 100, 'sedan', 10000], ['UAZ Buhanka', 'common', 112, 'van', 14000], ['Lada Samara Cross', 'common', 75, 'hatch', 9000],
-    ['Tenet T8', 'rare', 186, 'suv', 32000, 36], ['Nissan Qashqai', 'rare', 144, 'suv', 24000, 37], ['GAZ 24 Volga', 'rare', 95, 'sedan', 30000],
-    ['Skoda Octavia', 'rare', 150, 'sedan', 22000], ['Volkswagen Tiguan', 'rare', 150, 'suv', 30000], ['Moskvich 401', 'rare', 23, 'sedan', 25000],
-    ['Moskvich 408', 'rare', 50, 'sedan', 20000], ['VAZ 2103', 'rare', 71, 'sedan', 6000], ['UAZ 469', 'rare', 75, 'suv', 18000],
-    ['Toyota Camry', 'rare', 200, 'sedan', 35000], ['Kia Sportage', 'rare', 150, 'suv', 27000], ['VAZ 2102', 'rare', 64, 'wagon', 5000],
-    ['Moskvich 400', 'rare', 23, 'sedan', 30000], ['GAZ M20 Pobeda', 'rare', 52, 'sedan', 35000], ['GAZ 13 Chaika', 'epic', 195, 'sedan', 150000, 38],
-    ['ZIS 101', 'epic', 110, 'sedan', 120000, 39], ['Marussia B1', 'epic', 300, 'super', 130000], ['ZIL 111', 'epic', 200, 'sedan', 250000],
-    ['Aurus Senat', 'mythic', 598, 'sedan', 330000, 40], ['Marussia B2', 'mythic', 420, 'super', 180000],
+    ['Moskvich 3', 'common', 150, 'suv', 25000, 501], ['UAZ Patriot', 'common', 150, 'suv', 21000, 503], ['UAZ Hunter', 'common', 135, 'suv', 15500, 504],
+    ['Solaris HS', 'common', 123, 'sedan', 16500, 507], ['Lada Priora', 'common', 106, 'sedan', 8500, 508], ['Lada 2104', 'common', 72, 'wagon', 5500, 509],
+    ['Lada 2110', 'common', 81, 'sedan', 7000, 510], ['Lada 2115', 'common', 81, 'sedan', 7000, 511], ['Lada 4x4 Urban', 'common', 83, 'suv', 11500, 512],
+    ['Lada 2107', 'common', 75, 'sedan', 6000, 513], ['Lada 2106', 'common', 75, 'sedan', 6000, 514], ['Lada 2108', 'common', 75, 'hatch', 6000, 515],
+    ['Lada 2112', 'common', 90, 'hatch', 7000, 516], ['Moskvich 2141', 'common', 72, 'hatch', 5000, 517], ['VAZ 2109', 'common', 75, 'hatch', 6000, 519],
+    ['Moskvich 2140', 'common', 75, 'sedan', 5000, 522], ['GAZ 3102', 'common', 100, 'sedan', 10000, 524], ['UAZ Buhanka', 'common', 112, 'van', 14000, 525],
+    ['Lada Samara Cross', 'common', 75, 'hatch', 9000, 526], ['GAZ 24 Volga', 'rare', 95, 'sedan', 30000, 527], ['Moskvich 401', 'rare', 23, 'sedan', 25000, 530],
+    ['Moskvich 408', 'rare', 50, 'sedan', 20000, 531], ['VAZ 2103', 'rare', 71, 'sedan', 6000, 532], ['UAZ 469', 'rare', 75, 'suv', 18000, 533],
+    ['VAZ 2102', 'rare', 64, 'wagon', 5000, 536], ['GAZ M20 Pobeda', 'rare', 52, 'sedan', 35000, 538], ['GAZ 13 Chaika', 'epic', 195, 'sedan', 150000, 38],
+    ['ZIS 101', 'epic', 110, 'sedan', 120000, 39], ['Marussia B1', 'epic', 300, 'super', 130000, 539], ['ZIL 111', 'epic', 200, 'sedan', 250000, 540],
+    ['Aurus Senat', 'mythic', 598, 'sedan', 330000, 40], ['Marussia B2', 'mythic', 420, 'super', 180000, 541],
   ] },
   6: { flag: 'cn', country: 'Китай', base: 600, cars: [
     ['BYD Seagull', 'common', 101, 'hatch', 10000, 41], ['BYD Dolphin', 'common', 201, 'hatch', 17000, 42], ['BYD Atto 3', 'common', 201, 'suv', 21000, 43],
@@ -186,28 +182,48 @@ export const WORLD = {
 const COLORS = ['#c4161c', '#1f4fa8', '#e8e8e8', '#202428', '#8c96a3', '#2e7d4f', '#e8742c', '#f2c230', '#5b2a86', '#2a8f9a', '#7a1218', '#c9ccd1'];
 const round = (x) => Math.max(100, Math.round(x / 100) * 100);
 
-// Редкость — по цене внутри страны: 30 самых дешёвых обычные, дальше 14 редких, 4 эпических, 2 легендарные.
-// Так эпическая никогда не дороже легендарной, а редкая — эпической. FORCE — машины с закреплённой редкостью
-// (BMW M5 — подарок VIP, обещана эпической).
+// Редкость — по эксклюзивности модели, а не по цене (цены заводские и не трогаются):
+// мистическая — единичные гиперкары (десятки штук), легендарная — коллекционные малые серии
+// и гиперкары, эпическая — серийные суперкары и топ-версии, редкая — спорт/премиум, обычная — массовые.
+// Машины без записи в EXCLUSIVE берут редкость из своей строки (легендарная без записи — не выше эпической).
+// FORCE — машины с закреплённой редкостью по id (BMW M5 — подарок VIP, обещана эпической).
 const FORCE = { 14: 'epic' };
-export function rarityByPrice(cid) {
-  const cars = WORLD[cid].cars;
-  const idx = cars.map((c, i) => i).sort((a, b) => cars[a][4] - cars[b][4] || a - b);
-  const out = new Array(cars.length);
-  const forced = idx.filter((i) => FORCE[cars[i][5]]);
-  for (const i of forced) out[i] = FORCE[cars[i][5]];
-  const need = { mythic: 2, epic: 4, rare: 14, common: 30 };
-  for (const i of forced) need[out[i]]--;
-  const free = idx.filter((i) => !out[i]).reverse();
-  for (const r of ['mythic', 'epic', 'rare', 'common']) for (let n = 0; n < need[r]; n++) out[free.shift()] = r;
-  return out;
+export const EXCLUSIVE = {
+  // мистическая
+  'Hennessey Venom F5': ['mystic', '24 купе'], 'NIO EP9': ['mystic', '16 шт.'], 'Bugatti Divo': ['mystic', '40 шт.'],
+  'Mercedes-AMG One': ['mystic', '275 шт., мотор Формулы-1'], 'Pagani Huayra': ['mystic', '≈100 купе'],
+  // легендарная
+  'Ferrari LaFerrari': ['mythic', '499 шт.'], 'Porsche 918 Spyder': ['mythic', '918 шт.'], 'Lexus LFA': ['mythic', '500 шт.'],
+  'SSC Tuatara': ['mythic', '≈100 шт.'], 'Saleen S7': ['mythic', '≈100 шт.'], 'Ford GT': ['mythic', '≈1350 шт.'],
+  'Koenigsegg Jesko': ['mythic', '125 шт.'], 'McLaren P1': ['mythic', '375 шт.'], 'Bugatti Chiron': ['mythic', '500 шт.'],
+  'Bugatti Chiron Pur Sport': ['mythic', '60 шт.'], 'Bugatti Tourbillon': ['mythic', '250 шт.'], 'Bugatti Veyron': ['mythic', '450 шт.'],
+  'Bugatti EB110': ['mythic', '139 шт.'], 'Alfa Romeo 8C Competizione': ['mythic', '500 шт.'], 'Lamborghini Aventador SVJ': ['mythic', '900 купе'],
+  'ZIL 111': ['mythic', '112 шт.'], 'Marussia B2': ['mythic', 'единицы'], 'Aurus Senat': ['mythic', 'малая серия, ручная сборка'],
+  'Hongqi S9': ['mythic', 'малая серия'],
+  // эпическая
+  'BYD Yangwang U9': ['epic'], 'Nissan GT-R Nismo': ['epic'], 'Ferrari SF90 Stradale': ['epic'], 'Lamborghini Revuelto': ['epic'],
+  'Ferrari 812 Superfast': ['epic'], 'Ferrari 488 GTB': ['epic'], 'Ferrari F8 Tributo': ['epic'], 'Ferrari 296 GTB': ['epic'],
+  'Ferrari Purosangue': ['epic'], 'Lamborghini Huracan': ['epic'], 'Maserati MC20': ['epic'], 'Lancia Delta Integrale': ['epic', 'омологационная легенда ралли'],
+  'Ferrari 458 Italia': ['epic'], 'Honda NSX': ['epic'], 'Nissan GT-R': ['epic'], 'Porsche 911 Turbo S': ['epic'], 'Audi R8': ['epic'],
+  'Mercedes-Maybach S-Class': ['epic'], 'BMW M5': ['epic'], 'Chevrolet Corvette Z06': ['epic'], 'Chevrolet Corvette ZR1': ['epic'],
+  'Dodge Viper': ['epic'], 'Rolls-Royce Phantom': ['epic'], 'Rolls-Royce Cullinan': ['epic'], 'Aston Martin DBS': ['epic'], 'McLaren 720S': ['epic'],
+  'Xiaomi SU7 Ultra': ['epic'], 'GAC Aion Hyper SSR': ['epic'], 'GAZ 13 Chaika': ['epic', '3179 шт.'], 'Marussia B1': ['epic', 'малая серия'],
+  'ZIS 101': ['epic', 'довоенный лимузин'], 'Renault Clio V6': ['epic', '≈3000 шт.'],
+  // редкая
+  'Toyota Century': ['rare'], 'Lamborghini Urus': ['rare'], 'Lamborghini Gallardo': ['rare'], 'Ferrari Roma': ['rare'], 'Ferrari Portofino': ['rare'],
+  'Lexus LC 500': ['rare'], 'BYD Yangwang U8': ['rare'],
+  // обычная (массовые модели)
+  'Renault Kangoo': ['common'], 'Renault Talisman': ['common'], 'Wuling Hongguang S': ['common'], 'Peugeot e-208': ['common'], 'Citroen C5 Aircross': ['common'],
+};
+export function rarities(cid) {
+  return WORLD[cid].cars.map(([model, own, , , , keep]) => FORCE[keep] ?? EXCLUSIVE[model]?.[0] ?? (own === 'mythic' ? 'epic' : own));
 }
 export function buildCountry(cid) {
   const W = WORLD[cid];
-  const rar = rarityByPrice(cid);
+  const rar = rarities(cid);
   return W.cars.map(([model, , hp, body, price, keep], i) => {
     const rarity = rar[i];
-    const sport = { common: 0, rare: 1, epic: 2, mythic: 3 }[rarity];
+    const sport = { common: 0, rare: 1, epic: 2, mythic: 3, mystic: 4 }[rarity];
     const accel = Math.max(2.0, Math.min(25, +(14 - Math.log2(hp / 60) * 2.9 - sport * 0.4).toFixed(1)));
     const speed = Math.round(Math.min(420, 110 + Math.sqrt(hp) * 8 + sport * 6));
     const handling = Math.min(98, 52 + sport * 10 + (body === 'super' || body === 'coupe' ? 8 : body === 'suv' || body === 'van' ? -6 : 0) + (i % 5));
@@ -216,9 +232,10 @@ export function buildCountry(cid) {
   });
 }
 
-// Цена контейнера: между 18-й и 19-й по цене обычной машиной (60 % обычных дешевле, 40 % дороже), кратно $500.
+// Цена контейнера: 60 % обычных машин дешевле него, 40 % дороже; кратно $500.
 export function containerPrice(cid) {
-  const rar = rarityByPrice(cid);
+  const rar = rarities(cid);
   const commons = WORLD[cid].cars.filter((c, i) => rar[i] === 'common').map((c) => c[4]).sort((a, b) => a - b);
-  return Math.round((commons[17] + commons[18]) / 2 / 500) * 500;
+  const m = commons.length * 0.6;
+  return Math.round((commons[Math.floor(m) - 1] + commons[Math.floor(m)]) / 2 / 500) * 500;
 }

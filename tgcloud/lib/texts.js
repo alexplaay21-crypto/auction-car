@@ -36,6 +36,7 @@ export const ERRORS = {
   ALREADY_OWNED: 'Это уже есть у тебя',
   NOT_OWNED: 'Сначала купи это оформление',
   BP_NO_LEGENDARY: 'Легендарные машины — только за делюкс',
+  BP_NO_MYSTIC: 'Мистические машины выпадают только из контейнеров',
   STARS_ONLY: 'Покупается только за Telegram Stars — в магазине',
   BP_NEED_PREMIUM: 'Сначала купи премиум Battle Pass',
   BP_DELUXE_ALREADY: 'Делюкс уже куплен',

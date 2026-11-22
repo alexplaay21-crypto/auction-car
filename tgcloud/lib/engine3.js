@@ -188,6 +188,7 @@ export async function bpClaim(db, uid, level, track) {
 export async function setSeasonCar(db, season, carId, track = 'premium') {
   const c = carId ? await db.get('SELECT id, rarity FROM cars WHERE id = :c', { ':c': Number(carId) || 0 }) : null;
   if (carId && !c) throw new GameError('CAR_NOT_FOUND');
+  if (c && c.rarity === 'mystic') throw new GameError('BP_NO_MYSTIC'); // мистические — только из контейнеров
   if (c && track !== 'deluxe' && c.rarity === 'mythic') throw new GameError('BP_NO_LEGENDARY');
   const col = track === 'deluxe' ? 'dx_car_id' : 'prem_car_id';
   await db.run(`UPDATE bp_seasons SET ${col} = :c WHERE id = :s`, { ':c': c?.id ?? null, ':s': intOf(season, 1, 1e9) });
@@ -218,7 +219,7 @@ export async function setLevelReward(db, { season, level, track, kind, value }) 
   if (kind === 'model') {
     const c = await db.get('SELECT rarity FROM cars WHERE id = :c', { ':c': v });
     if (!c) throw new GameError('CAR_NOT_FOUND');
-    if (c.rarity === 'mythic') throw new GameError('BP_NO_LEGENDARY');
+    if (c.rarity === 'mythic' || c.rarity === 'mystic') throw new GameError('BP_NO_LEGENDARY');
   }
   const col = track === 'premium' ? 'prem' : 'free';
   await exec(db, `UPDATE bp_levels SET ${col}_kind = :k, ${col}_value = :v WHERE season = :s AND level = :l`,

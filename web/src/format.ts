@@ -17,8 +17,11 @@ export const RARITY: Record<string, { name: string; icon: string; color: string 
   rare: R('Редкая', '🔵', '#3d9bff'),
   epic: R('Эпическая', '🟣', '#b46bff'),
   mythic: R('Легендарная', '🟡', '#ffc23d'),
+  mystic: R('Мистическая', '🔴', '#ff3b4d'),
 };
-export const RARITIES = ['common', 'rare', 'epic', 'mythic'];
+export const RARITIES = ['common', 'rare', 'epic', 'mythic', 'mystic'];
+// порядок от самой ценной (для сортировки)
+export const RARITY_RANK: Record<string, number> = { mystic: 5, mythic: 4, epic: 3, rare: 2, common: 1 };
 
 export const ago = (ts: number, now = Date.now() / 1000) => {
   const s = Math.max(0, Math.floor(now - ts));

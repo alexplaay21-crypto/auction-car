@@ -22,14 +22,16 @@ beforeEach(async () => {
   for (const n of [2, 3, 4]) await E.ensureUser(db, { id: n, username: 'u' + n });
 });
 
-test('8 стран, у каждого контейнера флаг; в немецком 50 машин (30/14/4/2)', async () => {
+test('8 стран, у каждого контейнера флаг; редкость по эксклюзивности, в России 35 машин', async () => {
   assert.equal((await db.get('SELECT count(*) AS n FROM containers')).n, 8);
-  assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 8);
+  // 64 старых + новые; убранные из России машины не создаются (кроме старых id 36, 37 — они остаются у владельцев)
+  assert.equal((await db.get('SELECT count(*) AS n FROM cars')).n, 64 + 42 * 7 + 29);
+  assert.equal((await db.get('SELECT count(*) AS n FROM cars WHERE is_active = 1 AND id IN (36, 37)')).n, 0, 'вне контейнеров — не выпадают');
   const de = await db.all("SELECT c.rarity, count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 2 GROUP BY c.rarity ORDER BY c.rarity");
-  assert.deepEqual(Object.fromEntries(de.map((r) => [r.rarity, r.n])), { common: 30, epic: 4, mythic: 2, rare: 14 });
+  assert.deepEqual(Object.fromEntries(de.map((r) => [r.rarity, r.n])), { common: 30, epic: 4, mythic: 1, mystic: 1, rare: 14 });
   const flags = (await db.all('SELECT flag FROM container_meta ORDER BY container_id')).map((r) => r.flag);
   assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world']);
-  for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, [1, 2, 3, 4, 5, 6, 7, 8].includes(c) ? 50 : 8);
+  for (let c = 1; c <= 8; c++) assert.equal((await db.get('SELECT count(*) AS n FROM container_cars WHERE container_id = :c', { ':c': c })).n, c === 5 ? 35 : 50);
 });
 
 test('динамическая цена: дорогие торги поднимают стартовую цену, пустые — снижают (не больше 10% за раз)', async () => {
@@ -60,7 +62,7 @@ test('рынок: выставить, купить (деньги и машина
   assert.equal((await db.get('SELECT user_id FROM user_cars WHERE id = :i', { ':i': uc })).user_id, 3);
   assert.equal(await bal(2), 75_000 + 187_500, 'комиссия 25%');
   await assert.rejects(G.listCar(db, 2, await give(2, 1), 2_000), { code: 'MARKET_RARITY' }, 'обычные машины на рынок нельзя');
-  const uc2 = await give(2, 6);
+  const uc2 = await give(2, 7);
   const l2 = await G.listCar(db, 2, uc2, 9_999);
   await E.sellCar(db, 2, uc2);
   assert.equal((await db.get('SELECT status FROM market_listings WHERE id = :l', { ':l': l2.id })).status, 'cancelled', 'проданная государству снимается с рынка');

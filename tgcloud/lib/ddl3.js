@@ -182,7 +182,7 @@ const triggers = [
   // ---------- рынок ----------
   `CREATE TRIGGER IF NOT EXISTS listings_bi BEFORE INSERT ON market_listings BEGIN
      SELECT RAISE(ABORT, 'CAR_NOT_FOUND') WHERE NOT ${OWNS('NEW.seller_id', 'NEW.user_car_id')};
-     SELECT RAISE(ABORT, 'MARKET_RARITY') WHERE (SELECT c.rarity FROM user_cars u JOIN cars c ON c.id = u.car_id WHERE u.id = NEW.user_car_id) NOT IN ('epic', 'mythic');
+     SELECT RAISE(ABORT, 'MARKET_RARITY') WHERE (SELECT c.rarity FROM user_cars u JOIN cars c ON c.id = u.car_id WHERE u.id = NEW.user_car_id) NOT IN ('epic', 'mythic', 'mystic');
      SELECT RAISE(ABORT, 'USER_BANNED') WHERE (SELECT is_banned FROM users WHERE id = NEW.seller_id) = 1;
      SELECT RAISE(ABORT, 'BAD_LISTING') WHERE NEW.status <> 'open' OR NEW.created_at <> ${NOW} OR NEW.buyer_id IS NOT NULL
        OR NEW.rate_bps <> ${RATE('comm_player', 'NEW.seller_id')};

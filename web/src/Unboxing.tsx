@@ -14,6 +14,7 @@ const TIMING: Record<string, [number, number, number, number]> = {
   rare: [700, 1150, 750, 600],
   epic: [1100, 1250, 850, 900],
   mythic: [1700, 1400, 1000, 1300],
+  mystic: [2000, 1500, 1100, 1500],
 };
 
 export function Unboxing({ container, car, onClose, children }: { container?: any; car: any; onClose: () => void; children?: ReactNode }) {
@@ -46,8 +47,8 @@ export function Unboxing({ container, car, onClose, children }: { container?: an
   return (
     <div className={`unbox r-${r} ph-${phase}${doors ? '' : ' nodoors'}`} style={{ ['--turn' as any]: `${turn}ms`, ['--open' as any]: `${open}ms`, ['--shake' as any]: `${shake}ms` }} onClick={skip}>
       <div className="ub-dim" />
-      {(r === 'epic' || r === 'mythic') && <div className="ub-rays" />}
-      {r === 'mythic' && <div className="ub-sparks">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ ['--a' as any]: `${(i * 360) / 18}deg`, ['--d' as any]: `${(i % 6) * 0.12}s` }} />)}</div>}
+      {(r === 'epic' || r === 'mythic' || r === 'mystic') && <div className="ub-rays" />}
+      {(r === 'mythic' || r === 'mystic') && <div className="ub-sparks">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ ['--a' as any]: `${(i * 360) / 18}deg`, ['--d' as any]: `${(i % 6) * 0.12}s` }} />)}</div>}
       <div className="ub-stage">
         <div className="ub-light" />
         <div className="ub-car"><CarArt car={car} height={180} studio /></div>
@@ -70,6 +71,7 @@ export function Unboxing({ container, car, onClose, children }: { container?: an
         )}
       </div>
       {r === 'mythic' && <div className="ub-stamp">{t('ЛЕГЕНДАРНАЯ!')}</div>}
+      {r === 'mystic' && <div className="ub-stamp mystic">{t('МИСТИЧЕСКАЯ!')}</div>}
       {r === 'epic' && <div className="ub-stamp epic">{t('ЭПИЧЕСКАЯ!')}</div>}
       <div className="ub-flash" />
       <div className="ub-info" onClick={(e) => e.stopPropagation()}>

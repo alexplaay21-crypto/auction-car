@@ -6,6 +6,7 @@ import { money, who, RARITY, RARITIES } from '../format';
 import { CarArt, CarCard, ContainerArt, RarityTag, Sheet, Stat } from '../components';
 import { AppBar, Sect, Li, Empty, Ic, FriendPicker, Kv } from '../ui';
 import { useApp } from '../App';
+import { CarFilterBar, applyCarFilter, F0, type CarF } from '../carfilter';
 import { t } from '../i18n';
 
 async function act(name: string, input: any, ok?: (r: any) => string) {
@@ -16,16 +17,17 @@ async function act(name: string, input: any, ok?: (r: any) => string) {
 export function Garage() {
   const { reload, setTab, push, pop } = useApp();
   const [g, setG] = useState<any>(null);
-  const [rarity, setRarity] = useState<string | null>(null);
+  const [f, setF] = useState<CarF>(F0);
   const [opened, setOpened] = useState<any>(null);
   const [busy, setBusy] = useState(false);
-  const load = useCallback(() => call('app_garage', { action: 'list', rarity }).then(setG, (e) => toast(errorText(e))), [rarity]);
+  const load = useCallback(() => call('app_garage', { action: 'list' }).then(setG, (e) => toast(errorText(e))), []);
   useEffect(() => { load(); }, [load]);
   const run = async (name: string, input: any, ok?: (r: any) => string) => {
     if (busy) return null;
     setBusy(true); const r = await act(name, input, ok); setBusy(false); load(); reload(); return r;
   };
   if (!g) return <><AppBar title={t('Гараж')} back={pop} /><div className="page" /></>;
+  const shown = applyCarFilter(g.cars, f);
   const fill = g.owned / g.capacity;
   return (
     <>
@@ -68,12 +70,9 @@ export function Garage() {
           </>
         )}
 
-        <div className="chips">
-          <button className={`chip${!rarity ? ' on' : ''}`} onClick={() => setRarity(null)}>{t('Все')}</button>
-          {RARITIES.map((r) => <button key={r} className={`chip${rarity === r ? ' on' : ''}`} onClick={() => setRarity(r)}>{RARITY[r].name}</button>)}
-        </div>
-        {g.cars.length ? <div className="grid2">{g.cars.map((c: any) => <CarCard key={c.user_car_id} car={c} onClick={() => push({ name: 'car', id: c.user_car_id })} />)}</div>
-          : rarity ? <Empty icon={CarFront} title={t('Таких машин нет')} />
+        {g.cars.length > 0 && <CarFilterBar list={g.cars} f={f} onChange={setF} />}
+        {shown.length ? <div className="grid2">{shown.map((c: any) => <CarCard key={c.user_car_id} car={c} onClick={() => push({ name: 'car', id: c.user_car_id })} />)}</div>
+          : g.cars.length ? <Empty icon={CarFront} title={t('Таких машин нет')} />
           : <Empty icon={CarFront} title={t('Гараж пуст')} text={t('Выиграй контейнер на аукционе — внутри будет машина.')} action={t('К аукциону')} onAction={() => setTab('auction')} />}
       </div>
 
@@ -130,7 +129,7 @@ export function CarPage({ id }: { id: number }) {
                 title={`${car.sale.quick ? t('Быстрая продажа') : t('Государству')} · ${money(car.sale.amount)}`}
                 sub={t('Сразу, комиссия {n}%', { n: car.sale.rate / 100 }) + (car.sale.quick ? t(' · первые {n} после получения', { n: (car.sale.window ?? 900) >= 3600 ? t('{h} ч', { h: car.sale.window / 3600 }) : t('{m} мин', { m: Math.round((car.sale.window ?? 900) / 60) }) }) : '')}
                 onClick={() => !busy && run('app_garage', { action: 'sell', id: car.user_car_id }, (r) => t('Продано за {m}', { m: money(r.sold.amount) }))} />
-              {['epic', 'mythic'].includes(car.rarity) && <Li icon={Store} tone="green" title={t('Выставить на рынок')} sub={t('Свою цену увидят все игроки')} onClick={() => setMode('market')} />}
+              {['epic', 'mythic', 'mystic'].includes(car.rarity) && <Li icon={Store} tone="green" title={t('Выставить на рынок')} sub={t('Свою цену увидят все игроки')} onClick={() => setMode('market')} />}
               <Li icon={Handshake} tone="gold" title={t('Продать игроку')} sub={t('Предложение придёт ему в бот')} onClick={() => setMode('player')} />
             </div>
           </>

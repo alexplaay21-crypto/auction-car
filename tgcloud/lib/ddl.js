@@ -9,7 +9,8 @@ import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
-import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27 } from './ddl8.js';
+import { migration28 } from './ddl11.js';
+import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29 } from './ddl8.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -626,4 +627,8 @@ export const MIGRATIONS = [
   { id: 26, statements: MIGRATION_26 },
   // 27: редкость по цене внутри страны, замены машин после проверки.
   { id: 27, statements: MIGRATION_27 },
+  // 28: пятая редкость «Мистическая» — пересборка cars с новым CHECK, шанс 1 из 1000
+  { id: 28, statements: [], run: migration28 },
+  // 29: редкость по эксклюзивности, Россия — только российские марки (35 машин)
+  { id: 29, statements: MIGRATION_29 },
 ];

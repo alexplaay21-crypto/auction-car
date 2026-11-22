@@ -32,14 +32,18 @@ export const fx = {
   engine() { tone(90, 0.9, { type: 'sawtooth', gain: 0.03, slide: 2.6 }); vibrate('heavy'); },
   // контейнер дрожит: чем реже машина, тем дольше и ниже гул
   rumble(r: string) {
-    const n = { common: 2, rare: 3, epic: 5, mythic: 8 }[r] ?? 2;
+    const n = { common: 2, rare: 3, epic: 5, mythic: 8, mystic: 10 }[r] ?? 2;
     for (let i = 0; i < n; i++) { tone(70 + i * 6, 0.16, { type: 'sawtooth', gain: 0.025, at: i * 0.18 }); setTimeout(() => vibrate(i === n - 1 ? 'heavy' : 'light'), i * 180); }
   },
   // засовы и скрип дверей
   doors() { tone(140, 0.08, { type: 'square', gain: 0.04 }); tone(300, 0.5, { type: 'sawtooth', gain: 0.018, slide: 0.55, at: 0.08 }); vibrate('medium'); },
   // появление машины: у легендарной — фанфары
   reveal(r: string) {
-    if (r === 'mythic') {
+    if (r === 'mystic') { // низкий аккорд и колокол — звучит иначе, чем легендарная
+      [220, 262, 330, 392, 523, 659].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.06, at: i * 0.14 }));
+      tone(1319, 1.2, { type: 'sine', gain: 0.045, at: 0.9 }); tone(110, 1.1, { type: 'sawtooth', gain: 0.02, at: 0.1 });
+      notify('success'); [0, 250, 500, 800].forEach((d) => setTimeout(() => vibrate('heavy'), d));
+    } else if (r === 'mythic') {
       [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.32, { type: 'triangle', gain: 0.06, at: i * 0.12 }));
       tone(1568, 0.9, { type: 'sine', gain: 0.04, at: 0.75 }); notify('success'); [0, 250, 500].forEach((d) => setTimeout(() => vibrate('heavy'), d));
     } else if (r === 'epic') {

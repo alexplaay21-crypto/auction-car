@@ -7,6 +7,7 @@ export const RARITY = {
   rare: { ru: 'Редкая', icon: '🔵' },
   epic: { ru: 'Эпическая', icon: '🟣' },
   mythic: { ru: 'Легендарная', icon: '🟡' },
+  mystic: { ru: 'Мистическая', icon: '🔴' },
 };
 
 export const money = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('ru-RU').replace(/ /g, ' ');
@@ -57,7 +58,7 @@ export async function garageView(db, uid, { page = 1, size = 30, rarity = null }
   const total = (await db.get(`SELECT count(*) AS n FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE ${where}`, p)).n;
   const rows = await db.all(
     `SELECT uc.id AS user_car_id, uc.obtained_at, uc.source, uc.paid, c.* FROM user_cars uc JOIN cars c ON c.id = uc.car_id
-     WHERE ${where} ORDER BY CASE c.rarity WHEN 'mythic' THEN 0 WHEN 'epic' THEN 1 WHEN 'rare' THEN 2 ELSE 3 END, c.price DESC, uc.id DESC
+     WHERE ${where} ORDER BY CASE c.rarity WHEN 'mystic' THEN -1 WHEN 'mythic' THEN 0 WHEN 'epic' THEN 1 WHEN 'rare' THEN 2 ELSE 3 END, c.price DESC, uc.id DESC
      LIMIT :n OFFSET :o`, { ...p, ':n': size, ':o': (Math.max(1, page) - 1) * size });
   const value = (await db.get(`SELECT COALESCE(sum(c.price), 0) AS v FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.user_id = :u AND uc.status = 'owned'`, { ':u': uid })).v;
   const owned = (await db.get(`SELECT count(*) AS n FROM user_cars WHERE user_id = :u AND status = 'owned'`, { ':u': uid })).n;
@@ -144,7 +145,7 @@ export function roomText(v, { group = false } = {}) {
   if (!a) return head + '\nЖдём игроков…';
   const c = a.container;
   const ch = a.chances;
-  const chanceLine = `⚪ ${ch.common}% · 🔵 ${ch.rare}% · 🟣 ${ch.epic}% · 🟡 ${ch.mythic}%`;
+  const chanceLine = `⚪ ${ch.common}% · 🔵 ${ch.rare}% · 🟣 ${ch.epic}% · 🟡 ${ch.mythic}%${ch.mystic ? ` · 🔴 ${ch.mystic}%` : ''}`;
   if (a.status === 'active') {
     let t = head + `\n📦 <b>${esc(c.emoji ?? '')} ${esc(c.name)}</b>\n${chanceLine}\n\n`;
     t += a.leader ? `💵 Ставка: <b>${money(a.current)}</b> — ${esc(who(a.leader))}\n` : `💵 Стартовая цена: <b>${money(a.current)}</b>, ставок нет\n`;

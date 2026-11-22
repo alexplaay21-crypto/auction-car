@@ -167,7 +167,7 @@ export function CarCard({ car, onClick, ribbon }: { car: any; onClick?: () => vo
     <button className={`carcard press r-${car.rarity}`} onClick={onClick}>
       {ribbon && <span className="ribbon">{ribbon}</span>}
       <CarArt car={car} height={72} />
-      <div className="sb ell" style={{ fontSize: 14 }}>{car.name}</div>
+      <div className="sb l2" style={{ fontSize: 14 }}>{car.name}</div>
       <div className="row between g6"><RarityTag r={car.rarity} /><span className="price sm">{money(car.price)}</span></div>
     </button>
   );

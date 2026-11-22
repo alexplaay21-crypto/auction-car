@@ -6,6 +6,7 @@ import { CarCard, ContainerArt, CarArt, RarityTag, ProfileBg } from '../componen
 import { AppBar, Sect, Li, Ic, Kv } from '../ui';
 import { Chances } from './Auction';
 import { useApp } from '../App';
+import { CarFilterBar, applyCarFilter, F0, type CarF } from '../carfilter';
 import { t } from '../i18n';
 
 const PERK_ICON: Record<string, any> = { car: CarFront, garage: ParkingSquare, bonus: Gift, quick: Zap, state: Landmark, market: Store, transfer: Send, badge: Crown };
@@ -139,7 +140,9 @@ export function CatalogPage({ id }: { id: number }) {
   const { pop } = useApp();
   const [cat, setCat] = useState<any>(null);
   useEffect(() => { call('app_shop', { action: 'catalog' }).then(setCat, (e) => toast(errorText(e))); }, [id]);
+  const [f, setF] = useState<CarF>(F0);
   const c = cat?.containers.find((x: any) => x.id === id);
+  const inside = cat ? cat.cars.filter((x: any) => x.container_id === id) : [];
   return (
     <>
       <AppBar title={c ? t(c.name) : t('Контейнер')} back={pop} />
@@ -153,7 +156,8 @@ export function CatalogPage({ id }: { id: number }) {
               </div>
             </div>
             <Sect>{t('Машины внутри')}</Sect>
-            <div className="grid2">{cat.cars.filter((x: any) => x.container_id === id).map((x: any) => <CarCard key={x.id} car={x} />)}</div>
+            <CarFilterBar list={inside} f={f} onChange={setF} />
+            <div className="grid2">{applyCarFilter(inside, f).map((x: any) => <CarCard key={x.id} car={x} />)}</div>
           </>
         )}
       </div>

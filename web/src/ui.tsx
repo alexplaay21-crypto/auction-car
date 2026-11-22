@@ -133,7 +133,7 @@ export function CarPicker({ value, onPick, exclude = [] as number[], only, auto 
       {list.map((c) => (
         <button key={c.user_car_id} className={`carcard mini press r-${c.rarity}`} style={value === c.user_car_id ? { outline: '2px solid var(--orange)', outlineOffset: 2 } : undefined} onClick={() => onPick(c)}>
           <CarArt car={c} height={54} />
-          <div className="sm sb ell">{c.name}</div>
+          <div className="sm sb l2">{c.name}</div>
           <div className="xs muted">{money(c.price)}</div>
         </button>
       ))}

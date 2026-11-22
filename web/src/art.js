@@ -40,11 +40,11 @@ const BODIES = {
   },
 };
 
-const SPOKES = { common: 5, rare: 6, epic: 10, mythic: 7 };
+const SPOKES = { common: 5, rare: 6, epic: 10, mythic: 7, mystic: 7 };
 
 function wheel(cx, cy, rarity, id) {
   const n = SPOKES[rarity] ?? 5;
-  const caliper = rarity === 'mythic' ? '#ffb800' : rarity === 'epic' ? '#e0262c' : rarity === 'rare' ? '#3d8bff' : '#555b66';
+  const caliper = rarity === 'mystic' ? '#ff2b3d' : rarity === 'mythic' ? '#ffb800' : rarity === 'epic' ? '#e0262c' : rarity === 'rare' ? '#3d8bff' : '#555b66';
   let spokes = '';
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 - Math.PI / 2;
@@ -90,7 +90,7 @@ export function carSvg(car, { studio = false, w = 400, h = 180 } = {}) {
   const handles = t.doors.slice(0, -1).map((x, i) => `<rect x="${(x + t.doors[i + 1]) / 2 + 8}" y="${t.tall ? 96 : 108}" width="16" height="3.4" rx="1.7" fill="${shade(paint, -0.45)}" opacity=".8"/>`).join('');
   const pillars = t.pillars.map((x) => `<rect x="${x - 4}" y="40" width="8" height="70" fill="url(#paint${id})"/>`).join('');
   const [lx1, ly1, lx2, ly2] = t.light;
-  const spoiler = t.spoilerAt && (rarity === 'epic' || rarity === 'mythic')
+  const spoiler = t.spoilerAt && (rarity === 'epic' || rarity === 'mythic' || rarity === 'mystic')
     ? `<path d="M${t.spoilerAt - 6} ${t.low ? 92 : 94} L${t.spoilerAt + 34} ${t.low ? 92 : 94} L${t.spoilerAt + 30} ${t.low ? 98 : 100} L${t.spoilerAt - 2} ${t.low ? 99 : 101} Z" fill="${shade(paint, -0.55)}"/>
        <rect x="${t.spoilerAt + 6}" y="${t.low ? 97 : 99}" width="4" height="6" fill="#1b1e24"/>` : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${studio ? '-20 -10 440 200' : '0 20 400 160'}" width="${w}" height="${h}">

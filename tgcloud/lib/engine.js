@@ -53,6 +53,7 @@ export async function migrate(db) {
     for (const s of m.statements) {
       try { await db.run(s); } catch (e) { if (!/looks like a read one/i.test(String(e?.message))) throw e; }
     }
+    if (m.run) await m.run(db);
     await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (:id, unixepoch())', { ':id': m.id });
     applied.push(m.id);
   }
@@ -120,9 +121,12 @@ export function weighted(items, w) {
 
 export async function chances(db, containerId) {
   const st = await settings(db);
-  const c = await db.get('SELECT chance_common, chance_rare, chance_epic, chance_mythic FROM containers WHERE id = :c', { ':c': containerId });
-  const pick = (r) => c?.['chance_' + r] ?? st['chance_' + r];
-  return { common: pick('common'), rare: pick('rare'), epic: pick('epic'), mythic: pick('mythic') };
+  const c = await db.get('SELECT * FROM containers WHERE id = :c', { ':c': containerId });
+  // редкости, которых нет в контейнере, не выпадают — их шанс 0 (иначе витрина обещала бы невозможное)
+  const have = new Set((await db.all(`SELECT DISTINCT c.rarity FROM container_cars cc JOIN cars c ON c.id = cc.car_id
+     WHERE cc.container_id = :c AND c.is_active = 1 AND cc.weight > 0`, { ':c': containerId })).map((r) => r.rarity));
+  const pick = (r) => (have.size && !have.has(r) ? 0 : c?.['chance_' + r] ?? st['chance_' + r] ?? 0);
+  return { common: pick('common'), rare: pick('rare'), epic: pick('epic'), mythic: pick('mythic'), mystic: pick('mystic') };
 }
 
 export async function rollCar(db, containerId) {

@@ -8,7 +8,7 @@ import { currentSeason, createSeason, setLevelReward, setSeasonCar } from '../li
 import { ADMIN_IDS } from '../lib/config.js';
 import { feedbackList, answerFeedback } from '../lib/stars.js';
 
-const RARITIES = ['common', 'rare', 'epic', 'mythic'];
+const RARITIES = ['common', 'rare', 'epic', 'mythic', 'mystic'];
 const int = (v, min = 0, max = 1e12) => {
   const n = Math.floor(Number(v));
   if (!Number.isSafeInteger(n) || n < min || n > max) throw new GameError('BAD_INPUT');
@@ -113,15 +113,15 @@ export default endpoint(async (db, uid, input, { user }) => {
     const ch = (r) => opt(c['chance_' + r], (x) => int(x, 0, 100000));
     const f = {
       ':name': str(c.name), ':country': opt(c.country, (x) => str(x, 40)), ':emoji': opt(c.emoji, (x) => str(x, 8)), ':price': int(c.price, 1),
-      ':en': c.is_enabled === 0 ? 0 : 1, ':cc': ch('common'), ':cr': ch('rare'), ':ce': ch('epic'), ':cm': ch('mythic'),
+      ':en': c.is_enabled === 0 ? 0 : 1, ':cc': ch('common'), ':cr': ch('rare'), ':ce': ch('epic'), ':cm': ch('mythic'), ':cy': ch('mystic'),
     };
     let id = c.id ? int(c.id, 1) : null;
     if (id) {
       await db.run(`UPDATE containers SET name = :name, country = :country, emoji = :emoji, price = :price, is_enabled = :en,
-        chance_common = :cc, chance_rare = :cr, chance_epic = :ce, chance_mythic = :cm WHERE id = :id`, { ...f, ':id': id });
+        chance_common = :cc, chance_rare = :cr, chance_epic = :ce, chance_mythic = :cm, chance_mystic = :cy WHERE id = :id`, { ...f, ':id': id });
     } else {
-      id = (await db.run(`INSERT INTO containers (name, country, emoji, price, is_enabled, chance_common, chance_rare, chance_epic, chance_mythic)
-        VALUES (:name, :country, :emoji, :price, :en, :cc, :cr, :ce, :cm)`, f)).lastInsertRowid;
+      id = (await db.run(`INSERT INTO containers (name, country, emoji, price, is_enabled, chance_common, chance_rare, chance_epic, chance_mythic, chance_mystic)
+        VALUES (:name, :country, :emoji, :price, :en, :cc, :cr, :ce, :cm, :cy)`, f)).lastInsertRowid;
     }
     // цена из админки становится базовой для динамики
     const flag = ['us', 'ru', 'jp', 'cn', 'de', 'fr', 'it', 'world'].includes(c.flag) ? c.flag : null;
