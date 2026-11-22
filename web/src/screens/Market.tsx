@@ -35,8 +35,11 @@ export function Market() {
       <AppBar title={t('Рынок')} />
       <div className="page">
         <button className="btn go xl w" onClick={() => { setCar(null); setPrice(''); setSell(true); }}><Tag size={18} /> {t('Продать свою машину')}</button>
-        <div className="chips"><button className={`chip${mine ? ' on' : ''}`} onClick={() => setMine(!mine)}>{t('Мои лоты')}</button></div>
-        <CarFilterBar list={d?.list ?? []} f={f} onChange={setF} rarities={['epic', 'mythic', 'mystic']} extraSorts={[['new', 'Новые'], ['deal', 'Выгодные']]} />
+        <CarFilterBar compact list={d?.list ?? []} f={f} onChange={setF} rarities={['epic', 'mythic', 'mystic']} extraSorts={[['new', 'Новые'], ['deal', 'Выгодные']]}
+          extraCount={mine ? 1 : 0} onReset={() => setMine(false)}
+          extra={<div className="col g6"><span className="sm muted">{t('Лоты')}</span><div className="row wrap g6">
+            <button className={`chip${!mine ? ' on' : ''}`} onClick={() => setMine(false)}>{t('Все лоты')}</button>
+            <button className={`chip${mine ? ' on' : ''}`} onClick={() => setMine(true)}>{t('Только мои')}</button></div></div>} />
         {d && (shown.length ? (
           <div className="grid2">
             {shown.map((l: any) => {

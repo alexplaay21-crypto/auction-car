@@ -1,6 +1,6 @@
 // carfilter.tsx — единые фильтры и сортировка списков машин (каталог контейнера, гараж, рынок):
 // редкость (в т.ч. «только мистические»), марка, страна, цена, мощность; сортировка по цене, редкости, мощности.
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { RARITY, RARITIES, RARITY_RANK } from './format';
 import { Sheet } from './components';
@@ -37,29 +37,29 @@ export function applyCarFilter<T extends Record<string, any>>(list: T[], f: CarF
 }
 
 // extraSorts — сортировки, которые делает сервер (на рынке «Новые», «Выгодные»), ставятся первыми
-export function CarFilterBar({ list, f, onChange, rarities = RARITIES, extraSorts = [] }:
-  { list: any[]; f: CarF; onChange: (f: CarF) => void; rarities?: string[]; extraSorts?: [string, string][] }) {
+// compact — всё (редкость, сортировка и extra) внутри шторки, снаружи одна кнопка «Фильтры»
+export function CarFilterBar({ list, f, onChange, rarities = RARITIES, extraSorts = [], compact = false, extra, extraCount = 0, onReset }:
+  { onReset?: () => void; list: any[]; f: CarF; onChange: (f: CarF) => void; rarities?: string[]; extraSorts?: [string, string][]; compact?: boolean; extra?: ReactNode; extraCount?: number }) {
   const [open, setOpen] = useState(false);
   const brands = useMemo(() => [...new Set((list ?? []).map((c) => brandOf(c.name)))].sort(), [list]);
   const countries = useMemo(() => [...new Set((list ?? []).map((c) => c.country).filter(Boolean))].sort(), [list]);
   const n = [f.brand, f.country, f.price, f.power].filter((x) => x != null).length;
   const set = (p: Partial<CarF>) => onChange({ ...f, ...p });
-  return (
+  const sorts = [...extraSorts, ...SORTS];
+  const rarityChips = (
+    <div className={compact ? 'row wrap g6' : 'chips'}>
+      <button className={`chip${!f.rarity ? ' on' : ''}`} onClick={() => set({ rarity: null })}>{t('Все')}</button>
+      {rarities.map((r) => (
+        <button key={r} className={`chip${f.rarity === r ? ' on' : ''}${r === 'mystic' ? ' chip-mystic' : ''}`} onClick={() => set({ rarity: f.rarity === r ? null : r })}>
+          {r === 'mystic' ? `${RARITY.mystic.icon} ${t('Только мистические')}` : RARITY[r].name}
+        </button>
+      ))}
+    </div>
+  );
+  const sortChips = (cls: string) => sorts.map(([k, l]) => <button key={k} className={`chip${f.sort === k ? ' on' : ''}`} onClick={() => set({ sort: k })}>{t(l)}</button>);
+  const total = n + (f.rarity ? 1 : 0) + extraCount;
+  const details = (
     <>
-      <div className="chips">
-        <button className={`chip${!f.rarity ? ' on' : ''}`} onClick={() => set({ rarity: null })}>{t('Все')}</button>
-        {rarities.map((r) => (
-          <button key={r} className={`chip${f.rarity === r ? ' on' : ''}${r === 'mystic' ? ' chip-mystic' : ''}`} onClick={() => set({ rarity: f.rarity === r ? null : r })}>
-            {r === 'mystic' ? `${RARITY.mystic.icon} ${t('Только мистические')}` : RARITY[r].name}
-          </button>
-        ))}
-      </div>
-      <div className="chips">
-        <button className={`chip${n ? ' on' : ''}`} onClick={() => setOpen(true)}><SlidersHorizontal size={15} /> {t('Фильтры')}{n ? ` · ${n}` : ''}</button>
-        {[...extraSorts, ...SORTS].map(([k, l]) => <button key={k} className={`chip${f.sort === k ? ' on' : ''}`} onClick={() => set({ sort: k })}>{t(l)}</button>)}
-      </div>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('Фильтры')}>
-        <div className="col g12">
           {brands.length > 1 && (
             <label className="col g6"><span className="sm muted">{t('Марка')}</span>
               <select className="field" value={f.brand ?? ''} onChange={(e) => set({ brand: e.target.value || null })}>
@@ -77,9 +77,37 @@ export function CarFilterBar({ list, f, onChange, rarities = RARITIES, extraSort
           <div className="col g6"><span className="sm muted">{t('Мощность')}</span>
             <div className="row wrap g6">{POWER.map(([k, l]) => <button key={k} className={`chip${f.power === k ? ' on' : ''}`} onClick={() => set({ power: f.power === k ? null : k })}>{t(l)}</button>)}</div></div>
           <div className="row g8">
-            <button className="btn ghost grow" onClick={() => onChange({ ...F0, sort: f.sort })}>{t('Сбросить')}</button>
+            <button className="btn ghost grow" onClick={() => { onChange({ ...F0, sort: f.sort }); onReset?.(); }}>{t('Сбросить')}</button>
             <button className="btn go grow" onClick={() => setOpen(false)}>{t('Показать')}</button>
           </div>
+    </>
+  );
+  if (compact) return (
+    <>
+      <button className={`btn w filter-btn${total ? ' on' : ''}`} onClick={() => setOpen(true)}>
+        <SlidersHorizontal size={16} /> {t('Фильтры')}{total ? ` · ${total}` : ''}
+        <span className="sm muted">· {t(sorts.find(([k]) => k === f.sort)?.[1] ?? '')}</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('Фильтры')}>
+        <div className="col g12">
+          {extra}
+          <div className="col g6"><span className="sm muted">{t('Сортировка')}</span><div className="row wrap g6">{sortChips('')}</div></div>
+          <div className="col g6"><span className="sm muted">{t('Редкость')}</span>{rarityChips}</div>
+          {details}
+        </div>
+      </Sheet>
+    </>
+  );
+  return (
+    <>
+      {rarityChips}
+      <div className="chips">
+        <button className={`chip${n ? ' on' : ''}`} onClick={() => setOpen(true)}><SlidersHorizontal size={15} /> {t('Фильтры')}{n ? ` · ${n}` : ''}</button>
+        {sortChips('')}
+      </div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('Фильтры')}>
+        <div className="col g12">
+          {details}
         </div>
       </Sheet>
     </>

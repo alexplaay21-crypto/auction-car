@@ -274,4 +274,8 @@ export const EN: Record<string, string> = {
   'Контейнер появится, как только в комнате будет хоть один игрок': 'A container appears as soon as someone is in the room',
   'пропусков: {n} из {k}': 'misses: {n} of {k}',
   'Тебя перебили!': 'You\'ve been outbid!',
+  'Сортировка': 'Sort',
+  'Лоты': 'Listings',
+  'Все лоты': 'All listings',
+  'Только мои': 'Only mine',
 };
