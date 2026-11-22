@@ -3,8 +3,10 @@
 // Чем дороже контейнер, тем выше шанс редких машин и дорогих машин внутри редкости; самая дешёвая
 // машина может выпасть всегда. Мистическая — ровно 1 из 1000 при любой цене.
 export const MYSTIC_PM = 1;
-const W0 = { rare: 130, epic: 17, mythic: 2 };   // шансы (из 1000) у самого дешёвого контейнера
-const W1 = { rare: 300, epic: 115, mythic: 24 }; // … у самого дорогого
+// машины дорогие (редкая до $75 000, эпическая до $200 000, легендарная до $600 000, мистическая от $1 млн),
+// а контейнер не дороже $24 000 — поэтому шансы на дорогие редкости небольшие
+const W0 = { rare: 40, epic: 6, mythic: 1 };    // шансы (из 1000) у самого дешёвого контейнера
+const W1 = { rare: 110, epic: 25, mythic: 5 };  // … у самого дорогого
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // Шансы редкостей (из 1000) при положении t. present — редкости, которые есть в контейнере:
@@ -49,7 +51,7 @@ export function expectedValue(cars, t) {
 // tTop — до какого t доходит верх вилки, если упёрлись в cap.
 export function priceBand(cars, cap = 24_000) {
   const ev0 = expectedValue(cars, 0), ev1 = expectedValue(cars, 1);
-  const lo = Math.max(2_000, Math.round(ev0 / 500) * 500);
+  const lo = Math.min(cap, Math.max(2_000, Math.round(ev0 / 500) * 500));
   let hi = Math.min(cap, Math.round(ev1 / 500) * 500), tTop = 1;
   if (ev1 > cap) {
     let a = 0, b = 1; // EV(t) растёт с t — ищем t, где EV = cap

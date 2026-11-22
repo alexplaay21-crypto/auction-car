@@ -34,11 +34,15 @@ test('9 контейнеров (с британским), у каждого фл
     assert.ok(r.mythic >= 1 && r.mythic <= 2, `контейнер ${c}: легендарных ${r.mythic}`);
     assert.ok(r.epic >= 6 && r.epic <= 10, `контейнер ${c}: эпических ${r.epic}`);
   }
-  // сильная машина не дешевле слабой: цена растёт вместе с силой (мощность, разгон, макс. скорость)
-  const cars = await db.all('SELECT power, accel_x100, max_speed, price FROM cars WHERE id IN (SELECT car_id FROM container_cars)');
+  // цена — в диапазоне своей редкости; внутри редкости сильная машина не дешевле слабой
+  const BAND = { common: [3_000, 25_000], rare: [25_100, 75_000], epic: [75_100, 200_000], mythic: [201_000, 600_000], mystic: [1_000_000, 3_000_000] };
+  const cars = await db.all('SELECT rarity, power, accel_x100, max_speed, price FROM cars WHERE id IN (SELECT car_id FROM container_cars)');
   const st = (c) => 0.5 * Math.log(c.power) + 0.3 * Math.log(1000 / c.accel_x100) + 0.2 * Math.log(c.max_speed);
-  cars.sort((a, b) => st(a) - st(b) || a.price - b.price);
-  for (let i = 1; i < cars.length; i++) assert.ok(cars[i].price >= cars[i - 1].price - 100, 'цена не падает с ростом силы');
+  for (const c of cars) assert.ok(c.price >= BAND[c.rarity][0] && c.price <= BAND[c.rarity][1], `${c.rarity} ${c.price}`);
+  for (const r of Object.keys(BAND)) {
+    const l = cars.filter((c) => c.rarity === r).sort((a, b) => st(a) - st(b) || a.price - b.price);
+    for (let i = 1; i < l.length; i++) assert.ok(l[i].price >= l[i - 1].price - 100, `${r}: цена не падает с ростом силы`);
+  }
   const flags = (await db.all('SELECT flag FROM container_meta ORDER BY container_id')).map((r) => r.flag);
   assert.deepEqual(flags, ['jp', 'de', 'us', 'it', 'ru', 'cn', 'fr', 'world', 'uk']);
   const size = { 5: 35, 6: 48, 7: 48, 8: 68, 9: 19 };

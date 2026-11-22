@@ -166,3 +166,7 @@ export const MIGRATION_37 = Object.entries(NEW_CONTAINERS).flatMap(([id, c]) => 
   `INSERT INTO container_meta (container_id, flag, base_price, market, prev_price, updated_at) VALUES (${id}, '${c.flag}', ${containerPrice(+id)}, ${Math.round(containerPrice(+id) * 100 / 55)}, ${containerPrice(+id)}, (SELECT now FROM v_now)) ON CONFLICT (container_id) DO NOTHING`,
 ]).concat(catalogSync());
 
+// 39: цена машины по редкости — обычная до $25 000, редкая до $75 000, эпическая до $200 000, легендарная до $600 000,
+// мистическая от $1 000 000 (внутри редкости — по силе); шансы контейнера пересчитаны под эти цены (odds.js).
+export const MIGRATION_39 = catalogSync({ band: true });
+

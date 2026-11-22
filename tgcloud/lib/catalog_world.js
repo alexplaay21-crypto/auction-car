@@ -228,6 +228,9 @@ export const EXCLUSIVE = {
 import { SPECS } from './car_specs.js';
 import { priceBand } from './odds.js';
 export const PRICE_SCALE = 0.36, CONTAINER_MAX = 24_000;
+// цена машины по редкости: обычная до $25 000, редкая до $75 000, эпическая до $200 000,
+// легендарная до $600 000, мистическая — от $1 000 000 (цен между $600 000 и $1 000 000 нет)
+export const RARITY_PRICE = { common: [3_000, 25_000], rare: [25_100, 75_000], epic: [75_100, 200_000], mythic: [201_000, 600_000], mystic: [1_000_000, 3_000_000] };
 const TIERS = [['mystic', 5], ['mythic', 15], ['epic', 40], ['rare', 100]];
 // оценка, если завод не публикует: по мощности
 const estAccel = (hp) => Math.max(2.0, Math.min(30, +(14 - Math.log2(hp / 60) * 2.9).toFixed(1)));
@@ -258,6 +261,16 @@ export function globalTable() {
     const list = all.filter((x) => x.cid === cid).sort((a, b) => b.st - a.st || b.price - a.price);
     const N = list.length, epic = Math.max(6, Math.min(10, Math.round(N * 0.16))), leg = N >= 15 ? 2 : 1, rare = Math.round(N * 0.28);
     list.forEach((x, i) => { x.rarity = i < 1 ? 'mystic' : i < 1 + leg ? 'mythic' : i < 1 + leg + epic ? 'epic' : i < 1 + leg + epic + rare ? 'rare' : 'common'; });
+  }
+  // цена — в диапазоне своей редкости, по силе (сильнее — дороже) среди всех машин этой редкости в игре;
+  // диапазоны не пересекаются, поэтому машина более высокой редкости всегда дороже
+  for (const [r, [lo, hi]] of Object.entries(RARITY_PRICE)) {
+    const list = all.filter((x) => x.rarity === r).sort((a, b) => a.st - b.st || a.msrp - b.msrp || a.cid - b.cid || a.i - b.i);
+    list.forEach((x, k) => {
+      const f = list.length > 1 ? k / (list.length - 1) : 1;
+      const p = lo * (hi / lo) ** f;
+      x.price = Math.round(p / (p >= 200_000 ? 1000 : 100)) * (p >= 200_000 ? 1000 : 100);
+    });
   }
   TABLE = {};
   for (const x of all) (TABLE[x.cid] ??= [])[x.i] = x;
