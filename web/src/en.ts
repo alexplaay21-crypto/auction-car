@@ -278,4 +278,6 @@ export const EN: Record<string, string> = {
   'Лоты': 'Listings',
   'Все лоты': 'All listings',
   'Только мои': 'Only mine',
+  'В 00:00 и 12:00 по Москве · +100 опыта': 'At 00:00 and 12:00 Moscow time · +100 XP',
+  'Бонус выдаётся в 00:00 и 12:00 по Москве': 'The bonus comes at 00:00 and 12:00 Moscow time',
 };

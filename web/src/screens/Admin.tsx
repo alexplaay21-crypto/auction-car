@@ -11,7 +11,7 @@ const LABELS: Record<string, string> = {
   chance_common: 'Шанс ⚪ обычной', chance_rare: 'Шанс 🔵 редкой', chance_epic: 'Шанс 🟣 эпической', chance_mythic: 'Шанс 🟡 легендарной', chance_mystic: 'Шанс 🔴 мистической',
   comm_quick_bps: 'Комиссия быстрой продажи, б.п.', comm_quick_vip_bps: '…для VIP', comm_state_bps: 'Комиссия продажи государству, б.п.', comm_state_vip_bps: '…для VIP',
   comm_player_bps: 'Комиссия продажи игроку, б.п.', comm_player_vip_bps: '…для VIP', comm_transfer_bps: 'Комиссия перевода, б.п.', comm_transfer_vip_bps: '…для VIP',
-  daily_bonus: 'Бонус (раз в период)', daily_bonus_vip: 'Бонус VIP', bonus_period_s: 'Период бонуса, с', bonus_cap: 'Бонус только при балансе меньше', bonus_cap_vip: '…для VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',
+  daily_bonus: 'Бонус (раз в период)', daily_bonus_vip: 'Бонус VIP', bonus_period_s: 'Период бонуса, с (43200 = в 00:00 и 12:00)', bonus_tz_s: 'Часовой пояс бонуса, с от UTC (10800 = МСК)', bonus_cap: 'Бонус только при балансе меньше', bonus_cap_vip: '…для VIP', vip_price: 'Цена VIP', garage_start: 'Гараж на старте', garage_max: 'Максимум гаража без VIP',
   garage_vip_bonus: 'Мест за VIP', ref_inviter: 'Бонус пригласившему', ref_invited: 'Бонус приглашённому', ref_first_purchase: 'За первую покупку друга',
   ref_epic_every: 'Эпик за каждые N друзей',
   race_min_stake: 'Гонка: мин. ставка', race_max_stake: 'Гонка: макс. ставка', race_bot_win_bps: 'Гонка с ботом: выигрыш, б.п.', race_pvp_fee_bps: 'Гонка PvP: комиссия, б.п.',

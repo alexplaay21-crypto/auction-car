@@ -55,7 +55,7 @@ export function vipPerks(st, car = null) {
   return [
     ...(car ? [['car', `${car.name} в подарок`, 'эпическая машина сразу в гараж']] : []),
     ['garage', `+${st.garage_vip_bonus} мест в гараже`, `до ${st.garage_max + st.garage_vip_bonus} машин вместо ${st.garage_max}`],
-    ['bonus', `Бонус ${money(st.daily_bonus_vip)} вместо ${money(st.daily_bonus)}`, `раз в 4 часа, пока на балансе меньше ${money(st.bonus_cap_vip)} (без VIP — ${money(st.bonus_cap)})`],
+    ['bonus', `Бонус ${money(st.daily_bonus_vip)} вместо ${money(st.daily_bonus)}`, `в 00:00 и 12:00 (МСК), пока на балансе меньше ${money(st.bonus_cap_vip)} (без VIP — ${money(st.bonus_cap)})`],
     ['quick', `Быстрая продажа — ${pct(st.comm_quick_vip_bps)} вместо ${pct(st.comm_quick_bps)}`, `${hours(st.quick_sell_window_vip_s ?? st.quick_sell_window_s)} после выигрыша вместо ${hours(st.quick_sell_window_s)}`],
     ['state', `Продажа государству — ${pct(st.comm_state_vip_bps)} вместо ${pct(st.comm_state_bps)}`, 'в любое время'],
     ['market', `Рынок и продажа игроку — ${pct(st.comm_player_vip_bps)} вместо ${pct(st.comm_player_bps)}`, 'комиссия с каждой сделки'],
@@ -73,7 +73,7 @@ export function productTitle(p, se) {
 }
 function productDescription(p, st, car) {
   if (p.kind === 'money') return `Игровая валюта Car Auction: ${money(p.money)} сразу на баланс.`;
-  if (p.kind === 'vip') return `${car ? `${car.name} в подарок. ` : ''}Навсегда: +${st.garage_vip_bonus} мест в гараже, бонус ${money(st.daily_bonus_vip)} раз в 4 часа, комиссии ниже (переводы ${st.comm_transfer_vip_bps / 100}%, рынок ${st.comm_player_vip_bps / 100}%, быстрая продажа ${st.comm_quick_vip_bps / 100}% в течение ${(st.quick_sell_window_vip_s ?? 7200) / 3600} ч).`;
+  if (p.kind === 'vip') return `${car ? `${car.name} в подарок. ` : ''}Навсегда: +${st.garage_vip_bonus} мест в гараже, бонус ${money(st.daily_bonus_vip)} в 00:00 и 12:00, комиссии ниже (переводы ${st.comm_transfer_vip_bps / 100}%, рынок ${st.comm_player_vip_bps / 100}%, быстрая продажа ${st.comm_quick_vip_bps / 100}% в течение ${(st.quick_sell_window_vip_s ?? 7200) / 3600} ч).`;
   if (p.kind === 'bpdx') return `${car ? `Легендарная ${car.name} сразу в гараж + ` : ''}${DELUXE_LEVELS} уровней Battle Pass. Только для владельцев премиума.`;
   if (p.kind === 'bplvl') return 'Сразу открывает следующий уровень Battle Pass.';
   return `${car ? `Машина ${car.name} сразу в гараж + ` : ''}премиум-награды всех уровней сезона.`;

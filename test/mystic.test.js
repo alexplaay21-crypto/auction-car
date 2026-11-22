@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0), (36, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -28,7 +28,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   assert.deepEqual(await db.all('SELECT * FROM user_cars ORDER BY id'), gBefore, 'гаражи не изменились');
   assert.deepEqual(await E.audit(db), []);
   await db.run('DELETE FROM schema_migrations WHERE id >= 30');
-  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34, 35]);
+  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34, 35, 36]);
   // мистическая: записывается, падает из контейнера с шансом, выставляется на рынок
   await db.run("UPDATE cars SET rarity = 'epic' WHERE rarity = 'mystic'");
   await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57"); // единственная мистическая в контейнере
@@ -89,9 +89,36 @@ test('экономика: контейнер не «печатает» день�
     const tot = Object.keys(by).reduce((s, r) => s + CHANCES[r], 0);
     const ev = Object.keys(by).reduce((s, r) => s + (CHANCES[r] / tot) * (by[r].reduce((a, b) => a + b, 0) / by[r].length), 0);
     const ct = await db.get('SELECT c.price, m.base_price FROM containers c JOIN container_meta m ON m.container_id = c.id WHERE c.id = :c', { ':c': c });
-    assert.ok(Math.abs(ct.price - ev) <= 500, `контейнер ${c}: цена ${ct.price} ≈ средняя машина ${Math.round(ev)}`);
+    assert.ok(Math.abs(ct.price - Math.min(24000, ev)) <= 500, `контейнер ${c}: цена ${ct.price} ≈ средняя машина ${Math.round(ev)}`);
+    assert.ok(ct.price <= 24000, 'контейнер не дороже $24 000');
     // быстрая продажа (−10 %) средней машины не окупает даже нижний порог цены (90 %) с запасом
     assert.ok(ct.base_price * 0.9 >= ev * 0.9 - 500);
   }
   assert.equal((await db.get("SELECT v FROM settings WHERE k = 'price_floor_pct'")).v, 90);
+});
+
+test('бонус: в 00:00 и 12:00 по Москве, $25 000 (VIP $50 000), только при балансе меньше $100 000 (VIP $200 000)', async () => {
+  const { setClock } = await import('./db-shim.js');
+  const db = makeDb(); E.dropSettingsCache();
+  await E.migrate(db);
+  await E.ensureUser(db, { id: 2, username: 'u2' });
+  // ставим часы на 11:00 МСК (08:00 UTC) ближайших суток
+  const real = (await db.get('SELECT now FROM v_now')).now;
+  const at = (h) => Math.floor((real + 10800) / 86400) * 86400 + h * 3600 - 10800; // h — час по Москве
+  await setClock(db, at(11) - real + 86400);
+  E.dropSettingsCache();
+  const b0 = await E.bonusState(db, 2);
+  assert.equal(b0.amount, 25_000); assert.equal(b0.cap, 100_000);
+  const bal0 = (await E.getUser(db, 2)).balance;
+  await E.claimBonus(db, 2);
+  assert.equal((await E.getUser(db, 2)).balance, bal0 + 25_000);
+  await E.ensureUser(db, { id: 3, username: 'adm' }); await db.run('UPDATE users SET is_admin = 1 WHERE id = 3');
+  await E.adminAdjust(db, 3, 2, -50_000, 'тест', 'adj1'); // меньше лимита — проверяем именно время
+  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_TOO_EARLY' }, 'второй раз до 12:00 нельзя');
+  assert.equal((await E.bonusState(db, 2)).next_at, at(12) + 86400, 'следующий — в 12:00');
+  await setClock(db, at(12) - real + 86400 + 5);
+  await E.claimBonus(db, 2); // после 12:00 — снова можно
+  await setClock(db, at(24) - real + 86400 + 5);
+  await E.adminAdjust(db, 3, 2, 100_000, 'тест', 'adj2');
+  await assert.rejects(E.claimBonus(db, 2), { code: 'BONUS_RICH' }, 'от $100 000 на счету — бонуса нет');
 });

@@ -73,6 +73,7 @@ export async function migration28(db) {
 // 31: трёхзначный номер машины для игроков (cars.code). id в базе не меняются — на них ссылаются гаражи,
 // сделки и неизменяемый журнал денег. Номера каталога — из car_codes.js, остальные машины — 900+ по порядку id.
 import { CAR_CODES } from './car_codes.js';
+import { NOW as NOW_SQL } from './sql.js';
 export async function migration31(db) {
   const step = async (name, f) => { try { return await f(); } catch (e) { throw new Error(`mig31 ${name}: ${e?.message ?? e}`); } };
   return step('all', () => migration31Body(db, step));
@@ -109,4 +110,25 @@ export async function migration34(db) {
   const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'auctions'")).sql;
   if (!/\bshown_car_id\b/.test(ct)) await db.run('ALTER TABLE auctions ADD COLUMN shown_car_id INTEGER');
   await safeRun(db, "UPDATE settings SET v = 9 WHERE k = 'next_delay_s' AND v = 5");
+}
+
+// 36: экономика — цены машин ×0,385 (средняя машина в самом дорогом контейнере ≈ $24 000), контейнер не дороже $24 000
+// (и после торгов не дороже базовой цены); бонус раз за полдня в 00:00 и 12:00 МСК: $25 000 при балансе меньше $100 000,
+// VIP — $50 000 при балансе меньше $200 000. Балансы игроков не меняются.
+import { S as SET } from './sql.js';
+export const BONUS4_BI_V2 = `CREATE TRIGGER IF NOT EXISTS bonus4_bi BEFORE INSERT ON bonus4 BEGIN
+     SELECT RAISE(ABORT, 'BONUS_TOO_EARLY') WHERE COALESCE((SELECT max(created_at) FROM bonus4 WHERE user_id = NEW.user_id), 0)
+       >= ((${NOW_SQL} + ${SET('bonus_tz_s')}) / ${SET('bonus_period_s')}) * ${SET('bonus_period_s')} - ${SET('bonus_tz_s')};
+     SELECT RAISE(ABORT, 'BONUS_RICH') WHERE (SELECT balance FROM users WHERE id = NEW.user_id)
+       >= CASE WHEN (SELECT is_vip FROM users WHERE id = NEW.user_id) = 1 THEN ${SET('bonus_cap_vip')} ELSE ${SET('bonus_cap')} END;
+     SELECT RAISE(ABORT, 'BAD_BONUS') WHERE NEW.created_at <> ${NOW_SQL} OR NEW.amount <> CASE WHEN (SELECT is_vip FROM users WHERE id = NEW.user_id) = 1
+       THEN ${SET('daily_bonus_vip')} ELSE ${SET('daily_bonus')} END;
+   END`;
+export async function migration36(db) {
+  const { catalogSync: sync } = await import('./ddl8.js');
+  for (const [k, v] of Object.entries({ daily_bonus: 25_000, daily_bonus_vip: 50_000, bonus_cap: 100_000, bonus_cap_vip: 200_000, bonus_period_s: 43_200, bonus_tz_s: 10_800, price_cap_pct: 100 }))
+    await safeRun(db, `INSERT INTO settings (k, v) VALUES ('${k}', ${v}) ON CONFLICT (k) DO UPDATE SET v = excluded.v`);
+  await safeRun(db, 'DROP TRIGGER IF EXISTS bonus4_bi');
+  await db.run(BONUS4_BI_V2);
+  for (const q of sync()) await safeRun(db, q);
 }

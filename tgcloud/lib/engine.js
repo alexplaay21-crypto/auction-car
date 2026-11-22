@@ -357,7 +357,7 @@ export async function transfer(db, uid, toRef, amount, opId) {
   return { amount: a, commission, net: a - commission, to };
 }
 
-// Бонус раз в 4 часа: $5 000 (VIP $10 000). Не выдаётся, если на балансе уже от $50 000
+// Бонус раз за полдня — в 00:00 и 12:00 по Москве: $25 000 (VIP $50 000). Не выдаётся, если на балансе уже от $100 000 (VIP $200 000)
 // (VIP — от $100 000): бонус — помощь тем, у кого мало денег.
 export async function bonusState(db, uid) {
   const u = await getUser(db, uid);
@@ -365,9 +365,12 @@ export async function bonusState(db, uid) {
   const t = await now(db);
   const last = (await db.get('SELECT max(created_at) AS t FROM bonus4 WHERE user_id = :u', { ':u': uid }))?.t ?? 0;
   const cap = u.is_vip ? st.bonus_cap_vip : st.bonus_cap;
-  const next = last + st.bonus_period_s;
+  // окна бонуса: 00:00 и 12:00 по Москве (bonus_tz_s — сдвиг от UTC); один бонус на окно
+  const p = st.bonus_period_s, tz = st.bonus_tz_s ?? 10800;
+  const ws = Math.floor((t + tz) / p) * p - tz;
+  const next = last >= ws ? ws + p : t;
   const rich = u.balance >= cap;
-  return { available: t >= next && !rich, rich, cap, amount: u.is_vip ? st.daily_bonus_vip : st.daily_bonus, next_at: Math.max(next, t), period: st.bonus_period_s, now: t };
+  return { available: last < ws && !rich, rich, cap, amount: u.is_vip ? st.daily_bonus_vip : st.daily_bonus, next_at: next, period: p, now: t };
 }
 
 export async function claimBonus(db, uid) {

@@ -221,6 +221,7 @@ export const EXCLUSIVE = {
 // поэтому сильная машина никогда не дешевле слабой, а общий уровень цен не меняется.
 // Редкость — по месту в общем списке: 5 мистических, 15 легендарных, 40 эпических, 100 редких, остальные обычные.
 import { SPECS } from './car_specs.js';
+export const PRICE_SCALE = 0.385, CONTAINER_MAX = 24_000;
 const TIERS = [['mystic', 5], ['mythic', 15], ['epic', 40], ['rare', 100]];
 // оценка, если завод не публикует: по мощности
 const estAccel = (hp) => Math.max(2.0, Math.min(30, +(14 - Math.log2(hp / 60) * 2.9).toFixed(1)));
@@ -239,7 +240,8 @@ export function globalTable() {
   for (const x of all) x.st = strength(x.sp);
   const prices = all.map((x) => x.msrp).sort((a, b) => a - b);
   const order = [...all].sort((a, b) => a.st - b.st || a.msrp - b.msrp || a.cid - b.cid || a.i - b.i);
-  order.forEach((x, n) => { x.price = prices[n]; });
+  // ×PRICE_SCALE: средняя машина в самом дорогом контейнере ≈ $24 000 — цена контейнера (порядок по силе сохраняется)
+  order.forEach((x, n) => { x.price = Math.max(100, Math.round((prices[n] * PRICE_SCALE) / 100) * 100); });
   let n = 0; const top = [...order].reverse();
   for (const [r, k] of TIERS) for (let j = 0; j < k && n < top.length; j++) top[n++].rarity = r;
   for (; n < top.length; n++) top[n].rarity = 'common';
@@ -265,7 +267,7 @@ export const CONTAINER_EXTRA = { 8: [5] };
 export const DISABLED_CONTAINERS = [5];
 export const RENAMED_CONTAINERS = { 8: { name: 'Контейнер «Неизвестный»', country: 'Неизвестный', emoji: '❓' } };
 
-// Цена контейнера = средняя цена машины внутри с учётом шансов редкостей (кратно $500).
+// Цена контейнера = средняя цена машины внутри с учётом шансов редкостей (кратно $500), не больше $24 000.
 // Быстрая продажа возвращает 90 % цены машины, поэтому в среднем контейнер чуть в минус,
 // а редкие машины дают выигрыш. (Раньше старт был ≈55 % от средней машины — контейнеры «печатали» деньги.)
 export const CHANCES = { common: 740, rare: 215, epic: 40, mythic: 4, mystic: 1 };
@@ -275,5 +277,5 @@ export function containerPrice(cid) {
   for (const x of T) (by[x.rarity] ??= []).push(x.price);
   const present = Object.keys(by), tot = present.reduce((s, r) => s + CHANCES[r], 0);
   const ev = present.reduce((s, r) => s + (CHANCES[r] / tot) * (by[r].reduce((a, b) => a + b, 0) / by[r].length), 0);
-  return Math.max(500, Math.round(ev / 500) * 500);
+  return Math.min(CONTAINER_MAX, Math.max(500, Math.round(ev / 500) * 500));
 }

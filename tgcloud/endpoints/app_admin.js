@@ -64,10 +64,10 @@ export default endpoint(async (db, uid, input, { user }) => {
   }
 
   // ---------- настройки ----------
-  if (a === 'settings') return { values: await settings(db, { fresh: true }), keys: [...Object.keys(SETTINGS), ...Object.keys(SETTINGS_3).filter((k) => !k.startsWith('bp_')), 'bonus_period_s', 'bonus_cap', 'bonus_cap_vip'] };
+  if (a === 'settings') return { values: await settings(db, { fresh: true }), keys: [...Object.keys(SETTINGS), ...Object.keys(SETTINGS_3).filter((k) => !k.startsWith('bp_')), 'bonus_period_s', 'bonus_tz_s', 'bonus_cap', 'bonus_cap_vip'] };
   if (a === 'set') {
     const k = String(input.k);
-    if (!(k in SETTINGS) && !(k in SETTINGS_3) && !['bonus_period_s', 'bonus_cap', 'bonus_cap_vip'].includes(k)) throw new GameError('BAD_SETTING');
+    if (!(k in SETTINGS) && !(k in SETTINGS_3) && !['bonus_period_s', 'bonus_tz_s', 'bonus_cap', 'bonus_cap_vip'].includes(k)) throw new GameError('BAD_SETTING');
     const v = int(input.v, 0, 1e12);
     if (/^chance_/.test(k) && v > 100000) throw new GameError('BAD_INPUT');
     if (/_bps$/.test(k) && v > 10000) throw new GameError('BAD_INPUT');

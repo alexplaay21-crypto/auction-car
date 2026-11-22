@@ -43,7 +43,7 @@ export function Home() {
             <Ic icon={b.available ? Gift : Clock} tone={b.available ? '' : 'gray'} />
             <div className="grow">
               <div className="h3">{t('Бонус {m}', { m: money(b.amount) })}</div>
-              <div className="sm muted">{b.rich ? t('Доступен при балансе меньше {m}', { m: money(b.cap) }) : b.available ? t('Раз в 4 часа · +100 опыта') : t('Через {t}', { t: left(wait) })}</div>
+              <div className="sm muted">{b.rich ? t('Доступен при балансе меньше {m}', { m: money(b.cap) }) : b.available ? t('В 00:00 и 12:00 по Москве · +100 опыта') : t('Через {t}', { t: left(wait) })}</div>
             </div>
             {b.available && <span className="btn go s">{t('Забрать')}</span>}
           </div>

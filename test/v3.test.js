@@ -44,7 +44,7 @@ test('8 стран, у каждого контейнера флаг; редко�
   assert.equal((await db.get("SELECT count(*) AS n FROM container_cars cc JOIN cars c ON c.id = cc.car_id WHERE cc.container_id = 8 AND c.country = 'Россия'")).n, 35);
 });
 
-test('динамическая цена: дорогие торги поднимают стартовую цену, пустые — снижают (не больше 10% за раз)', async () => {
+test('динамическая цена: не выше базовой ($24 000 максимум), без ставок снижается, но не ниже 90 %', async () => {
   const room = await E.joinRoom(db, 2);
   const a = await db.get(`SELECT * FROM auctions WHERE room_id = :r AND status = 'active'`, { ':r': room });
   const p0 = a.initial_bid;
@@ -54,9 +54,13 @@ test('динамическая цена: дорогие торги подним�
   await E.bid(db, 2, room, { amount: p0 * 6, opId: op() });
   await tick(31); await E.tick(db);
   const p1 = (await db.get('SELECT price FROM containers WHERE id = :c', { ':c': a.container_id })).price;
-  assert.ok(p1 > p0 && p1 <= p0 * 1.1, `${p0} → ${p1}`);
-  const cp = await G.containerPrices(db);
-  assert.ok(cp.find((x) => x.id === a.container_id).change > 0);
+  // потолок — базовая цена (контейнер не дороже $24 000), даже после дорогих торгов
+  assert.ok(p1 <= p0 && p1 <= 24_000, `${p0} → ${p1}`);
+  // без ставок цена снижается, но не ниже 90 % базовой
+  for (let i = 0; i < 12; i++) { await tick(9); await E.joinRoom(db, 2); await E.tick(db); await tick(31); await E.tick(db); }
+  const rows = await db.all('SELECT c.price, m.base_price FROM containers c JOIN container_meta m ON m.container_id = c.id WHERE c.is_enabled = 1');
+  assert.ok(rows.some((r) => r.price < r.base_price), 'хоть один контейнер подешевел');
+  for (const r of rows) assert.ok(r.price >= r.base_price * 0.9 && r.price <= r.base_price, `${r.price} в пределах 90–100 % от ${r.base_price}`);
   await ok();
 });
 
