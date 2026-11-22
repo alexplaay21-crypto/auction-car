@@ -259,9 +259,15 @@ export function buildCountry(cid) {
   });
 }
 
+// Состав контейнеров: контейнер 8 «Неизвестный» — свои машины и все российские; российский контейнер (5)
+// убран с аукциона (уже полученные игроками российские контейнеры открываются как раньше).
+export const CONTAINER_EXTRA = { 8: [5] };
+export const DISABLED_CONTAINERS = [5];
+export const RENAMED_CONTAINERS = { 8: { name: 'Контейнер «Неизвестный»', country: 'Неизвестный', emoji: '❓' } };
+
 // Цена контейнера: 60 % обычных машин дешевле него, 40 % дороже; кратно $500.
 export function containerPrice(cid) {
-  const T = globalTable()[cid];
+  const T = [cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((c) => globalTable()[c]);
   let commons = T.filter((x) => x.rarity === 'common').map((x) => x.price).sort((a, b) => a - b);
   if (commons.length < 6) commons = T.map((x) => x.price).sort((a, b) => a - b); // в стране почти нет обычных — по всем машинам
   const m = commons.length * 0.6;

@@ -46,7 +46,7 @@ export const MIGRATION_14 = upsertGerman();
 export const MIGRATION_15 = upsertGerman();
 
 // ---------- остальные страны ----------
-import { WORLD, buildCountry, containerPrice } from './catalog_world.js';
+import { WORLD, buildCountry, containerPrice, CONTAINER_EXTRA, DISABLED_CONTAINERS } from './catalog_world.js';
 export function worldIds(cid) {
   let next = WORLD[cid].base;
   return WORLD[cid].cars.map((c) => c[5] ?? next++);
@@ -114,10 +114,13 @@ export const MIGRATION_27 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
 // Синхронизация каталога с catalog_world.js: машины, состав контейнеров, цены контейнеров, машины сезона BP.
 export const catalogSync = (o = {}) => [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
   ...upsertWorld(cid, { legacy: false, ...o }),
-  `DELETE FROM container_cars WHERE container_id = ${cid} AND car_id NOT IN (${worldIds(cid).join(', ')})`,
+  // машины других стран в этом контейнере (контейнер «Неизвестный» — ещё и российские)
+  ...(CONTAINER_EXTRA[cid] ?? []).flatMap((x) => worldIds(x)).map((id) => `INSERT INTO container_cars (container_id, car_id, weight) VALUES (${cid}, ${id}, 1) ON CONFLICT DO NOTHING`),
+  `DELETE FROM container_cars WHERE container_id = ${cid} AND car_id NOT IN (${[cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((x) => worldIds(x)).join(', ')})`,
   `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
   `UPDATE container_meta SET base_price = ${containerPrice(cid)}, market = ${Math.round(containerPrice(cid) * 100 / 55)}, prev_price = ${containerPrice(cid)} WHERE container_id = ${cid}`,
 ]).concat([
+  ...DISABLED_CONTAINERS.map((c) => `UPDATE containers SET is_enabled = 0 WHERE id = ${c} AND is_enabled = 1`),
   'UPDATE cars SET is_active = 0 WHERE is_active = 1 AND id NOT IN (SELECT car_id FROM container_cars)',
   'UPDATE cars SET is_active = 1 WHERE is_active = 0 AND id IN (SELECT car_id FROM container_cars)',
   // машины сезона Battle Pass: премиум — эпическая, делюкс — легендарная (той же страны, из контейнера)
@@ -138,3 +141,8 @@ export const MIGRATION_29 = catalogSync();
 
 // 30: Франция — убраны Citroen C1 и Renault Talisman (битые 3D-модели), у владельцев остаются; развёрнутые машины.
 export const MIGRATION_30 = catalogSync();
+
+// 33: российский контейнер убран с аукциона, его машины — в контейнере «Неизвестный» (бывший «Весь мир»).
+import { RENAMED_CONTAINERS } from './catalog_world.js';
+export const MIGRATION_33 = catalogSync().concat(Object.entries(RENAMED_CONTAINERS).map(([id, c]) =>
+  `UPDATE containers SET name = ${q(c.name)}, country = ${q(c.country)}, emoji = ${q(c.emoji)} WHERE id = ${id}`));

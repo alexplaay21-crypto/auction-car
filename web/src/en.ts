@@ -72,7 +72,7 @@ export const EN: Record<string, string> = {
   'Обычная': 'Common', 'Редкая': 'Rare', 'Эпическая': 'Epic', 'Легендарная': 'Legendary', 'Мистическая': 'Mystic',
   'Драг 402 м': 'Drag 402 m', 'Кольцо': 'Circuit', 'Ралли': 'Rally',
   'Японский контейнер': 'Japanese container', 'Немецкий контейнер': 'German container', 'Американский контейнер': 'American container', 'Итальянский контейнер': 'Italian container',
-  'Российский контейнер': 'Russian container', 'Китайский контейнер': 'Chinese container', 'Французский контейнер': 'French container', 'Контейнер «Весь мир»': '“Whole world” container',
+  'Российский контейнер': 'Russian container', 'Китайский контейнер': 'Chinese container', 'Французский контейнер': 'French container', 'Контейнер «Весь мир»': '“Whole world” container', 'Контейнер «Неизвестный»': '“Unknown” container', 'Неизвестный': 'Unknown',
   'Победа на аукционе': 'Auction win', 'Открыть контейнер': 'Open a container', 'Бонус': 'Bonus', 'Гонка': 'Race', 'Победа в гонке': 'Race win', 'Сделка на рынке': 'Market deal',
   // ошибки
   'Не хватает денег': 'Not enough money', 'Ставка должна быть выше текущей хотя бы на шаг': 'Your bid must beat the current one by at least one step',
