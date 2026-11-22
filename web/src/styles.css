@@ -784,3 +784,18 @@ body { background-image: none; }
 .result { display: flex; flex-direction: column; gap: 6px; animation: feedIn .5s ease-out; }
 .next .bar { margin-top: 6px; }
 @media (prefers-reduced-motion: reduce) { .st-box, .st-rays, .misses.warn { animation: none !important; } }
+
+/* ---------- аукцион: тот же 3D-контейнер прямо в карточке, крупно ---------- */
+.unbox.inline { position: relative; inset: auto; z-index: auto; padding: 0; gap: 0; overflow: hidden; border-radius: var(--r) var(--r) 0 0;
+  aspect-ratio: 4 / 3; background: radial-gradient(100% 85% at 50% 45%, #1b2130, #07080c 75%); }
+.unbox.inline .ub-stage { width: 100%; height: 100%; aspect-ratio: auto; }
+.unbox.inline .ub-cube { --L: 300px; --H: 128px; --D: 121px; }
+.unbox.inline:not(.ph-0) .ub-cube { transform: rotateX(-4deg) rotateY(-90deg) scale3d(1.15, 1.15, 1.15); }
+.unbox.inline .ub-car { inset: 12% 3%; }
+/* во время торгов контейнер стоит боком и чуть покачивается; под конец — дрожит */
+.unbox.inline.idle .ub-cube { animation: ubIdle 3.4s ease-in-out infinite; }
+.unbox.inline.idle.hot .ub-cube { animation: shake .3s linear infinite; }
+.unbox.inline.idle .ub-seam { opacity: 0; animation: none; }
+@keyframes ubIdle { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+.unbox.inline .ub-stamp { top: 6%; font-size: clamp(22px, 7vw, 34px); }
+@media (max-width: 360px) { .unbox.inline .ub-cube { --L: 250px; --H: 107px; --D: 101px; } }

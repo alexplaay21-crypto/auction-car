@@ -9,7 +9,7 @@ import { fx } from './sound';
 import { t } from './i18n';
 
 // мс: дрожь, разворот, открытие дверей, пауза до итога
-const TIMING: Record<string, [number, number, number, number]> = {
+export const TIMING: Record<string, [number, number, number, number]> = {
   common: [450, 1100, 700, 500],
   rare: [700, 1150, 750, 600],
   epic: [1100, 1250, 850, 900],
@@ -47,33 +47,7 @@ export function Unboxing({ container, car, onClose, children }: { container?: an
   return (
     <div className={`unbox r-${r} ph-${phase}${doors ? '' : ' nodoors'}`} style={{ ['--turn' as any]: `${turn}ms`, ['--open' as any]: `${open}ms`, ['--shake' as any]: `${shake}ms` }} onClick={skip}>
       <div className="ub-dim" />
-      {(r === 'epic' || r === 'mythic' || r === 'mystic') && <div className="ub-rays" />}
-      {(r === 'mythic' || r === 'mystic') && <div className="ub-sparks">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ ['--a' as any]: `${(i * 360) / 18}deg`, ['--d' as any]: `${(i % 6) * 0.12}s` }} />)}</div>}
-      <div className="ub-stage">
-        <div className="ub-light" />
-        <div className="ub-car"><CarArt car={car} height={180} studio /></div>
-        {img && (
-          <div className="ub-scene">
-            <div className="ub-cube">
-              <img className="f side" src={img.side} alt="" />
-              <img className="f back" src={img.side} alt="" />
-              <img className="f top" src={img.top} alt="" />
-              <img className="f bottom" src={img.top} alt="" />
-              <img className="f rear" src={img.end} alt="" />
-              <div className="f doors">
-                <div className="ub-hole" />
-                <img className="ub-door l" src={img.l} alt="" />
-                <img className="ub-door r" src={img.r} alt="" />
-                <div className="ub-seam" />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      {r === 'mythic' && <div className="ub-stamp">{t('ЛЕГЕНДАРНАЯ!')}</div>}
-      {r === 'mystic' && <div className="ub-stamp mystic">{t('МИСТИЧЕСКАЯ!')}</div>}
-      {r === 'epic' && <div className="ub-stamp epic">{t('ЭПИЧЕСКАЯ!')}</div>}
-      <div className="ub-flash" />
+      <ContainerScene container={container} car={car} r={r} doors={doors} img={img} />
       <div className="ub-info" onClick={(e) => e.stopPropagation()}>
         <div className="h2">{car?.name}</div>
         <RarityTag r={r} />
@@ -82,5 +56,44 @@ export function Unboxing({ container, car, onClose, children }: { container?: an
       </div>
       {phase < 4 && <div className="ub-skip">{t('нажми, чтобы пропустить')}</div>}
     </div>
+  );
+}
+
+// 3D-сцена: контейнер (вид 3/4) → разворот дверями → двери → машина. Фазу задаёт родитель классом ph-N.
+export function ContainerScene({ container, car, r, doors = true, img: img0 }: { container?: any; car: any; r: string; doors?: boolean; img?: any }) {
+  const img = useMemo(() => img0 ?? (doors && container ? {
+    side: svgUrl(containerSideSvg(container)), top: svgUrl(containerTopSvg(container)),
+    l: svgUrl(containerDoorSvg(container, 'l')), r: svgUrl(containerDoorSvg(container, 'r')), end: svgUrl(containerDoorSvg(container, 'both')),
+  } : null), [img0, doors, container?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <>
+        {(r === 'epic' || r === 'mythic' || r === 'mystic') && <div className="ub-rays" />}
+        {(r === 'mythic' || r === 'mystic') && <div className="ub-sparks">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ ['--a' as any]: `${(i * 360) / 18}deg`, ['--d' as any]: `${(i % 6) * 0.12}s` }} />)}</div>}
+        <div className="ub-stage">
+          <div className="ub-light" />
+          {car && <div className="ub-car"><CarArt car={car} height={180} studio /></div>}
+          {img && (
+            <div className="ub-scene">
+                <div className="ub-cube">
+                  <img className="f side" src={img.side} alt="" />
+                  <img className="f back" src={img.side} alt="" />
+                  <img className="f top" src={img.top} alt="" />
+                  <img className="f bottom" src={img.top} alt="" />
+                  <img className="f rear" src={img.end} alt="" />
+                  <div className="f doors">
+                    <div className="ub-hole" />
+                    <img className="ub-door l" src={img.l} alt="" />
+                    <img className="ub-door r" src={img.r} alt="" />
+                    <div className="ub-seam" />
+                  </div>
+                </div>
+            </div>
+          )}
+        </div>
+        {r === 'mythic' && <div className="ub-stamp">{t('ЛЕГЕНДАРНАЯ!')}</div>}
+        {r === 'mystic' && <div className="ub-stamp mystic">{t('МИСТИЧЕСКАЯ!')}</div>}
+        {r === 'epic' && <div className="ub-stamp epic">{t('ЭПИЧЕСКАЯ!')}</div>}
+        <div className="ub-flash" />
+    </>
   );
 }

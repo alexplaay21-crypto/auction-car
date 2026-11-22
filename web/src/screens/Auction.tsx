@@ -3,7 +3,7 @@ import { Gavel, LogOut, Users, Pencil, Package, RotateCcw } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money, RARITY } from '../format';
 import { Avatar, CarArt, ContainerArt, RarityTag, Sheet, Money } from '../components';
-import { containerDoorSvg, svgUrl } from '../art';
+import { ContainerScene, TIMING } from '../Unboxing';
 import { fx } from '../sound';
 import { AppBar, Sect, Li, Nick } from '../ui';
 import { useApp } from '../App';
@@ -34,10 +34,10 @@ export function Auction() {
       // торги закончились у нас на глазах — открываем этот же контейнер: дрожь → двери → машина
       last.current = null; reload();
       setAnim({ id: a.id, t0: Date.now() });
-      const rr = a.car?.rarity ?? 'common', sh = SHAKE[rr] ?? 500;
+      const rr = a.car?.rarity ?? 'common', [sh, turn, open] = TIMING[rr] ?? TIMING.common;
       fx.rumble(rr);
-      setTimeout(() => fx.doors(), sh);
-      setTimeout(() => { fx.reveal(rr); if (a.status === 'won' && a.leader?.id === uid) haptic('success'); }, sh + 900);
+      setTimeout(() => fx.doors(), sh + turn);
+      setTimeout(() => { fx.reveal(rr); if (a.status === 'won' && a.leader?.id === uid) haptic('success'); }, sh + turn + open * 0.6);
     }
     if (a?.status === 'active') {
       // перебили — коротко сообщить
@@ -106,15 +106,16 @@ export function Auction() {
   const car = a?.car ?? null;
   const rar = car?.rarity ?? 'common';
   // фаза сцены: торги → дрожь → двери открываются → итог (кто зашёл позже — сразу итог)
+  const tm = TIMING[rar] ?? TIMING.common;
   let phase: 'live' | 'shake' | 'open' | 'done' = a?.status === 'active' ? 'live' : 'done';
+  let uph = a?.status === 'active' ? 0 : 4;
   if (a && a.status !== 'active' && anim?.id === a.id && car) {
-    const el = Date.now() - (anim?.t0 ?? 0), sh = SHAKE[rar] ?? 500;
-    phase = el < sh ? 'shake' : el < sh + 1900 ? 'open' : 'done';
+    const el = Date.now() - (anim?.t0 ?? 0);
+    uph = el < tm[0] ? 0 : el < tm[0] + tm[1] ? 1 : el < tm[0] + tm[1] + tm[2] * 0.6 ? 2 : el < tm[0] + tm[1] + tm[2] + tm[3] ? 3 : 4;
+    phase = uph === 0 ? 'shake' : uph < 4 ? 'open' : 'done';
   }
   const iBid = !!a?.bids?.some((b: any) => b.user_id === uid);
   const lastChance = room.in_room && !iBid && room.my_missed >= room.kick_after - 1;
-  const doorL = a ? svgUrl(containerDoorSvg(a.container, 'l')) : '';
-  const doorR = a ? svgUrl(containerDoorSvg(a.container, 'r')) : '';
 
   return (
     <>
@@ -130,16 +131,9 @@ export function Auction() {
 
         {a ? (
           <div className={`card pad0${phase === 'live' && left < 6 ? ' hot' : ''}`}>
-            <div className={`stage r-${rar} st-${phase}${phase === 'live' && left < 6 ? ' st-hot' : ''}`} style={{ ['--sh' as any]: `${SHAKE[rar] ?? 500}ms` }}>
-              <div className="st-glow" />
-              {(rar === 'epic' || rar === 'mythic' || rar === 'mystic') && <div className="st-rays" />}
-              <div className="st-box">
-                <div className="st-hole" />
-                <img className="st-door l" src={doorL} alt="" />
-                <img className="st-door r" src={doorR} alt="" />
-                <div className="st-seam" />
-              </div>
-              {car && <div className="st-car"><CarArt car={car} height={170} studio /></div>}
+            <div className={`unbox inline r-${phase === 'live' ? 'common' : rar} ph-${uph}${phase === 'live' ? ' idle' : ''}${phase === 'live' && left < 6 ? ' hot' : ''}`}
+              style={{ ['--turn' as any]: `${tm[1]}ms`, ['--open' as any]: `${tm[2]}ms`, ['--shake' as any]: `${tm[0]}ms` }}>
+              <ContainerScene container={a.container} car={phase === 'live' ? null : car} r={phase === 'live' ? 'common' : rar} />
               <span className="st-tag">
                 {phase === 'live' ? <><span className="live-dot" /> {t('Торги · игроков: {n}', { n: room.count })}</>
                   : phase !== 'done' ? t('Открываем контейнер…')
@@ -228,9 +222,6 @@ export function Auction() {
     </>
   );
 }
-
-// дрожь контейнера перед открытием: чем реже машина, тем дольше
-const SHAKE: Record<string, number> = { common: 450, rare: 650, epic: 950, mythic: 1300, mystic: 1600 };
 
 export function Chances({ ch, compact = false }: { ch: any; compact?: boolean }) {
   const R = ['common', 'rare', 'epic', 'mythic', 'mystic'];
