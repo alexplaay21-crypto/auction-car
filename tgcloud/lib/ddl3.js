@@ -9,7 +9,7 @@ export const SETTINGS_3 = {
   race_bot_win_bps: 9000,     // победа над ботом: +90% ставки
   race_pvp_fee_bps: 500,      // PvP: победитель забирает банк минус 5%
   bp_price: 150_000, bp_xp_level: 1000, bp_levels: 15, bp_season: 1,
-  price_floor_pct: 60, price_cap_pct: 160, price_step_pct: 10, // динамика цен контейнеров
+  price_floor_pct: 90, price_cap_pct: 160, price_step_pct: 10, // динамика цен контейнеров
 };
 
 // Навык гонщика: 210 улучшений на 100 уровней, вся прокачка — ровно $2 000 000.

@@ -9,6 +9,25 @@ export default async function (input, ctx) {
   switch (input?.action) {
     case 'migrate': return { applied: await migrate(db) };
     case 'audit': return { problems: await audit(db) };
+    // экономика (только чтение): деньги у игроков, источники и стоки по журналу, пакеты за звёзды
+    case 'econ': {
+      const t = (await db.get('SELECT now FROM v_now')).now;
+      const users = await db.get('SELECT count(*) AS n, sum(balance) AS total, avg(balance) AS avg FROM users WHERE id > 0');
+      const pct = async (p) => (await db.get('SELECT balance FROM users WHERE id > 0 ORDER BY balance LIMIT 1 OFFSET :o', { ':o': Math.floor((users.n - 1) * p) }))?.balance;
+      const active7 = await db.get('SELECT count(DISTINCT user_id) AS n FROM ledger WHERE created_at > :t', { ':t': t - 7 * 86400 });
+      const by = async (since) => db.all(`SELECT kind, count(*) AS n, sum(delta) AS sum FROM ledger WHERE user_id > 0 AND created_at > :s GROUP BY kind ORDER BY sum DESC`, { ':s': since });
+      return {
+        users: { ...users, p50: await pct(0.5), p90: await pct(0.9), p99: await pct(0.99), active7: active7.n },
+        top: await db.all('SELECT id, balance FROM users WHERE id > 0 ORDER BY balance DESC LIMIT 10'),
+        garage: await db.get("SELECT count(*) AS cars, sum(c.price) AS value FROM user_cars uc JOIN cars c ON c.id = uc.car_id WHERE uc.status = 'owned' AND uc.user_id > 0"),
+        ledger_all: await by(0), ledger_7d: await by(t - 7 * 86400),
+        stars: await db.all('SELECT * FROM star_products ORDER BY sort, id'),
+        star_paid: await db.all('SELECT product_id, count(*) AS n, sum(stars) AS stars FROM star_payments GROUP BY product_id').catch((e) => String(e?.message)),
+        settings: await db.all("SELECT k, v FROM settings WHERE k LIKE '%bonus%' OR k LIKE 'ref_%' OR k LIKE 'race%' OR k LIKE 'start%' OR k LIKE 'comm_%' OR k IN ('bet_step', 'vip_price', 'bp_price')"),
+        containers: await db.all('SELECT id, name, price, is_enabled FROM containers ORDER BY id'),
+        auctions_7d: await db.get("SELECT count(*) AS n, avg(current_bid) AS avg_win, sum(current_bid) AS spent FROM auctions WHERE status = 'won' AND ended_at > :t", { ':t': t - 7 * 86400 }),
+      };
+    }
     case 'setup_bot':
       await api.setMyCommands({ commands: [
         { command: 'play', description: 'Играть — войти в комнату аукциона' },

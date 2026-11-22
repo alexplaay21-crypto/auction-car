@@ -265,11 +265,15 @@ export const CONTAINER_EXTRA = { 8: [5] };
 export const DISABLED_CONTAINERS = [5];
 export const RENAMED_CONTAINERS = { 8: { name: 'Контейнер «Неизвестный»', country: 'Неизвестный', emoji: '❓' } };
 
-// Цена контейнера: 60 % обычных машин дешевле него, 40 % дороже; кратно $500.
+// Цена контейнера = средняя цена машины внутри с учётом шансов редкостей (кратно $500).
+// Быстрая продажа возвращает 90 % цены машины, поэтому в среднем контейнер чуть в минус,
+// а редкие машины дают выигрыш. (Раньше старт был ≈55 % от средней машины — контейнеры «печатали» деньги.)
+export const CHANCES = { common: 740, rare: 215, epic: 40, mythic: 4, mystic: 1 };
 export function containerPrice(cid) {
   const T = [cid, ...(CONTAINER_EXTRA[cid] ?? [])].flatMap((c) => globalTable()[c]);
-  let commons = T.filter((x) => x.rarity === 'common').map((x) => x.price).sort((a, b) => a - b);
-  if (commons.length < 6) commons = T.map((x) => x.price).sort((a, b) => a - b); // в стране почти нет обычных — по всем машинам
-  const m = commons.length * 0.6;
-  return Math.round((commons[Math.floor(m) - 1] + commons[Math.floor(m)]) / 2 / 500) * 500;
+  const by = {};
+  for (const x of T) (by[x.rarity] ??= []).push(x.price);
+  const present = Object.keys(by), tot = present.reduce((s, r) => s + CHANCES[r], 0);
+  const ev = present.reduce((s, r) => s + (CHANCES[r] / tot) * (by[r].reduce((a, b) => a + b, 0) / by[r].length), 0);
+  return Math.max(500, Math.round(ev / 500) * 500);
 }

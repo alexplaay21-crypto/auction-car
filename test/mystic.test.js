@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -28,7 +28,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   assert.deepEqual(await db.all('SELECT * FROM user_cars ORDER BY id'), gBefore, 'гаражи не изменились');
   assert.deepEqual(await E.audit(db), []);
   await db.run('DELETE FROM schema_migrations WHERE id >= 30');
-  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34]);
+  assert.deepEqual(await E.migrate(db), [29, 30, 31, 32, 33, 34, 35]);
   // мистическая: записывается, падает из контейнера с шансом, выставляется на рынок
   await db.run("UPDATE cars SET rarity = 'epic' WHERE rarity = 'mystic'");
   await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57"); // единственная мистическая в контейнере
@@ -77,4 +77,21 @@ test('машины сезона Battle Pass после пересчёта: пр�
     if (x.prem_car_id != null) assert.equal(x.pr, 'epic');
     if (x.dx_car_id != null) assert.equal(x.dr, 'mythic');
   }
+});
+
+test('экономика: контейнер не «печатает» деньги — старт не ниже средней машины × 0,9 даже после торгов без ставок', async () => {
+  const db = makeDb(); E.dropSettingsCache();
+  await E.migrate(db);
+  const { buildCountry, CONTAINER_EXTRA, CHANCES } = await import('../tgcloud/lib/catalog_world.js');
+  for (const c of [1, 2, 3, 4, 6, 7, 8]) {
+    const cars = [c, ...(CONTAINER_EXTRA[c] ?? [])].flatMap((x) => buildCountry(x));
+    const by = {}; for (const x of cars) (by[x[2]] ??= []).push(x[8]);
+    const tot = Object.keys(by).reduce((s, r) => s + CHANCES[r], 0);
+    const ev = Object.keys(by).reduce((s, r) => s + (CHANCES[r] / tot) * (by[r].reduce((a, b) => a + b, 0) / by[r].length), 0);
+    const ct = await db.get('SELECT c.price, m.base_price FROM containers c JOIN container_meta m ON m.container_id = c.id WHERE c.id = :c', { ':c': c });
+    assert.ok(Math.abs(ct.price - ev) <= 500, `контейнер ${c}: цена ${ct.price} ≈ средняя машина ${Math.round(ev)}`);
+    // быстрая продажа (−10 %) средней машины не окупает даже нижний порог цены (90 %) с запасом
+    assert.ok(ct.base_price * 0.9 >= ev * 0.9 - 500);
+  }
+  assert.equal((await db.get("SELECT v FROM settings WHERE k = 'price_floor_pct'")).v, 90);
 });

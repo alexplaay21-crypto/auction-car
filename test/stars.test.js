@@ -21,7 +21,7 @@ test('пакеты валюты: каждый следующий выгодне�
   const list = (await S.starProducts(db, 2)).filter((p) => p.kind === 'money');
   for (let i = 1; i < list.length; i++) assert.ok(list[i].money / list[i].stars > list[i - 1].money / list[i - 1].stars);
   assert.equal(list[0].bonus_pct, 0);
-  assert.equal(list.at(-1).bonus_pct, 140);
+  assert.equal(list.at(-1).bonus_pct, 60); // 2500★ = $12 млн: +60 % к цене за звезду по сравнению с 50★
 });
 
 test('оплата валюты зачисляется один раз', async () => {
@@ -29,7 +29,7 @@ test('оплата валюты зачисляется один раз', async (
   await pay(2, 'm250', 250, 'c1');
   const again = await pay(2, 'm250', 250, 'c1');
   assert.equal(again.duplicate, true);
-  assert.equal(await bal(2), b0 + 1_750_000);
+  assert.equal(await bal(2), b0 + 900_000);
   await ok();
 });
 

@@ -146,3 +146,13 @@ export const MIGRATION_30 = catalogSync();
 import { RENAMED_CONTAINERS } from './catalog_world.js';
 export const MIGRATION_33 = catalogSync().concat(Object.entries(RENAMED_CONTAINERS).map(([id, c]) =>
   `UPDATE containers SET name = ${q(c.name)}, country = ${q(c.country)}, emoji = ${q(c.emoji)} WHERE id = ${id}`));
+
+// 35: экономика — контейнер стоит столько, сколько в среднем стоит машина внутри (раньше ≈55 %, и каждый
+// контейнер в среднем приносил +60–80 %); без ставок цена падает не ниже 90 % базовой;
+// пакеты за звёзды — под новые цены (балансы игроков не меняются).
+export const STAR_MONEY_35 = { m50: 150_000, m100: 330_000, m250: 900_000, m500: 2_000_000, m1000: 4_500_000, m2500: 12_000_000 };
+export const MIGRATION_35 = catalogSync().concat([
+  "UPDATE settings SET v = 90 WHERE k = 'price_floor_pct' AND v < 90",
+  ...Object.entries(STAR_MONEY_35).map(([id, m]) => `UPDATE star_products SET money = ${m} WHERE id = '${id}' AND kind = 'money'`),
+]);
+
