@@ -102,3 +102,11 @@ export async function migration32(db) {
     if (!new RegExp(`\\b${col}\\b`).test(ct)) await db.run(`ALTER TABLE cars ADD COLUMN ${col} ${def}`);
   for (const q of catalogSync({ specs: true })) await safeRun(db, q);
 }
+
+// 34: аукцион — у контейнера без ставок тоже показывается, что было внутри (shown_car_id, никому не выдаётся);
+// пауза между контейнерами 5 → 9 с, чтобы все успели увидеть, как открывается контейнер.
+export async function migration34(db) {
+  const ct = (await db.get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'auctions'")).sql;
+  if (!/\bshown_car_id\b/.test(ct)) await db.run('ALTER TABLE auctions ADD COLUMN shown_car_id INTEGER');
+  await safeRun(db, "UPDATE settings SET v = 9 WHERE k = 'next_delay_s' AND v = 5");
+}

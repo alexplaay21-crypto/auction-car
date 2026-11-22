@@ -2,6 +2,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeDb, setClock } from './db-shim.js';
 import * as E from '../tgcloud/lib/engine.js';
+import * as V from '../tgcloud/lib/views.js';
 import * as S from '../tgcloud/lib/stars.js';
 
 let db, clock = 0, seq = 0;
@@ -56,7 +57,7 @@ test('аукцион: залог, возврат перебитому, тайм�
   assert.equal(car.status, 'owned');
   assert.equal((await E.getUser(db, 3)).wins, 1);
   await assert.rejects(E.bid(db, 2, room, { raise: 2500, opId: op() }), { code: 'AUCTION_OVER' }, 'пауза между контейнерами');
-  await tick(5);
+  await tick(9);
   await E.tick(db);
   assert.ok(await active(room), 'после паузы — следующий контейнер');
   await ok();
@@ -66,9 +67,20 @@ test('кик после двух контейнеров без ставок, п�
   const room = await E.joinRoom(db, 2);
   for (let i = 0; i < 2; i++) {
     await tick(31); await E.tick(db); // контейнер без ставок
-    await tick(5); await E.tick(db);  // следующий
-    if (i === 0) assert.equal((await db.get('SELECT left_at FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room })).left_at, null, 'после одного пропуска ещё в комнате');
+    await tick(9); await E.tick(db);  // следующий
+    if (i === 0) {
+      assert.equal((await db.get('SELECT left_at FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room })).left_at, null, 'после одного пропуска ещё в комнате');
+      // без ставок всё равно видно, что было в контейнере, но машину никто не получил
+      const last = await db.get("SELECT * FROM auctions WHERE room_id = :r AND status = 'no_bids' ORDER BY id LIMIT 1", { ':r': room });
+      assert.ok(last.shown_car_id && last.car_id == null);
+      const v = await V.roomView(db, room, 2);
+      assert.equal(v.my_missed, 1);
+      assert.equal((await db.get('SELECT count(*) AS n FROM user_cars')).n, 0);
+    }
   }
+  const vk = await V.roomView(db, room, 2);
+  assert.equal(vk.kicked, true, 'игрок видит, что его выкинули');
+  assert.equal(vk.in_room, false);
   const m = await db.get('SELECT * FROM room_members WHERE room_id = :r AND user_id = 2', { ':r': room });
   assert.ok(m.left_at && m.kicked === 1);
   assert.equal((await db.get('SELECT status FROM rooms WHERE id = :r', { ':r': room })).status, 'closed');

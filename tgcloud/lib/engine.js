@@ -243,9 +243,11 @@ export async function finalize(db, auctionId) {
   const a = await db.get(`SELECT * FROM auctions WHERE id = :a AND status = 'active' AND ends_at <= ${NOW}`, { ':a': auctionId });
   if (!a) return false;
   const carId = a.leader_id ? await rollCar(db, a.container_id) : null;
+  // без ставок машина тоже выбирается — её показывают всем («что было внутри»), но никому не выдают
+  const shown = a.leader_id ? null : await rollCar(db, a.container_id).catch(() => null);
   const r = await db.run(
-    `UPDATE auctions SET status = :s, car_id = :car, ended_at = ${NOW} WHERE id = :a AND status = 'active' AND ends_at <= ${NOW}`,
-    { ':s': a.leader_id ? 'won' : 'no_bids', ':car': carId, ':a': a.id }).catch((e) => { throw toGameError(e) ?? e; });
+    `UPDATE auctions SET status = :s, car_id = :car, shown_car_id = :shown, ended_at = ${NOW} WHERE id = :a AND status = 'active' AND ends_at <= ${NOW}`,
+    { ':s': a.leader_id ? 'won' : 'no_bids', ':car': carId, ':shown': shown, ':a': a.id }).catch((e) => { throw toGameError(e) ?? e; });
   return r.rowsAffected > 0;
 }
 

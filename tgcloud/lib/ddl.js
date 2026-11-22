@@ -9,7 +9,7 @@ import { MIGRATION_7, MIGRATION_8, MIGRATION_9, MIGRATION_10 } from './ddl6.js';
 import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
-import { migration28, migration31, migration32 } from './ddl11.js';
+import { migration28, migration31, migration32, migration34 } from './ddl11.js';
 import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30, MIGRATION_33 } from './ddl8.js';
 
 export const SETTINGS = {
@@ -639,4 +639,6 @@ export const MIGRATIONS = [
   { id: 32, statements: [], run: migration32 },
   // 33: без российского контейнера на аукционе, «Неизвестный» = свои машины + российские
   { id: 33, statements: MIGRATION_33 },
+  // 34: аукцион — что было в контейнере без ставок, пауза 9 с между контейнерами
+  { id: 34, statements: [], run: migration34 },
 ];

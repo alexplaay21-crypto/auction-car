@@ -32,6 +32,7 @@ export async function roomView(db, roomId, uid = null) {
        WHERE b.auction_id = :a ORDER BY b.id DESC LIMIT 8`, { ':a': a.id });
     const leader = a.leader_id ? await db.get(`SELECT ${USER_COLS} FROM users WHERE id = :u`, { ':u': a.leader_id }) : null;
     let car = null;
+    if (!a.car_id && a.shown_car_id) car = { ...(await db.get('SELECT * FROM cars WHERE id = :c', { ':c': a.shown_car_id })), shown: true };
     if (a.car_id) {
       car = await db.get('SELECT * FROM cars WHERE id = :c', { ':c': a.car_id });
       const uc = await db.get(`SELECT id, status, sold_amount FROM user_cars WHERE source = 'auction' AND source_ref = :a`, { ':a': a.id });
@@ -44,10 +45,12 @@ export async function roomView(db, roomId, uid = null) {
     };
   }
   const me = uid ? members.find((m) => m.id === uid) : null;
+  // выкинут за пропуски (и ещё не вернулся)
+  const kicked = uid && !me ? !!(await db.get('SELECT 1 AS x FROM room_members WHERE room_id = :r AND user_id = :u AND kicked = 1 AND left_at IS NOT NULL', { ':r': roomId, ':u': uid })) : false;
   return {
     id: room.id, number: room.number, scope: room.scope, scope_id: room.scope_id, status: room.status, rev: room.rev,
     max: room.max_players, members, count: members.length, next_at: room.next_at, now: t, step: st.bet_step,
-    timer: st.auction_timer_s, kick_after: st.kick_after, auction, in_room: !!me, my_missed: me?.missed ?? 0,
+    timer: st.auction_timer_s, kick_after: st.kick_after, next_delay: st.next_delay_s, auction, in_room: !!me, my_missed: me?.missed ?? 0, kicked,
   };
 }
 
@@ -162,7 +165,10 @@ export function roomText(v, { group = false } = {}) {
   if (a.status === 'won' && a.car) {
     const r = RARITY[a.car.rarity] ?? RARITY.common;
     t += `<b>продан</b>\n🏆 ${esc(who(a.leader))} забирает за <b>${money(a.current)}</b>\n${r.icon} Внутри: <b>${esc(a.car.name)}</b> (${r.ru}, ${money(a.car.price)})\n`;
-  } else if (a.status === 'no_bids') t += 'без ставок\n';
+  } else if (a.status === 'no_bids') {
+    t += 'без ставок — никто не забрал\n';
+    if (a.car) { const r = RARITY[a.car.rarity] ?? RARITY.common; t += `${r.icon} А внутри было: <b>${esc(a.car.name)}</b> (${r.ru}, ${money(a.car.price)})\n`; }
+  }
   else t += 'отменён\n';
   if (v.status === 'open') t += `\n⏸ Следующий контейнер через ${Math.max(0, v.next_at - v.now)} с…`;
   else t += '\n🔚 Комната закрыта.';

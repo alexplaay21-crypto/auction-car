@@ -61,7 +61,7 @@ test('победа: картинка меняется на машину, поб�
   const v = await roomView(db, room);
   assert.match(roomText(v), /Следующий контейнер/);
   // следующий контейнер — снова его картинка
-  await tick(5);
+  await tick(9);
   await sync(db, api, InputFile, { roomId: room });
   const next = edits[edits.length - 1];
   assert.equal(next.how, 'media');

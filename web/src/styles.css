@@ -724,3 +724,63 @@ body { background-image: none; }
 .tabbar .in.dragging .tab-pill { transition: opacity .2s; transform: translateX(calc(var(--i) * 100%)) scale(1.08, 1.12);
   background: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 6px 18px rgba(0, 0, 0, .35); }
 .tabbar .in.dragging button.on:not(.mid) { transform: scale(1.06); }
+
+/* ---------- аукцион: сцена с контейнером — открывается этот же контейнер ---------- */
+.stage { position: relative; aspect-ratio: 16 / 10; overflow: hidden; perspective: 900px; border-radius: var(--r) var(--r) 0 0;
+  background: radial-gradient(90% 80% at 50% 45%, #1b2130, #07080c 75%); }
+.st-glow { position: absolute; left: 50%; top: 50%; width: 120%; height: 120%; transform: translate(-50%, -50%) scale(.2); border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--rc) 80%, white), color-mix(in srgb, var(--rc) 35%, transparent) 45%, transparent 70%);
+  filter: blur(6px); transition: transform .9s cubic-bezier(.2, .8, .2, 1), opacity .5s; pointer-events: none; }
+.st-open .st-glow, .st-done .st-glow { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.st-done.r-common .st-glow { opacity: .4; }
+.st-rays { position: absolute; left: calc(50% - 80vmax); top: calc(50% - 80vmax); width: 160vmax; height: 160vmax; opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 70%, transparent) 0 7deg, transparent 7deg 18deg);
+  -webkit-mask: radial-gradient(closest-side, #000 8%, transparent 50%); mask: radial-gradient(closest-side, #000 8%, transparent 50%);
+  transition: opacity .6s; animation: spinr 16s linear infinite; }
+.st-done .st-rays { opacity: .9; }
+.st-box { position: absolute; left: 50%; top: 52%; height: 82%; aspect-ratio: 244 / 259; transform: translate(-50%, -50%); transform-style: preserve-3d;
+  transition: opacity .6s .5s, transform .8s; }
+.st-live .st-box { animation: stIdle 3.2s ease-in-out infinite; }
+.st-hot .st-box { animation: shake .3s linear infinite; }
+.st-shake .st-box { animation: shake .07s linear infinite; }
+.st-done .st-box { opacity: .35; transform: translate(-50%, -50%) scale(.92); }
+@keyframes stIdle { 50% { translate: 0 -3px; } }
+.st-hole { position: absolute; inset: 3%; background: linear-gradient(#020304, #0b0e15); box-shadow: inset 0 0 40px color-mix(in srgb, var(--rc) 80%, transparent); }
+.st-door { position: absolute; top: 0; height: 100%; width: 50%; transition: transform .85s cubic-bezier(.55, .05, .3, 1), filter .85s; backface-visibility: visible; }
+.st-door.l { left: 0; transform-origin: left center; }
+.st-door.r { right: 0; transform-origin: right center; }
+.st-open .st-door.l, .st-done .st-door.l { transform: rotateY(-112deg); filter: brightness(.45); }
+.st-open .st-door.r, .st-done .st-door.r { transform: rotateY(112deg); filter: brightness(.45); }
+.st-seam { position: absolute; left: calc(50% - 2px); top: 4%; bottom: 4%; width: 4px; border-radius: 3px; opacity: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rc) 90%, white), transparent); filter: blur(1px); }
+.st-shake .st-seam { opacity: .95; animation: leak .3s ease-in-out infinite alternate; }
+/* машина выезжает из глубины контейнера к игроку */
+.st-car { position: absolute; inset: 7% 5%; display: grid; place-items: center; z-index: 3; opacity: 0; transform: translateZ(-520px) scale(.4);
+  transition: transform 1s cubic-bezier(.2, 1.12, .3, 1) .85s, opacity .4s .85s; pointer-events: none; }
+.st-open .st-car, .st-done .st-car { opacity: 1; transform: none; }
+.st-car .car-pic, .st-car .car-art, .st-car .car-photo { width: 100%; height: auto !important; border-radius: 14px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), 0 18px 50px -10px color-mix(in srgb, var(--rc) 70%, transparent); }
+.st-tag { position: absolute; left: 10px; top: 10px; z-index: 4; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+  border-radius: 8px; background: rgba(13, 15, 20, .78); font-weight: 800; font-size: 12px; }
+.st-done .st-tag { color: var(--rc); }
+.st-timer { position: absolute; right: 10px; top: 10px; z-index: 4; min-width: 40px; height: 40px; border-radius: 20px; display: grid; place-items: center;
+  font-weight: 900; font-size: 18px; background: rgba(13, 15, 20, .78); font-variant-numeric: tabular-nums; }
+.st-timer.hot { color: var(--red); animation: blink .5s infinite; }
+/* ставки: сумма «подпрыгивает», свежая ставка подсвечивается */
+.bump { display: inline-block; animation: bump .35s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes bump { 0% { transform: scale(1.18); color: var(--orange); } 100% { transform: none; } }
+.lead-me { font-weight: 800; color: var(--green); }
+.feed .fr.fresh { animation: feedIn .45s ease-out; background: color-mix(in srgb, var(--orange) 10%, transparent); }
+.feed .fr.mine b { color: var(--orange); }
+@keyframes feedIn { from { transform: translateY(-8px); opacity: 0; } }
+/* пропуски до кика */
+.misses { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--bg-2); font-size: 12.5px; color: var(--muted); }
+.misses .dots { display: inline-flex; gap: 5px; flex: none; }
+.misses .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--card-3); box-shadow: inset 0 0 0 1px var(--line); }
+.misses .dots i.on { background: var(--red); box-shadow: none; }
+.misses.warn { color: #ffd0d4; background: rgba(255, 77, 94, .14); box-shadow: inset 0 0 0 1px rgba(255, 77, 94, .45); animation: warnPulse 1.4s ease-in-out infinite; }
+@keyframes warnPulse { 50% { box-shadow: inset 0 0 0 1px rgba(255, 77, 94, .9); } }
+.kick-card { border-color: rgba(255, 77, 94, .55); background: linear-gradient(180deg, rgba(255, 77, 94, .12), transparent), var(--card); display: flex; flex-direction: column; gap: 8px; }
+.result { display: flex; flex-direction: column; gap: 6px; animation: feedIn .5s ease-out; }
+.next .bar { margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) { .st-box, .st-rays, .misses.warn { animation: none !important; } }

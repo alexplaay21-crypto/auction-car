@@ -1,9 +1,10 @@
-import { Unboxing } from '../Unboxing';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Gavel, LogOut, Users, Pencil, Package, RotateCcw } from 'lucide-react';
 import { call, clientId, errorText, haptic, toast } from '../tg';
 import { money, RARITY } from '../format';
 import { Avatar, CarArt, ContainerArt, RarityTag, Sheet, Money } from '../components';
+import { containerDoorSvg, svgUrl } from '../art';
+import { fx } from '../sound';
 import { AppBar, Sect, Li, Nick } from '../ui';
 import { useApp } from '../App';
 import { t } from '../i18n';
@@ -17,7 +18,8 @@ export function Auction() {
   const [custom, setCustom] = useState(false);
   const [amount, setAmount] = useState('');
   const [catalog, setCatalog] = useState<any>(null);
-  const [reveal, setReveal] = useState<any>(null);
+  const [anim, setAnim] = useState<{ id: number; t0: number } | null>(null);
+  const lastLeader = useRef<number | null>(null);
   const [players, setPlayers] = useState(false);
   const offset = useRef(0);
   const last = useRef<number | null>(null);
@@ -29,10 +31,19 @@ export function Auction() {
     setRoom(r?.room ?? null);
     const a = r?.room?.auction;
     if (a && a.status !== 'active' && last.current === a.id) {
+      // торги закончились у нас на глазах — открываем этот же контейнер: дрожь → двери → машина
       last.current = null; reload();
-      if (a.status === 'won' && a.leader?.id === uid) { setReveal(a); haptic('success'); }
+      setAnim({ id: a.id, t0: Date.now() });
+      const rr = a.car?.rarity ?? 'common', sh = SHAKE[rr] ?? 500;
+      fx.rumble(rr);
+      setTimeout(() => fx.doors(), sh);
+      setTimeout(() => { fx.reveal(rr); if (a.status === 'won' && a.leader?.id === uid) haptic('success'); }, sh + 900);
     }
-    if (a?.status === 'active') last.current = a.id;
+    if (a?.status === 'active') {
+      // перебили — коротко сообщить
+      if (last.current === a.id && lastLeader.current === uid && a.leader?.id !== uid) { haptic('heavy'); toast(t('Тебя перебили!')); }
+      last.current = a.id; lastLeader.current = a.leader?.id ?? null;
+    }
   }, [uid, reload]);
 
   const load = useCallback(() => call('app_room', { action: 'state', scope, roomId: room?.id ?? undefined }).then(apply, () => {}), [scope, room?.id, apply]);
@@ -92,58 +103,109 @@ export function Auction() {
   const iLead = a?.leader?.id === uid;
   const nextIn = Math.max(0, Math.ceil(room.next_at - now));
   const steps = [room.step, 1000, 5000].filter((x, i, arr) => arr.indexOf(x) === i);
+  const car = a?.car ?? null;
+  const rar = car?.rarity ?? 'common';
+  // фаза сцены: торги → дрожь → двери открываются → итог (кто зашёл позже — сразу итог)
+  let phase: 'live' | 'shake' | 'open' | 'done' = a?.status === 'active' ? 'live' : 'done';
+  if (a && a.status !== 'active' && anim?.id === a.id && car) {
+    const el = Date.now() - (anim?.t0 ?? 0), sh = SHAKE[rar] ?? 500;
+    phase = el < sh ? 'shake' : el < sh + 1900 ? 'open' : 'done';
+  }
+  const iBid = !!a?.bids?.some((b: any) => b.user_id === uid);
+  const lastChance = room.in_room && !iBid && room.my_missed >= room.kick_after - 1;
+  const doorL = a ? svgUrl(containerDoorSvg(a.container, 'l')) : '';
+  const doorR = a ? svgUrl(containerDoorSvg(a.container, 'r')) : '';
 
   return (
     <>
       <AppBar title={t('Комната №{n}', { n: room.number })} />
       <div className="page">
-        {a?.status === 'active' ? (
-          <div className={`card pad0${left < 6 ? ' hot' : ''}`}>
-            <div className="hero-img">
-              <ContainerArt c={a.container} size={150} studio />
-              <span className="tag"><span className="live-dot" /> {t('Торги · игроков: {n}', { n: room.count })}</span>
-            </div>
-            <div className="col g12" style={{ padding: 14 }}>
-              <div className="h2">{t(a.container.name)}</div>
-              <Chances ch={a.chances} />
-              <div className="row g12">
-                <Timer pct={pct} left={left} hot={left < 6} />
-                <div className="grow col">
-                  <span className="sm muted">{a.leader ? t('Текущая ставка') : t('Стартовая цена')}</span>
-                  <Money value={a.current} className="bid-num" />
-                  {a.leader ? <div className="row g6">{iLead ? <span className="b c-orange">{t('Ты лидер')}</span> : <><span className="sm muted">{t('лидер')}</span><Nick u={a.leader} /></>}</div>
-                    : <span className="sm muted">{t('Ставок пока нет')}</span>}
-                </div>
-              </div>
-              {room.in_room ? (
-                <>
-                  <div className="grid3">{steps.map((x: number) => <button key={x} className="bid-btn" disabled={busy} onClick={() => act({ action: 'bid', raise: x })}>+{money(x)}</button>)}</div>
-                  <button className="btn w" onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> {t('Своя сумма')}</button>
-                  <div className="xs muted center">{t('Баланс {a} · минимум {b}', { a: money(me.balance), b: money(a.min_bid) })}{room.my_missed > 0 && ' · ' + t('пропущено {a} из {b}', { a: room.my_missed, b: room.kick_after })}</div>
-                </>
-              ) : <button className="btn go xl w" onClick={() => act({ action: 'join' })}>{t('Войти и торговаться')}</button>}
-            </div>
-          </div>
-        ) : (
-          <div className="card">
-            {a?.status === 'won' && a.car ? (
-              <div className={`reveal r-${a.car.rarity}`}>
-                <div className="reveal-art"><CarArt car={a.car} height={150} studio /></div>
-                <div className="row g6 sm muted">{a.leader?.id === uid ? t('Ты забрал') : <><Nick u={a.leader} /> {t('забирает')}</>} {t('за {m}', { m: money(a.current) })}</div>
-                <div className="h2">{a.car.name}</div>
-                <div className="row g8"><RarityTag r={a.car.rarity} /><span className="sm muted">{t('стоимость {m}', { m: money(a.car.price) })}</span></div>
-              </div>
-            ) : <Li icon={Package} title={a ? t('{c} — без ставок', { c: a.container.name }) : t('Ждём игроков')} sub={a ? t('Цена такого контейнера немного снизится') : undefined} />}
-            <div className="sep" />
-            <div className="center">{room.status === 'open' ? <>{t('Следующий контейнер через')} <b className="c-orange">{t('{n} с', { n: nextIn })}</b></> : t('Комната закрыта')}</div>
+        {room.kicked && !room.in_room && (
+          <div className="card kick-card">
+            <div className="h3">{t('Тебя выкинуло из комнаты')}</div>
+            <div className="sm muted">{t('{n} контейнера подряд без ставки. Смотреть можно, а чтобы торговаться — вернись.', { n: room.kick_after })}</div>
+            <button className="btn go w" disabled={busy} onClick={() => act({ action: 'join' }, t('Ты снова в комнате'))}>{t('Вернуться в комнату')}</button>
           </div>
         )}
+
+        {a ? (
+          <div className={`card pad0${phase === 'live' && left < 6 ? ' hot' : ''}`}>
+            <div className={`stage r-${rar} st-${phase}${phase === 'live' && left < 6 ? ' st-hot' : ''}`} style={{ ['--sh' as any]: `${SHAKE[rar] ?? 500}ms` }}>
+              <div className="st-glow" />
+              {(rar === 'epic' || rar === 'mythic' || rar === 'mystic') && <div className="st-rays" />}
+              <div className="st-box">
+                <div className="st-hole" />
+                <img className="st-door l" src={doorL} alt="" />
+                <img className="st-door r" src={doorR} alt="" />
+                <div className="st-seam" />
+              </div>
+              {car && <div className="st-car"><CarArt car={car} height={170} studio /></div>}
+              <span className="st-tag">
+                {phase === 'live' ? <><span className="live-dot" /> {t('Торги · игроков: {n}', { n: room.count })}</>
+                  : phase !== 'done' ? t('Открываем контейнер…')
+                  : a.status === 'won' ? (iLead ? t('Контейнер твой!') : t('Продан')) : t('Без ставок')}
+              </span>
+              {phase === 'live' && <span className={`st-timer${left < 6 ? ' hot' : ''}`}>{Math.ceil(left)}</span>}
+            </div>
+
+            {phase === 'live' ? (
+              <div className="col g12" style={{ padding: 14 }}>
+                <div className="row between g8"><div className="h3">{t(a.container.name)}</div><span className="sm muted">{t('ставок: {n}', { n: a.bids_count ?? a.bids.length })}</span></div>
+                <Chances ch={a.chances} compact />
+                <div className="row g12">
+                  <Timer pct={pct} left={left} hot={left < 6} />
+                  <div className="grow col">
+                    <span className="sm muted">{a.leader ? t('Текущая ставка') : t('Стартовая цена')}</span>
+                    <span key={a.current} className="bump"><Money value={a.current} className="bid-num" /></span>
+                    {a.leader ? <div className="row g6">{iLead ? <span className="lead-me">{t('★ Ты лидер')}</span> : <><span className="sm muted">{t('лидер')}</span><Nick u={a.leader} /></>}</div>
+                      : <span className="sm muted">{t('Ставок пока нет — начни первым')}</span>}
+                  </div>
+                </div>
+                {room.in_room ? (
+                  <>
+                    <div className="grid3">{steps.map((x: number) => <button key={x} className="bid-btn" disabled={busy || iLead} onClick={() => act({ action: 'bid', raise: x })}>+{money(x)}</button>)}</div>
+                    <button className="btn w" disabled={iLead} onClick={() => { setAmount(String(a.min_bid)); setCustom(true); }}><Pencil size={16} /> {t('Своя сумма')}</button>
+                    <div className={`misses${lastChance ? ' warn' : ''}`}>
+                      <span className="dots">{Array.from({ length: room.kick_after }, (_, i) => <i key={i} className={i < room.my_missed ? 'on' : ''} />)}</span>
+                      <span>{iBid ? t('Ставка в этом контейнере сделана — пропуск не засчитан')
+                        : lastChance ? t('Последний шанс: без ставки в этом контейнере тебя выкинет из комнаты')
+                        : t('Пропуски: {a} из {b}. {b} контейнера подряд без ставки — выход из комнаты', { a: room.my_missed, b: room.kick_after })}</span>
+                    </div>
+                    <div className="xs muted center">{t('Баланс {a} · минимум {b}', { a: money(me.balance), b: money(a.min_bid) })}</div>
+                  </>
+                ) : <button className="btn go xl w" onClick={() => act({ action: 'join' })}>{t('Войти и торговаться')}</button>}
+              </div>
+            ) : (
+              <div className="col g12" style={{ padding: 14 }}>
+                {phase !== 'done' ? <div className="center sm muted">{t('Открываем {c}…', { c: t(a.container.name) })}</div> : car ? (
+                  <div className={`result r-${rar}`}>
+                    <div className="sm muted">
+                      {a.status === 'won' ? (iLead ? t('Ты забрал за {m}', { m: money(a.current) }) : <span className="row g6"><Nick u={a.leader} /> {t('забирает за {m}', { m: money(a.current) })}</span>)
+                        : t('Никто не сделал ставку. Внутри было:')}
+                    </div>
+                    <div className="h2">{car.name}</div>
+                    <div className="row g8"><RarityTag r={rar} /><span className="sm muted">{t('стоимость {m}', { m: money(car.price) })}</span></div>
+                    {a.status === 'won' && iLead && (car.auto_sold != null
+                      ? <div className="sm muted">{t('Гараж полон — машина сразу продана за {m}', { m: money(car.auto_sold) })}</div>
+                      : <button className="btn go w" onClick={() => { push({ name: 'garage' }); if (car.user_car_id) push({ name: 'car', id: car.user_car_id }); }}>{t('Открыть машину')}</button>)}
+                  </div>
+                ) : <Li icon={Package} title={t('{c} — без ставок', { c: t(a.container.name) })} />}
+                {phase === 'done' && (room.status === 'open' ? (
+                  <div className="next">
+                    <div className="row between"><span className="sm muted">{t('Следующий контейнер')}</span><b className="c-orange">{t('через {n} с', { n: nextIn })}</b></div>
+                    <div className="bar"><i style={{ width: `${Math.max(0, Math.min(100, 100 - (nextIn / (room.next_delay ?? 9)) * 100))}%` }} /></div>
+                  </div>
+                ) : <div className="center sm muted">{t('Комната закрыта')}</div>)}
+              </div>
+            )}
+          </div>
+        ) : <div className="card"><Li icon={Package} title={t('Ждём игроков')} sub={t('Контейнер появится, как только в комнате будет хоть один игрок')} /></div>}
 
         {a?.bids?.length > 0 && (
           <>
             <Sect>{t('Ставки')}</Sect>
             <div className="card list feed">
-              {a.bids.map((b: any, i: number) => <div key={i} className="fr"><span className="grow"><Nick u={{ id: b.user_id, username: b.username, first_name: b.first_name }} /></span><b className="num">{money(b.amount)}</b></div>)}
+              {a.bids.map((b: any, i: number) => <div key={`${b.user_id}:${b.amount}`} className={`fr${i === 0 ? ' fresh' : ''}${b.user_id === uid ? ' mine' : ''}`}><span className="grow"><Nick u={{ id: b.user_id, username: b.username, first_name: b.first_name }} /></span><b className="num">{money(b.amount)}</b></div>)}
             </div>
           </>
         )}
@@ -155,7 +217,7 @@ export function Auction() {
       </div>
 
       <Sheet open={players} onClose={() => setPlayers(false)} title={t('Игроки в комнате')}>
-        <div className="card list">{room.members.map((m: any) => <Li key={m.id} lead={<Avatar u={m} size={34} />} title={<Nick u={m} noAva />} sub={m.missed ? t('без ставок: {n}', { n: m.missed }) : t('активен')} />)}</div>
+        <div className="card list">{room.members.map((m: any) => <Li key={m.id} lead={<Avatar u={m} size={34} />} title={<Nick u={m} noAva />} sub={m.missed ? t('пропусков: {n} из {k}', { n: m.missed, k: room.kick_after }) : t('активен')} />)}</div>
       </Sheet>
 
       <Sheet open={custom} onClose={() => setCustom(false)} title={t('Своя ставка')}>
@@ -163,19 +225,12 @@ export function Auction() {
         <div className="sm muted center">{t('Минимум {a} · баланс {b}', { a: money(a?.min_bid), b: money(me.balance) })}</div>
         <button className="btn go xl w" disabled={busy} onClick={async () => { setCustom(false); await act({ action: 'bid', amount: Number(amount) }); }}>{t('Поставить {m}', { m: money(Number(amount) || 0) })}</button>
       </Sheet>
-
-      {reveal?.car && (
-        <Unboxing container={reveal.container} car={reveal.car} onClose={() => setReveal(null)}>
-          <div className="sm muted">{t('Контейнер твой за {m}', { m: money(reveal.current) })}</div>
-          <div className="h3">{t('Стоимость {m}', { m: money(reveal.car.price) })}</div>
-          {reveal.car.auto_sold != null
-            ? <div className="sm muted">{t('Гараж полон — машина сразу продана за {m}', { m: money(reveal.car.auto_sold) })}</div>
-            : <button className="btn go xl w" onClick={() => { setReveal(null); push({ name: 'garage' }); if (reveal.car.user_car_id) push({ name: 'car', id: reveal.car.user_car_id }); }}>{t('Открыть машину')}</button>}
-        </Unboxing>
-      )}
     </>
   );
 }
+
+// дрожь контейнера перед открытием: чем реже машина, тем дольше
+const SHAKE: Record<string, number> = { common: 450, rare: 650, epic: 950, mythic: 1300, mystic: 1600 };
 
 export function Chances({ ch, compact = false }: { ch: any; compact?: boolean }) {
   const R = ['common', 'rare', 'epic', 'mythic', 'mystic'];
