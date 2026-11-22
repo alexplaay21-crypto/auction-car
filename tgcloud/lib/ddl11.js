@@ -125,10 +125,9 @@ export const BONUS4_BI_V2 = `CREATE TRIGGER IF NOT EXISTS bonus4_bi BEFORE INSER
        THEN ${SET('daily_bonus_vip')} ELSE ${SET('daily_bonus')} END;
    END`;
 export async function migration36(db) {
-  const { catalogSync: sync } = await import('./ddl8.js');
   for (const [k, v] of Object.entries({ daily_bonus: 25_000, daily_bonus_vip: 50_000, bonus_cap: 100_000, bonus_cap_vip: 200_000, bonus_period_s: 43_200, bonus_tz_s: 10_800, price_cap_pct: 100 }))
     await safeRun(db, `INSERT INTO settings (k, v) VALUES ('${k}', ${v}) ON CONFLICT (k) DO UPDATE SET v = excluded.v`);
   await safeRun(db, 'DROP TRIGGER IF EXISTS bonus4_bi');
   await db.run(BONUS4_BI_V2);
-  for (const q of sync()) await safeRun(db, q);
+  for (const q of catalogSync()) await safeRun(db, q);
 }
