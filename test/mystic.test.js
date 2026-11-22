@@ -10,7 +10,7 @@ test('миграция 28: cars пересобрана без потерь, ми
   const db = makeDb(); E.dropSettingsCache();
   // база «как сейчас на сервере»: все миграции до 27
   await db.run('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
-  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0)');
+  await db.run('INSERT INTO schema_migrations (id, applied_at) VALUES (28, 0), (29, 0), (30, 0)');
   await E.migrate(db);
   await E.ensureUser(db, { id: 2, username: 'u2' });
   await db.run(`INSERT INTO car_grants (op_id, user_id, car_id, source, created_at) VALUES ('g1', 2, 57, 'admin', (SELECT now FROM v_now))`);
@@ -27,7 +27,8 @@ test('миграция 28: cars пересобрана без потерь, ми
   assert.deepEqual(await db.all('SELECT * FROM cars ORDER BY id'), carsBefore, 'машины не изменились');
   assert.deepEqual(await db.all('SELECT * FROM user_cars ORDER BY id'), gBefore, 'гаражи не изменились');
   assert.deepEqual(await E.audit(db), []);
-  assert.deepEqual(await E.migrate(db), [29]);
+  await db.run('DELETE FROM schema_migrations WHERE id = 30');
+  assert.deepEqual(await E.migrate(db), [29, 30]);
   assert.equal((await db.get('SELECT rarity FROM cars WHERE id = 16')).rarity, 'mystic', 'Mercedes-AMG One — мистическая');
   // мистическая: записывается, падает из контейнера с шансом, выставляется на рынок
   await db.run("UPDATE cars SET rarity = 'mystic' WHERE id = 57");

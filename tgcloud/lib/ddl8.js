@@ -111,7 +111,8 @@ export const MIGRATION_27 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
 // 29: редкость по эксклюзивности (мистическая, легендарная — только малые серии), Россия — 35 машин
 // российских и советских марок. Убранные машины остаются у владельцев как есть, но больше не выпадают:
 // они выходят из контейнера и из наград (is_active = 0 для машин вне всех контейнеров).
-export const MIGRATION_29 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
+// Синхронизация каталога с catalog_world.js: машины, состав контейнеров, цены контейнеров, машины сезона BP.
+export const catalogSync = () => [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
   ...upsertWorld(cid, { legacy: false }),
   `DELETE FROM container_cars WHERE container_id = ${cid} AND car_id NOT IN (${worldIds(cid).join(', ')})`,
   `UPDATE containers SET price = ${containerPrice(cid)} WHERE id = ${cid}`,
@@ -127,3 +128,7 @@ export const MIGRATION_29 = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((cid) => [
      WHERE c1.id = bp_seasons.prem_car_id ORDER BY abs(c2.price - c1.price) LIMIT 1)
    WHERE prem_car_id IS NOT NULL AND (SELECT rarity FROM cars WHERE id = prem_car_id) <> 'epic'`,
 ]);
+export const MIGRATION_29 = catalogSync();
+
+// 30: Франция — убраны Citroen C1 и Renault Talisman (битые 3D-модели), у владельцев остаются; развёрнутые машины.
+export const MIGRATION_30 = catalogSync();
