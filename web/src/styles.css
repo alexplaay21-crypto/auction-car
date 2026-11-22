@@ -177,6 +177,7 @@ label.frow > span { width: 44%; color: var(--muted); font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .carcard.r-mystic::after { animation: none; } }
 .carcard .car-art { margin: 0 -8px; width: calc(100% + 16px); }
 .carcard .price { font-weight: 800; font-variant-numeric: tabular-nums; }
+.carcard > .row.between { flex-wrap: wrap; row-gap: 4px; }
 .carcard .ribbon { position: absolute; right: 8px; top: 10px; height: 20px; padding: 0 7px; border-radius: 6px; background: var(--orange); color: #fff; font-weight: 800; font-size: 11px; display: flex; align-items: center; }
 .mini { width: 140px; flex: none; }
 
