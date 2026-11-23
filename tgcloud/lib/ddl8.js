@@ -170,3 +170,6 @@ export const MIGRATION_37 = Object.entries(NEW_CONTAINERS).flatMap(([id, c]) => 
 // мистическая от $1 000 000 (внутри редкости — по силе); шансы контейнера пересчитаны под эти цены (odds.js).
 export const MIGRATION_39 = catalogSync({ band: true });
 
+// 40: шансы подняты (редкая 1 из 7 у дешёвого контейнера, 1 из 3 у дорогого), вилка цены — от половины до $24 000.
+export const MIGRATION_40 = catalogSync({ band: true });
+

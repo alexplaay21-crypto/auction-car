@@ -10,7 +10,7 @@ import { MIGRATION_11 } from './ddl7.js';
 import { MIGRATION_20, MIGRATION_21 } from './ddl9.js';
 import { MIGRATION_25 } from './ddl10.js';
 import { migration28, migration31, migration32, migration34, migration36, migration38 } from './ddl11.js';
-import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30, MIGRATION_33, MIGRATION_35, MIGRATION_37, MIGRATION_39 } from './ddl8.js';
+import { MIGRATION_12, MIGRATION_13, MIGRATION_14, MIGRATION_15, MIGRATION_16, MIGRATION_17, MIGRATION_18, MIGRATION_19, MIGRATION_22, MIGRATION_23, MIGRATION_24, MIGRATION_26, MIGRATION_27, MIGRATION_29, MIGRATION_30, MIGRATION_33, MIGRATION_35, MIGRATION_37, MIGRATION_39, MIGRATION_40 } from './ddl8.js';
 
 export const SETTINGS = {
   start_balance: 15_000,
@@ -651,4 +651,6 @@ export const MIGRATIONS = [
   { id: 38, statements: [], run: migration38 },
   // 39: цены машин в диапазонах редкости, шансы под них
   { id: 39, statements: MIGRATION_39 },
+  // 40: шансы выше (редкая 1 из 7 → 1 из 3), вилка цены контейнера ½–1 от верха, не дороже $24 000
+  { id: 40, statements: MIGRATION_40 },
 ];

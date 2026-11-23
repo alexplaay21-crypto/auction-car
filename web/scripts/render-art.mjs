@@ -5,8 +5,14 @@ import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { carSvg, containerSvg } from '../src/art.js';
-import { CATALOG as CATALOG1, CATALOG_V3, ALL_CONTAINERS as CONTAINERS } from '../../tgcloud/lib/catalog.js';
+import { CATALOG as CATALOG1, CATALOG_V3, ALL_CONTAINERS } from '../../tgcloud/lib/catalog.js';
+import { RENAMED_CONTAINERS, NEW_CONTAINERS } from '../../tgcloud/lib/catalog_world.js';
 const CATALOG = [...CATALOG1, ...CATALOG_V3];
+// контейнеры: стартовые + переименованные + новые (британский)
+const CONTAINERS = ALL_CONTAINERS.map((c, i) => ({ ...c, ...(RENAMED_CONTAINERS[i + 1] ?? {}) }));
+for (const [id, c] of Object.entries(NEW_CONTAINERS)) CONTAINERS[Number(id) - 1] = c;
+// --containers-only: машины 1–64 давно заменены 3D-карточками — не перерисовывать их
+const ONLY_CONTAINERS = process.argv.includes('--containers-only');
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -15,7 +21,7 @@ const out = root + 'public/art/';
 mkdirSync(out, { recursive: true });
 
 const jobs = [
-  ...CATALOG.map((c, i) => ({ file: `car-${i + 1}.jpg`, svg: carSvg({ ...c, id: i + 1 }, { studio: true, w: 880, h: 400 }), w: 880, h: 400 })),
+  ...(ONLY_CONTAINERS ? [] : CATALOG).map((c, i) => ({ file: `car-${i + 1}.jpg`, svg: carSvg({ ...c, id: i + 1 }, { studio: true, w: 880, h: 400 }), w: 880, h: 400 })),
   ...CONTAINERS.map((c, i) => ({ file: `container-${i + 1}.jpg`, svg: containerSvg({ ...c, id: i + 1 }, { studio: true, w: 680, h: 380 }), w: 680, h: 380 })),
 ];
 
