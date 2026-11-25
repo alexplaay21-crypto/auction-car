@@ -4,11 +4,38 @@ import { db, api, EndpointError } from 'sdk';
 import { migrate, audit } from '../lib/engine.js';
 import { OPERATOR_ID, MINI_APP_URL, APP_NAME } from '../lib/config.js';
 
+// JSON → base64 (без Buffer и btoa: в среде платформы их может не быть)
+function b64json(v) {
+  const bytes = new TextEncoder().encode(JSON.stringify(v));
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0);
+    out += A[(n >> 18) & 63] + A[(n >> 12) & 63] + (i + 1 < bytes.length ? A[(n >> 6) & 63] : '=') + (i + 2 < bytes.length ? A[n & 63] : '=');
+  }
+  return out;
+}
+
 export default async function (input, ctx) {
   if (Number(ctx.initData?.user?.id) !== OPERATOR_ID) throw new EndpointError('Forbidden', { code: 'FORBIDDEN' });
   switch (input?.action) {
     case 'migrate': return { applied: await migrate(db) };
     case 'audit': return { problems: await audit(db) };
+    // перенос на свой сервер (только чтение): схема, размеры таблиц, строки таблицы частями (base64 JSON)
+    case 'schema': return { b64: b64json(await db.all("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY rowid")) };
+    case 'tables': {
+      const ts = await db.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+      const out = {};
+      for (const t of ts) out[t.name] = (await db.get(`SELECT count(*) AS n FROM "${t.name}"`)).n;
+      out.sqlite_sequence = (await db.all('SELECT * FROM sqlite_sequence').catch(() => [])).length;
+      return out;
+    }
+    case 'dump': {
+      const t = String(input.table ?? '');
+      if (!/^[a-z_0-9]+$/i.test(t)) throw new EndpointError('Bad table', { code: 'BAD_INPUT' });
+      const rows = await db.all(`SELECT * FROM "${t}" LIMIT :n OFFSET :o`, { ':n': Math.min(5000, Number(input.limit) || 1000), ':o': Number(input.offset) || 0 });
+      return { b64: b64json(rows) };
+    }
     // экономика (только чтение): деньги у игроков, источники и стоки по журналу, пакеты за звёзды
     case 'econ': {
       const t = (await db.get('SELECT now FROM v_now')).now;

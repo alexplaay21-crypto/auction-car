@@ -2,6 +2,9 @@
   "name": "car-auction",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "sdk": "file:server/sdk"
+  },
   "devDependencies": {
     "@tgcloud/cli": "^0.2.0"
   },
@@ -10,6 +13,7 @@
     "status": "tgcloud status",
     "test": "node --test --no-warnings test/*.test.js",
     "build:web": "npm --prefix web run build",
-    "art": "node web/scripts/render-art.mjs"
+    "art": "node web/scripts/render-art.mjs",
+    "server": "node --no-warnings server/main.js"
   }
 }

@@ -11,3 +11,6 @@ web/dist/
 .idea/
 .vscode/
 web/tsconfig.tsbuildinfo
+# свой сервер: пароль/токен и база — только у вас
+deploy/server.env
+data/

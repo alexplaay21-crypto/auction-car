@@ -1,0 +1,7 @@
+{
+  "name": "sdk",
+  "private": true,
+  "type": "module",
+  "description": "Замена SDK платформы tgcloud для своего сервера: db (SQLite), api (Bot API), InputFile, EndpointError",
+  "exports": { ".": "./index.js", "./db": "./db.js" }
+}

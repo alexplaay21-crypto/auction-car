@@ -95,7 +95,17 @@ export function errorText(e: any): string {
 export function call<T = any>(name: string, input: Record<string, unknown> = {}): Promise<T> {
   return new Promise((resolve, reject) => {
     const s = tg?.Serverless;
-    if (!s?.call) return reject(new ApiError('NO_TELEGRAM'));
+    // свой сервер: тот же вызов — POST /api/<имя>, initData в заголовке (сервер проверяет подпись бота)
+    if (!s?.call) {
+      if (!tg?.initData) return reject(new ApiError('NO_TELEGRAM'));
+      fetch('/api/' + name, { method: 'POST', headers: { 'content-type': 'application/json', 'x-telegram-init-data': tg.initData }, body: JSON.stringify(input) })
+        .then(async (r) => {
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.ok) resolve(j.result as T);
+          else reject(new ApiError(j.parameters?.code ?? (r.status === 401 ? 'NO_TELEGRAM' : 'ERROR'), j.description));
+        }, () => reject(new ApiError('ERROR')));
+      return;
+    }
     s.call(name, input, (err: any, result: T) => {
       if (err) reject(new ApiError(err.parameters?.code ?? err.type ?? 'ERROR', err.message));
       else resolve(result);
